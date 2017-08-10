@@ -9,6 +9,9 @@
 *.userosscache
 *.sln.docstates
 
+# ReSharper Caches
+_ReSharper.Caches/
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
