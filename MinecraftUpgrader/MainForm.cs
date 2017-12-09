@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.VisualBasic.Devices;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MinecraftUpgrader.MultiMC;
 using MinecraftUpgrader.Upgrade;
@@ -150,6 +151,10 @@ namespace MinecraftUpgrader
 			var actionName = newInstance ? "Building new" : "Converting";
 			var dialog = new ProgressDialog( $"{actionName} instance" );
 			var cancelSource = new CancellationTokenSource();
+			var ci = new ComputerInfo();
+			var ramSize = new FileSize( (long) ci.TotalPhysicalMemory );
+			// Set JVM max memory to 2 GB less than the user's total RAM, at most 12 GB
+			var maxRamGb = (int) Math.Min( ramSize.GigaBytes - 2, 12 );
 
 			this.Enabled = false;
 			dialog.Cancel += ( o, args ) => {
@@ -162,11 +167,11 @@ namespace MinecraftUpgrader
 			{
 				if ( newInstance )
 				{
-					await Upgrader.NewInstance( this.config, this.txtNewInstanceName.Text, cancelSource.Token, dialog.Reporter );
+					await Upgrader.NewInstance( this.config, this.txtNewInstanceName.Text, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
 				}
 				else // Convert instance
 				{
-					await Upgrader.ConvertInstance( this.config, this.instances[ this.cbInstance.SelectedIndex ].path, cancelSource.Token, dialog.Reporter );
+					await Upgrader.ConvertInstance( this.config, this.instances[ this.cbInstance.SelectedIndex ].path, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024);
 				}
 
 				MessageBox.Show( dialog,
