@@ -33,7 +33,7 @@ namespace MinecraftUpgrader.Config
 		private static async Task WriteConfigValues( Dictionary<string, string> values, TextWriter writer )
 		{
 			foreach ( var key in values.Keys.OrderBy( k => k ) )
-				await writer.WriteLineAsync( $"{key}={values[ key ]}" );
+				await writer.WriteLineAsync( $"{key}={values[ key ] ?? ""}" );
 		}
 
 		private static void SetProperties<T>( T source, Dictionary<string, string> targetDictionary )
@@ -45,7 +45,7 @@ namespace MinecraftUpgrader.Config
 							  select (p, att);
 
 			foreach ( var (prop, att) in configProps )
-				targetDictionary[ att.PropertyName ?? prop.Name ] = prop.GetValue( source ).ToString();
+				targetDictionary[ att.PropertyName ?? prop.Name ] = prop.GetValue( source )?.ToString();
 		}
 
 		public static async Task<T> ReadConfig<T>( TextReader reader ) where T : new()
