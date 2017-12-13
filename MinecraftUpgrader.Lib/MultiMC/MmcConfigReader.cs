@@ -31,6 +31,16 @@ namespace MinecraftUpgrader.MultiMC
 			}
 		}
 
+		public static async Task UpdateConfig( string mmcPath, MmcConfig config )
+		{
+			var configPath = Path.Combine( mmcPath, "multimc.cfg" );
+
+			using ( var fs = File.Open( configPath, FileMode.Open, FileAccess.ReadWrite ) )
+			{
+				await ConfigReader.UpdateConfig( config, fs );
+			}
+		}
+
 		public static async Task<IList<(string, string)>> GetInstances( this MmcConfig config )
 		{
 			if ( !Directory.Exists( config.InstancesFolder ) )

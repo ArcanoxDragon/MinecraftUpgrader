@@ -19,8 +19,8 @@ namespace MinecraftUpgrader
 	{
 		private static readonly Guid OpenFolderMmcCookie = new Guid( "76309a12-c3b3-4954-80ac-242685715563" );
 
-		private bool mmcFound;
-		private MmcConfig config;
+		private bool                              mmcFound;
+		private MmcConfig                         config;
 		private IList<(string name, string path)> instances;
 
 		public MainForm()
@@ -40,19 +40,19 @@ namespace MinecraftUpgrader
 			try
 			{
 				this.cbInstance.Items.Clear();
-				this.rbInstanceNew.Checked = true;
-				this.rbInstanceConvert.Enabled = false;
+				this.rbInstanceNew.Checked      = true;
+				this.rbInstanceConvert.Enabled  = false;
 				this.txtNewInstanceName.Enabled = false;
-				this.txtNewInstanceName.Text = "";
-				this.cbInstance.Enabled = false;
-				this.config = await MmcConfigReader.ReadFromMmcFolder( path );
-				this.lbInstancesFolder.Text = this.config.InstancesFolder;
-				this.mmcFound = true;
+				this.txtNewInstanceName.Text    = "";
+				this.cbInstance.Enabled         = false;
+				this.config                     = await MmcConfigReader.ReadFromMmcFolder( path );
+				this.lbInstancesFolder.Text     = this.config.InstancesFolder;
+				this.mmcFound                   = true;
 
 				try
 				{
 					this.txtNewInstanceName.Enabled = true;
-					this.instances = await this.config.GetInstances();
+					this.instances                  = await this.config.GetInstances();
 
 					if ( this.instances.Count > 0 )
 					{
@@ -82,7 +82,7 @@ namespace MinecraftUpgrader
 			}
 			catch ( Exception )
 			{
-				this.mmcFound = false;
+				this.mmcFound               = false;
 				this.lbInstancesFolder.Text = "Not Found";
 			}
 		}
@@ -100,8 +100,8 @@ namespace MinecraftUpgrader
 
 		private async void OnBtnBrowseMmcClick( object sender, EventArgs e )
 		{
-			var dialog = new CommonOpenFileDialog {
-				IsFolderPicker = true,
+			var dialog        = new CommonOpenFileDialog {
+				IsFolderPicker   = true,
 				CookieIdentifier = OpenFolderMmcCookie
 			};
 			var result = dialog.ShowDialog( this.Handle );
@@ -119,7 +119,7 @@ namespace MinecraftUpgrader
 		private void OnRbInstanceChecked( object sender, EventArgs e )
 		{
 			this.txtNewInstanceName.Enabled = this.rbInstanceNew.Checked;
-			this.cbInstance.Enabled = this.rbInstanceConvert.Checked;
+			this.cbInstance.Enabled         = this.rbInstanceConvert.Checked;
 			this.CheckGoButton();
 		}
 
@@ -147,16 +147,16 @@ namespace MinecraftUpgrader
 
 		private async void OnBtnGoClick( object sender, EventArgs e )
 		{
-			var newInstance = this.rbInstanceNew.Checked;
-			var actionName = newInstance ? "Building new" : "Converting";
-			var dialog = new ProgressDialog( $"{actionName} instance" );
+			var newInstance  = this.rbInstanceNew.Checked;
+			var actionName   = newInstance ? "Building new" : "Converting";
+			var dialog       = new ProgressDialog( $"{actionName} instance" );
 			var cancelSource = new CancellationTokenSource();
-			var ci = new ComputerInfo();
-			var ramSize = new FileSize( (long) ci.TotalPhysicalMemory );
+			var ci           = new ComputerInfo();
+			var ramSize      = new FileSize( (long) ci.TotalPhysicalMemory );
 			// Set JVM max memory to 2 GB less than the user's total RAM, at most 12 GB
 			var maxRamGb = (int) Math.Min( ramSize.GigaBytes - 2, 12 );
 
-			this.Enabled = false;
+			this.Enabled  =  false;
 			dialog.Cancel += ( o, args ) => {
 				cancelSource.Cancel();
 				dialog.Reporter.ReportProgress( -1, "Cancelling...please wait" );
@@ -165,13 +165,31 @@ namespace MinecraftUpgrader
 
 			try
 			{
+				var multiMcInstances = Process.GetProcessesByName( "multimc" );
+
+				if ( multiMcInstances.Any() )
+				{
+					MessageBox.Show( dialog,
+									 "The installer has detected that there are instances of MultiMC still open.\n\n" +
+									 "MultiMC must be closed to install a new pack. Click OK to close MultiMC automatically.",
+									 "MultiMC Running",
+									 MessageBoxButtons.OK,
+									 MessageBoxIcon.Warning );
+
+					foreach ( var process in multiMcInstances )
+						process.Kill();
+				}
+
+				this.config.UpdateChannel = "develop";
+				await MmcConfigReader.UpdateConfig( this.txtMmcPath.Text, this.config );
+
 				if ( newInstance )
 				{
 					await Upgrader.NewInstance( this.config, this.txtNewInstanceName.Text, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
 				}
 				else // Convert instance
 				{
-					await Upgrader.ConvertInstance( this.config, this.instances[ this.cbInstance.SelectedIndex ].path, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024);
+					await Upgrader.ConvertInstance( this.config, this.instances[ this.cbInstance.SelectedIndex ].path, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
 				}
 
 				MessageBox.Show( dialog,

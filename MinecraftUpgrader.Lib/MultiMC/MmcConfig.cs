@@ -15,5 +15,8 @@ namespace MinecraftUpgrader.MultiMC
 
 		[ ConfigProperty ]
 		public string JavaVersion { get; set; }
+
+		[ConfigProperty]
+		public string UpdateChannel { get; set; }
 	}
 }
