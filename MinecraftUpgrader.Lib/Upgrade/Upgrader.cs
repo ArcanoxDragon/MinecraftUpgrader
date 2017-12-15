@@ -107,7 +107,7 @@ namespace MinecraftUpgrader.Upgrade
 						progress?.ReportProgress( "Extracting base pack contents (configs)..." );
 						await zip.ExtractDirectory( "config", minecraftDir, false, token, progress );
 						progress?.ReportProgress( "Extracting base pack contents (mods)..." );
-						await zip.ExtractDirectory( "mods", minecraftDir, false, token, progress );
+						await zip.ExtractDirectory( "mods", minecraftDir, true, token, progress );
 						progress?.ReportProgress( "Extracting base pack contents (resources)..." );
 						await zip.ExtractDirectory( "resources", minecraftDir, false, token, progress );
 						progress?.ReportProgress( "Extracting base pack contents (scripts)..." );

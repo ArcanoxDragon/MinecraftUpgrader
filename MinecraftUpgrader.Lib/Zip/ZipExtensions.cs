@@ -38,13 +38,16 @@ namespace MinecraftUpgrader.Zip
 
 				Directory.CreateDirectory( destinationPath );
 
-				using ( var fs = File.Open( destinationName,
-											overwriteExisting ? FileMode.Create : FileMode.CreateNew,
-											FileAccess.Write,
-											FileShare.None ) )
-				using ( var es = zip.GetInputStream( entry ) )
+				if ( overwriteExisting || !File.Exists( destinationName ) )
 				{
-					await es.CopyToAsync( fs, BufferSize, t );
+					using ( var fs = File.Open( destinationName,
+												FileMode.Create,
+												FileAccess.Write,
+												FileShare.None ) )
+					using ( var es = zip.GetInputStream( entry ) )
+					{
+						await es.CopyToAsync( fs, BufferSize, t );
+					}
 				}
 
 				progress?.ReportProgress( ++iEntry / (double) entries.Count );
