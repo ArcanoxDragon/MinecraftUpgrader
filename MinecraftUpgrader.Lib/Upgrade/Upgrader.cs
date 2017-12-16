@@ -66,7 +66,7 @@ namespace MinecraftUpgrader.Upgrade
 			{
 				using ( var web = new WebClient() )
 				{
-					string downloadTask = "";
+					var downloadTask = "";
 
 					token.Register( web.CancelAsync );
 					web.DownloadProgressChanged += ( sender, args ) => {
@@ -140,7 +140,7 @@ namespace MinecraftUpgrader.Upgrade
 
 					// Download additional mods
 					var iMod = 0;
-					foreach ( string mod in pack.AdditionalMods )
+					foreach ( var mod in pack.AdditionalMods )
 					{
 						token.ThrowIfCancellationRequested();
 

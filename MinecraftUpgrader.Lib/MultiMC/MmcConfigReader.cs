@@ -35,6 +35,11 @@ namespace MinecraftUpgrader.MultiMC
 		{
 			var configPath = Path.Combine( mmcPath, "multimc.cfg" );
 
+			// Normalize slashes
+			config.IconsFolder     = config.IconsFolder.Replace( "\\", "/" );
+			config.InstancesFolder = config.InstancesFolder.Replace( "\\", "/" );
+			config.JavaPath        = config.JavaPath.Replace( "\\", "/" );
+
 			using ( var fs = File.Open( configPath, FileMode.Open, FileAccess.ReadWrite ) )
 			{
 				await ConfigReader.UpdateConfig( config, fs );

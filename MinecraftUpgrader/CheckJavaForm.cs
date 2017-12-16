@@ -173,7 +173,7 @@ namespace MinecraftUpgrader
 				var versionMatch = Regex.Match( version, @"(\d+)\.(\d+)" );
 				var majorStr = versionMatch.Groups[ 2 ].Value;
 
-				if ( !versionStrMatch.Success || !int.TryParse( majorStr, out int major ) )
+				if ( !versionStrMatch.Success || !int.TryParse( majorStr, out var major ) )
 				{
 					task.TrySetException( new Exception( $"Invalid Java version: {version} ({javaExe})" ) );
 					return;

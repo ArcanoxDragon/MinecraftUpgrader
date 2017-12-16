@@ -12,7 +12,7 @@ namespace MinecraftUpgrader.Config
 		private static async Task<Dictionary<string, string>> ReadConfigValues( TextReader reader )
 		{
 			string line;
-			var values = new Dictionary<string, string>();
+			var    values = new Dictionary<string, string>();
 
 			while ( ( line = await reader.ReadLineAsync() ) != null )
 			{
@@ -20,8 +20,8 @@ namespace MinecraftUpgrader.Config
 
 				if ( match.Success )
 				{
-					string propName = match.Groups[ 1 ].Value;
-					string propValue = match.Groups[ 2 ].Value;
+					var propName  = match.Groups[ 1 ].Value;
+					var propValue = match.Groups[ 2 ].Value;
 
 					values[ propName ] = propValue;
 				}
@@ -38,40 +38,42 @@ namespace MinecraftUpgrader.Config
 
 		private static void SetProperties<T>( T source, Dictionary<string, string> targetDictionary )
 		{
-			var objProps = typeof( T ).GetProperties( BindingFlags.Public | BindingFlags.Instance );
+			var objProps    = typeof( T ).GetProperties( BindingFlags.Public | BindingFlags.Instance );
 			var configProps = from p in objProps
 							  let att = p.GetCustomAttribute<ConfigPropertyAttribute>()
 							  where att != null
 							  select (p, att);
 
 			foreach ( var (prop, att) in configProps )
+				// ReSharper disable PossibleNullReferenceException (this is an incorrect warning by ReSharper; will literally never happen)
 				targetDictionary[ att.PropertyName ?? prop.Name ] = prop.GetValue( source )?.ToString();
+			// ReSharper restore PossibleNullReferenceException
 		}
 
 		public static async Task<T> ReadConfig<T>( TextReader reader ) where T : new()
 		{
-			var propValues = await ReadConfigValues( reader );
-			var objProps = typeof( T ).GetProperties( BindingFlags.Public | BindingFlags.Instance );
+			var propValues  = await ReadConfigValues( reader );
+			var objProps    = typeof( T ).GetProperties( BindingFlags.Public | BindingFlags.Instance );
 			var configProps = from p in objProps
 							  let att = p.GetCustomAttribute<ConfigPropertyAttribute>()
 							  where att != null
 							  select (p, att);
 
-			T obj = new T();
+			var obj = new T();
 
 			foreach ( var (prop, att) in configProps )
 			{
-				string propName = att.PropertyName ?? prop.Name;
-				string propVal = null;
+				var    propName = att.PropertyName ?? prop.Name;
+				string propVal  = null;
 
-				if ( propValues.TryGetValue( propName, out string val ) )
+				if ( propValues.TryGetValue( propName, out var val ) )
 					propVal = val;
 
 				if ( prop.PropertyType == typeof( string ) )
 					prop.SetValue( obj, propVal );
-				else if ( prop.PropertyType == typeof( int ) && int.TryParse( propVal, out int i ) )
+				else if ( prop.PropertyType == typeof( int ) && int.TryParse( propVal, out var i ) )
 					prop.SetValue( obj, i );
-				else if ( prop.PropertyType == typeof( double ) && double.TryParse( propVal, out double d ) )
+				else if ( prop.PropertyType == typeof( double ) && double.TryParse( propVal, out var d ) )
 					prop.SetValue( obj, d );
 				else if ( prop.PropertyType == typeof( bool ) )
 				{
