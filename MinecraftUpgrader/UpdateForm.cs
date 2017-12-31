@@ -19,6 +19,7 @@ namespace MinecraftUpgrader
 
 		private async void UpdateForm_Load( object sender, EventArgs args )
 		{
+			var    skipUpdate = false;
 			byte[] localHash, remoteHash;
 			var    md5                = MD5.Create();
 			var    curProcess         = Process.GetCurrentProcess();
@@ -26,6 +27,10 @@ namespace MinecraftUpgrader
 			var    processFileOldPath = $"{processFilePath}.old";
 			var    otherProcesses     = Process.GetProcessesByName( curProcess.ProcessName )
 											   .Where( p => p.Id != curProcess.Id );
+
+#if DEBUG
+			skipUpdate = true;
+#endif
 
 			foreach ( var process in otherProcesses )
 			{
@@ -48,7 +53,8 @@ namespace MinecraftUpgrader
 					remoteHash = md5.ComputeHash( remoteStream );
 				}
 
-				if ( localHash.SequenceEqual( remoteHash ) )
+				// ReSharper disable once ConditionIsAlwaysTrueOrFalse (compiler conditional)
+				if ( skipUpdate || localHash.SequenceEqual( remoteHash ) )
 				{
 					this.Hide();
 					new CheckJavaForm().ShowDialog();
@@ -83,7 +89,7 @@ namespace MinecraftUpgrader
 				byte[] newLocalHash;
 
 				using ( var fs = new FileStream( processFilePath, FileMode.Open, FileAccess.ReadWrite ) )
-					newLocalHash  = md5.ComputeHash( fs );
+					newLocalHash = md5.ComputeHash( fs );
 
 				if ( !newLocalHash.SequenceEqual( remoteHash ) )
 				{

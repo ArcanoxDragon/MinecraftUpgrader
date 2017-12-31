@@ -21,15 +21,15 @@ namespace MinecraftUpgrader.Upgrade
 		private const int    BufferSize = 4 * 1024 * 1024; // 4 MB
 		private const string ConfigPath = "http://mc.angeldragons.com/dutchie/pack-upgrade.json";
 
-		private static async Task<PackUpgrade> LoadConfig()
+		public static async Task<PackUpgrade> LoadConfig()
 		{
 			var json   = new JsonSerializer { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 			var config = default( PackUpgrade );
 
 			using ( var http = new HttpClient() )
-			using ( var str  = await http.GetStreamAsync( ConfigPath ) )
-			using ( var sr   = new StreamReader( str ) )
-			using ( var jr   = new JsonTextReader( sr ) )
+			using ( var str = await http.GetStreamAsync( ConfigPath ) )
+			using ( var sr = new StreamReader( str ) )
+			using ( var jr = new JsonTextReader( sr ) )
 			{
 				config = json.Deserialize<PackUpgrade>( jr );
 			}
@@ -39,6 +39,7 @@ namespace MinecraftUpgrader.Upgrade
 
 		private static async Task SetupPack( MmcConfig mmcConfig, PackUpgrade pack, string destinationFolder, CancellationToken token, ProgressReporter progress, int? maxRamMb = null )
 		{
+			var versionFile  = Path.Combine( destinationFolder, "packVersion" );
 			var cfgFile      = Path.Combine( destinationFolder, "instance.cfg" );
 			var tempDir      = Path.Combine( destinationFolder, "temp" );
 			var minecraftDir = Path.Combine( destinationFolder, ".minecraft" );
@@ -48,16 +49,18 @@ namespace MinecraftUpgrader.Upgrade
 			using ( var fs = File.Open( cfgFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None ) )
 			using ( var sr = new StreamReader( fs ) )
 			{
-				var cfg     = await ConfigReader.ReadConfig<MmcInstance>( sr );
+				var cfg = await ConfigReader.ReadConfig<MmcInstance>( sr );
 
 				cfg.OverrideMemory = true;
 				cfg.MinMemAlloc    = 1024;
-				cfg.MaxMemAlloc = maxRamMb ?? ( 6 * 1024 );
+				cfg.MaxMemAlloc    = maxRamMb ?? ( 6 * 1024 );
 
 				await ConfigReader.UpdateConfig( cfg, fs );
 			}
 
 			progress?.ReportProgress( "Creating instance folder structure..." );
+
+			File.WriteAllText( versionFile, pack.PackVersion );
 
 			Directory.CreateDirectory( minecraftDir );
 			Directory.CreateDirectory( tempDir );
@@ -80,7 +83,7 @@ namespace MinecraftUpgrader.Upgrade
 					token.ThrowIfCancellationRequested();
 
 					// Download MultiMC pack descriptor
-					downloadTask = "Downloading MultiMC pack descriptor...";
+					downloadTask           = "Downloading MultiMC pack descriptor...";
 					var packConfigFileName = Path.Combine( destinationFolder, "mmc-pack.json" );
 					await web.DownloadFileTaskAsync( pack.MultiMcPack, packConfigFileName );
 
@@ -101,17 +104,17 @@ namespace MinecraftUpgrader.Upgrade
 					progress?.ReportProgress( 0, "Extracting base pack contents..." );
 
 					// Extract server pack contents
-					using ( var fs  = File.Open( serverPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read ) )
+					using ( var fs = File.Open( serverPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read ) )
 					using ( var zip = new ZipFile( fs ) )
 					{
 						progress?.ReportProgress( "Extracting base pack contents (configs)..." );
-						await zip.ExtractDirectory( "config", minecraftDir, false, token, progress );
+						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "config", false, token, progress ) );
 						progress?.ReportProgress( "Extracting base pack contents (mods)..." );
-						await zip.ExtractDirectory( "mods", minecraftDir, true, token, progress );
+						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "mods", true, token, progress ) );
 						progress?.ReportProgress( "Extracting base pack contents (resources)..." );
-						await zip.ExtractDirectory( "resources", minecraftDir, false, token, progress );
+						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "resources", false, token, progress ) );
 						progress?.ReportProgress( "Extracting base pack contents (scripts)..." );
-						await zip.ExtractDirectory( "scripts", minecraftDir, false, token, progress );
+						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "scripts", false, token, progress ) );
 					}
 
 					token.ThrowIfCancellationRequested();
@@ -125,17 +128,17 @@ namespace MinecraftUpgrader.Upgrade
 					progress?.ReportProgress( 0, "Extracting client overrides..." );
 
 					// Extract client pack contents
-					using ( var fs  = File.Open( clientPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read ) )
+					using ( var fs = File.Open( clientPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read ) )
 					using ( var zip = new ZipFile( fs ) )
 					{
 						progress?.ReportProgress( "Extracting client overrides (configs)..." );
-						await zip.ExtractDirectory( "overrides/config", minecraftDir, true, token, progress );
+						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/config", true, token, progress ) );
 						progress?.ReportProgress( "Extracting client overrides (mods)..." );
-						await zip.ExtractDirectory( "overrides/mods", minecraftDir, true, token, progress );
+						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/mods", true, token, progress ) );
 						progress?.ReportProgress( "Extracting client overrides (resources)..." );
-						await zip.ExtractDirectory( "overrides/resources", minecraftDir, true, token, progress );
+						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/resources", true, token, progress ) );
 						progress?.ReportProgress( "Extracting client overrides (scripts)..." );
-						await zip.ExtractDirectory( "overrides/scripts", minecraftDir, true, token, progress );
+						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/scripts", true, token, progress ) );
 					}
 
 					// Download additional mods
@@ -219,7 +222,7 @@ namespace MinecraftUpgrader.Upgrade
 			await SetupPack( mmcConfig, pack, newInstDir, token, progress, maxRamMb );
 		}
 
-		public static async Task ConvertInstance( MmcConfig mmcConfig, string instPath, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null)
+		public static async Task ConvertInstance( MmcConfig mmcConfig, string instPath, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null )
 		{
 			if ( !Directory.Exists( instPath ) )
 				throw new InvalidOperationException( "The specified instance folder was not found" );
@@ -247,7 +250,7 @@ namespace MinecraftUpgrader.Upgrade
 													 "Please create a new instance, or manually upgrade the existing instance to " +
 													 $"Minecraft {pack.IntendedVersion}" );
 
-			var minecraftDir = Path.Combine( instPath,     "minecraft" );
+			var minecraftDir = Path.Combine( instPath,     ".minecraft" );
 			var patchesDir   = Path.Combine( instPath,     "patches" );
 			var configDir    = Path.Combine( minecraftDir, "config" );
 			var modsDir      = Path.Combine( minecraftDir, "mods" );

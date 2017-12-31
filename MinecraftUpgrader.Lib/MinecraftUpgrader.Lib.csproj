@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.0;net45</TargetFrameworks>
+    <TargetFrameworks>net45</TargetFrameworks>
     <RootNamespace>MinecraftUpgrader</RootNamespace>
   </PropertyGroup>
 
@@ -14,6 +14,9 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>10.0.3</Version>
+    </PackageReference>
+    <PackageReference Include="semver">
+      <Version>2.0.4</Version>
     </PackageReference>
     <PackageReference Include="SharpZipLib">
       <Version>0.86.0</Version>

@@ -60,11 +60,9 @@
 			this.gbStepOne.Controls.Add(this.txtMmcPath);
 			this.gbStepOne.Controls.Add(this.lbDownloadMmc);
 			this.gbStepOne.Controls.Add(this.lbMmcPath);
-			this.gbStepOne.Location = new System.Drawing.Point(18, 18);
-			this.gbStepOne.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.gbStepOne.Location = new System.Drawing.Point(12, 12);
 			this.gbStepOne.Name = "gbStepOne";
-			this.gbStepOne.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-			this.gbStepOne.Size = new System.Drawing.Size(994, 120);
+			this.gbStepOne.Size = new System.Drawing.Size(663, 78);
 			this.gbStepOne.TabIndex = 0;
 			this.gbStepOne.TabStop = false;
 			this.gbStepOne.Text = "Step 1: MultiMC";
@@ -72,30 +70,27 @@
 			// lbInstancesFolder
 			// 
 			this.lbInstancesFolder.AutoSize = true;
-			this.lbInstancesFolder.Location = new System.Drawing.Point(146, 88);
-			this.lbInstancesFolder.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+			this.lbInstancesFolder.Location = new System.Drawing.Point(97, 57);
 			this.lbInstancesFolder.Name = "lbInstancesFolder";
-			this.lbInstancesFolder.Size = new System.Drawing.Size(84, 20);
+			this.lbInstancesFolder.Size = new System.Drawing.Size(57, 13);
 			this.lbInstancesFolder.TabIndex = 4;
 			this.lbInstancesFolder.Text = "Not Found";
 			// 
 			// lbInstancesFolderStatic
 			// 
 			this.lbInstancesFolderStatic.AutoSize = true;
-			this.lbInstancesFolderStatic.Location = new System.Drawing.Point(9, 88);
-			this.lbInstancesFolderStatic.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+			this.lbInstancesFolderStatic.Location = new System.Drawing.Point(6, 57);
 			this.lbInstancesFolderStatic.Name = "lbInstancesFolderStatic";
-			this.lbInstancesFolderStatic.Size = new System.Drawing.Size(127, 20);
+			this.lbInstancesFolderStatic.Size = new System.Drawing.Size(85, 13);
 			this.lbInstancesFolderStatic.TabIndex = 4;
 			this.lbInstancesFolderStatic.Text = "Instances folder:";
 			// 
 			// btnBrowseMmc
 			// 
 			this.btnBrowseMmc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnBrowseMmc.Location = new System.Drawing.Point(936, 49);
-			this.btnBrowseMmc.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.btnBrowseMmc.Location = new System.Drawing.Point(624, 32);
 			this.btnBrowseMmc.Name = "btnBrowseMmc";
-			this.btnBrowseMmc.Size = new System.Drawing.Size(50, 35);
+			this.btnBrowseMmc.Size = new System.Drawing.Size(33, 23);
 			this.btnBrowseMmc.TabIndex = 2;
 			this.btnBrowseMmc.Text = "...";
 			this.btnBrowseMmc.UseVisualStyleBackColor = true;
@@ -105,10 +100,9 @@
 			// 
 			this.txtMmcPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.txtMmcPath.Location = new System.Drawing.Point(14, 52);
-			this.txtMmcPath.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.txtMmcPath.Location = new System.Drawing.Point(9, 34);
 			this.txtMmcPath.Name = "txtMmcPath";
-			this.txtMmcPath.Size = new System.Drawing.Size(912, 26);
+			this.txtMmcPath.Size = new System.Drawing.Size(609, 20);
 			this.txtMmcPath.TabIndex = 1;
 			this.txtMmcPath.Leave += new System.EventHandler(this.OnTxtMmcPathLeave);
 			// 
@@ -116,10 +110,9 @@
 			// 
 			this.lbDownloadMmc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.lbDownloadMmc.AutoSize = true;
-			this.lbDownloadMmc.Location = new System.Drawing.Point(802, 25);
-			this.lbDownloadMmc.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+			this.lbDownloadMmc.Location = new System.Drawing.Point(535, 16);
 			this.lbDownloadMmc.Name = "lbDownloadMmc";
-			this.lbDownloadMmc.Size = new System.Drawing.Size(180, 20);
+			this.lbDownloadMmc.Size = new System.Drawing.Size(122, 13);
 			this.lbDownloadMmc.TabIndex = 0;
 			this.lbDownloadMmc.TabStop = true;
 			this.lbDownloadMmc.Text = "Download MultiMC Here";
@@ -129,10 +122,9 @@
 			// lbMmcPath
 			// 
 			this.lbMmcPath.AutoSize = true;
-			this.lbMmcPath.Location = new System.Drawing.Point(9, 25);
-			this.lbMmcPath.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+			this.lbMmcPath.Location = new System.Drawing.Point(6, 16);
 			this.lbMmcPath.Name = "lbMmcPath";
-			this.lbMmcPath.Size = new System.Drawing.Size(476, 20);
+			this.lbMmcPath.Size = new System.Drawing.Size(324, 13);
 			this.lbMmcPath.TabIndex = 0;
 			this.lbMmcPath.Text = "You need MultiMC to run the pack. Where do you have it installed?";
 			// 
@@ -145,11 +137,9 @@
 			this.gbStep2.Controls.Add(this.rbInstanceConvert);
 			this.gbStep2.Controls.Add(this.rbInstanceNew);
 			this.gbStep2.Controls.Add(this.label1);
-			this.gbStep2.Location = new System.Drawing.Point(18, 148);
-			this.gbStep2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.gbStep2.Location = new System.Drawing.Point(12, 96);
 			this.gbStep2.Name = "gbStep2";
-			this.gbStep2.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-			this.gbStep2.Size = new System.Drawing.Size(994, 229);
+			this.gbStep2.Size = new System.Drawing.Size(663, 149);
 			this.gbStep2.TabIndex = 1;
 			this.gbStep2.TabStop = false;
 			this.gbStep2.Text = "Step 2: Pick Instance";
@@ -157,10 +147,9 @@
 			// txtNewInstanceName
 			// 
 			this.txtNewInstanceName.Enabled = false;
-			this.txtNewInstanceName.Location = new System.Drawing.Point(262, 108);
-			this.txtNewInstanceName.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.txtNewInstanceName.Location = new System.Drawing.Point(175, 70);
 			this.txtNewInstanceName.Name = "txtNewInstanceName";
-			this.txtNewInstanceName.Size = new System.Drawing.Size(721, 26);
+			this.txtNewInstanceName.Size = new System.Drawing.Size(482, 20);
 			this.txtNewInstanceName.TabIndex = 1;
 			this.txtNewInstanceName.TextChanged += new System.EventHandler(this.OnTxtNewInstanceNameChanged);
 			// 
@@ -171,10 +160,9 @@
 			this.cbInstance.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.cbInstance.Enabled = false;
 			this.cbInstance.FormattingEnabled = true;
-			this.cbInstance.Location = new System.Drawing.Point(38, 180);
-			this.cbInstance.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.cbInstance.Location = new System.Drawing.Point(25, 117);
 			this.cbInstance.Name = "cbInstance";
-			this.cbInstance.Size = new System.Drawing.Size(946, 28);
+			this.cbInstance.Size = new System.Drawing.Size(632, 21);
 			this.cbInstance.TabIndex = 3;
 			this.cbInstance.SelectedIndexChanged += new System.EventHandler(this.OnCbInstanceChanged);
 			// 
@@ -182,10 +170,9 @@
 			// 
 			this.rbInstanceConvert.AutoSize = true;
 			this.rbInstanceConvert.Enabled = false;
-			this.rbInstanceConvert.Location = new System.Drawing.Point(14, 145);
-			this.rbInstanceConvert.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.rbInstanceConvert.Location = new System.Drawing.Point(9, 94);
 			this.rbInstanceConvert.Name = "rbInstanceConvert";
-			this.rbInstanceConvert.Size = new System.Drawing.Size(214, 24);
+			this.rbInstanceConvert.Size = new System.Drawing.Size(146, 17);
 			this.rbInstanceConvert.TabIndex = 2;
 			this.rbInstanceConvert.Text = "Convert existing instance:";
 			this.rbInstanceConvert.UseVisualStyleBackColor = true;
@@ -195,10 +182,9 @@
 			// 
 			this.rbInstanceNew.AutoSize = true;
 			this.rbInstanceNew.Checked = true;
-			this.rbInstanceNew.Location = new System.Drawing.Point(14, 109);
-			this.rbInstanceNew.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.rbInstanceNew.Location = new System.Drawing.Point(9, 71);
 			this.rbInstanceNew.Name = "rbInstanceNew";
-			this.rbInstanceNew.Size = new System.Drawing.Size(236, 24);
+			this.rbInstanceNew.Size = new System.Drawing.Size(160, 17);
 			this.rbInstanceNew.TabIndex = 0;
 			this.rbInstanceNew.TabStop = true;
 			this.rbInstanceNew.Text = "Create new instance named:";
@@ -208,10 +194,9 @@
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(9, 25);
-			this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+			this.label1.Location = new System.Drawing.Point(6, 16);
 			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(749, 60);
+			this.label1.Size = new System.Drawing.Size(510, 39);
 			this.label1.TabIndex = 0;
 			this.label1.Text = resources.GetString("label1.Text");
 			// 
@@ -219,11 +204,9 @@
 			// 
 			this.groupBox1.Controls.Add(this.btnGo);
 			this.groupBox1.Controls.Add(this.label2);
-			this.groupBox1.Location = new System.Drawing.Point(18, 386);
-			this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.groupBox1.Location = new System.Drawing.Point(12, 251);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-			this.groupBox1.Size = new System.Drawing.Size(994, 228);
+			this.groupBox1.Size = new System.Drawing.Size(663, 148);
 			this.groupBox1.TabIndex = 2;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Step 3: Go!";
@@ -231,10 +214,9 @@
 			// btnGo
 			// 
 			this.btnGo.Enabled = false;
-			this.btnGo.Location = new System.Drawing.Point(408, 142);
-			this.btnGo.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.btnGo.Location = new System.Drawing.Point(272, 92);
 			this.btnGo.Name = "btnGo";
-			this.btnGo.Size = new System.Drawing.Size(178, 63);
+			this.btnGo.Size = new System.Drawing.Size(119, 41);
 			this.btnGo.TabIndex = 0;
 			this.btnGo.Text = "Go!";
 			this.btnGo.UseVisualStyleBackColor = true;
@@ -243,27 +225,26 @@
 			// label2
 			// 
 			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(9, 25);
-			this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+			this.label2.Location = new System.Drawing.Point(6, 16);
 			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(943, 80);
+			this.label2.Size = new System.Drawing.Size(643, 52);
 			this.label2.TabIndex = 0;
 			this.label2.Text = resources.GetString("label2.Text");
 			// 
 			// MainForm
 			// 
 			this.AcceptButton = this.btnGo;
-			this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(1030, 634);
+			this.ClientSize = new System.Drawing.Size(687, 412);
 			this.Controls.Add(this.groupBox1);
 			this.Controls.Add(this.gbStep2);
 			this.Controls.Add(this.gbStepOne);
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.Name = "MainForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "Minecraft Upgrader";
+			this.Load += new System.EventHandler(this.OnFormLoad);
 			this.gbStepOne.ResumeLayout(false);
 			this.gbStepOne.PerformLayout();
 			this.gbStep2.ResumeLayout(false);

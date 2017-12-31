@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualBasic.Devices;
+using Microsoft.Win32;
+using Semver;
 
 namespace MinecraftUpgrader
 {
@@ -34,7 +36,7 @@ namespace MinecraftUpgrader
 				Application.Exit();
 			}
 
-			var ci = new ComputerInfo();
+			var ci      = new ComputerInfo();
 			var ramSize = new FileSize( (long) ci.TotalPhysicalMemory );
 
 			if ( ramSize.GigaBytes < 7.5 )
@@ -110,12 +112,12 @@ namespace MinecraftUpgrader
 		private async Task CheckJavaVersions()
 		{
 			var javaVersions = this.FindJavaPaths();
-			var results = new List<bool>();
+			var results      = new Dictionary<string, (bool valid, string version)>();
 
 			foreach ( var version in javaVersions )
-				results.Add( await this.CheckJava( version ) );
+				results.Add( version, await this.CheckJava( version ) );
 
-			if ( !results.Any( r => r ) )
+			if ( !results.Values.Any( r => r.valid ) )
 			{
 				this.Invoke( new Action( () => {
 					var result = MessageBox.Show( "You do not have any compatible Java versions installed; " +
@@ -140,27 +142,39 @@ namespace MinecraftUpgrader
 
 				Application.Exit();
 			}
+
+			var maxJava = results.Select( pair => {
+									 if (!SemVersion.TryParse( pair.Value.version, out var semVersion ))
+										 semVersion = new SemVersion( 0 );
+
+									 return new KeyValuePair<string, SemVersion>( pair.Key, semVersion );
+								 } )
+								 .OrderByDescending( pair => pair.Value )
+								 .First().Key;
+
+			Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.JavaPath,    maxJava );
+			Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.JavaVersion, results[ maxJava ].version );
 		}
 
-		private Task<bool> CheckJava( string javaExe )
+		private Task<(bool valid, string version)> CheckJava( string javaExe )
 		{
-			var task = new TaskCompletionSource<bool>();
-			var process = new Process {
-				EnableRaisingEvents = true,
-				StartInfo = {
-					CreateNoWindow = true,
-					FileName = javaExe,
-					Arguments = "-version",
-					UseShellExecute = false,
-					ErrorDialog = true,
+			var task                = new TaskCompletionSource<(bool valid, string version)>();
+			var process             = new Process {
+				EnableRaisingEvents    = true,
+				StartInfo              = {
+					CreateNoWindow        = true,
+					FileName              = javaExe,
+					Arguments             = "-version",
+					UseShellExecute       = false,
+					ErrorDialog           = true,
 					RedirectStandardError = true
 				}
 			};
 
 			this.cancel.Token.Register( () => task.TrySetCanceled() );
 
-			process.Exited += ( o, e ) => {
-				var output = process.StandardError.ReadToEnd(); // version information is printed to stderr, because Oracle
+			process.Exited       += ( o, e ) => {
+				var output          = process.StandardError.ReadToEnd(); // version information is printed to stderr, because Oracle
 				var versionStrMatch = Regex.Match( output, @"java version ""([^""]+)""", RegexOptions.IgnoreCase );
 
 				if ( !versionStrMatch.Success )
@@ -169,9 +183,9 @@ namespace MinecraftUpgrader
 					return;
 				}
 
-				var version = versionStrMatch.Groups[ 1 ].Value;
+				var version      = versionStrMatch.Groups[ 1 ].Value;
 				var versionMatch = Regex.Match( version, @"(\d+)\.(\d+)" );
-				var majorStr = versionMatch.Groups[ 2 ].Value;
+				var majorStr     = versionMatch.Groups[ 2 ].Value;
 
 				if ( !versionStrMatch.Success || !int.TryParse( majorStr, out var major ) )
 				{
@@ -179,7 +193,7 @@ namespace MinecraftUpgrader
 					return;
 				}
 
-				task.TrySetResult( major >= 8 );
+				task.TrySetResult( (major >= 8, version) );
 			};
 
 			process.Start();
@@ -189,11 +203,11 @@ namespace MinecraftUpgrader
 
 		private IEnumerable<string> FindJavaPaths()
 		{
-			var javaRoot = Path.Combine( Environment.GetFolderPath( Environment.SpecialFolder.ProgramFiles ), "Java" );
+			var javaRoot  = Path.Combine( Environment.GetFolderPath( Environment.SpecialFolder.ProgramFiles ), "Java" );
 			var javaFiles = Directory.EnumerateFiles( javaRoot, "*.exe", SearchOption.AllDirectories );
-			var javaExes = from file in javaFiles
-						   where Path.GetFileName( file )?.ToLower() == "java.exe"
-						   select file;
+			var javaExes  = from file in javaFiles
+							where Path.GetFileName( file )?.ToLower() == "java.exe"
+							select file;
 
 			return javaExes;
 		}

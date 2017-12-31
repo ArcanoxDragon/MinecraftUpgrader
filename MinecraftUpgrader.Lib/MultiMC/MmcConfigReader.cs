@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using MinecraftUpgrader.Config;
 
@@ -46,12 +47,31 @@ namespace MinecraftUpgrader.MultiMC
 			}
 		}
 
-		public static async Task<IList<(string, string)>> GetInstances( this MmcConfig config )
+		public static async Task<MmcConfig> CreateConfig( string mmcPath )
+		{
+			var defaults     = new MmcConfig {
+				AutoUpdate      = false,
+				InstancesFolder = "instances",
+				IconsFolder     = "icons",
+				Language        = "en",
+				UpdateChannel   = "develop",
+				MinMemAlloc     = 512,
+				MaxMemAlloc     = 1024
+			};
+
+			using ( var fs = File.Open( Path.Combine( mmcPath, "multimc.cfg" ), FileMode.Create, FileAccess.Write ) )
+			using ( var sw = new StreamWriter( fs ) )
+				await ConfigReader.WriteConfig( defaults, sw );
+
+			return defaults;
+		}
+
+		public static async Task<IList<(string name, string path)>> GetInstances( this MmcConfig config )
 		{
 			if ( !Directory.Exists( config.InstancesFolder ) )
 				return Enumerable.Empty<(string, string)>().ToList();
 
-			var instances = new List<(string, string)>();
+			var instances = new List<(string name, string path)>();
 
 			foreach ( var directory in Directory.EnumerateDirectories( config.InstancesFolder ) )
 			{
