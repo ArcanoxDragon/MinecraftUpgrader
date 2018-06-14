@@ -132,13 +132,13 @@ namespace MinecraftUpgrader.Upgrade
 					using ( var zip = new ZipFile( fs ) )
 					{
 						progress?.ReportProgress( "Extracting client overrides (configs)..." );
-						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/config", true, token, progress ) );
+						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/config", true, token, progress ) );
 						progress?.ReportProgress( "Extracting client overrides (mods)..." );
-						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/mods", true, token, progress ) );
+						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/mods", true, token, progress ) );
 						progress?.ReportProgress( "Extracting client overrides (resources)..." );
-						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/resources", true, token, progress ) );
+						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/resources", true, token, progress ) );
 						progress?.ReportProgress( "Extracting client overrides (scripts)..." );
-						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/scripts", true, token, progress ) );
+						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/scripts", true, token, progress ) );
 					}
 
 					// Remove extraneous mods

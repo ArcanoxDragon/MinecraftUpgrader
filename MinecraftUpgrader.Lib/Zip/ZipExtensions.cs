@@ -99,5 +99,18 @@ namespace MinecraftUpgrader.Zip
 				progress?.ReportProgress( ++iEntry / (double) entries.Count );
 			}
 		}
+
+		public static async Task<bool> TryExtractAsync(this ZipFile zip, string destination, ZipExtractOptions options)
+		{
+			try
+			{
+				await zip.ExtractAsync( destination, options );
+				return true;
+			}
+			catch
+			{
+				return false;
+			}
+		}
 	}
 }
