@@ -141,7 +141,24 @@ namespace MinecraftUpgrader.Upgrade
 						await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/scripts", true, token, progress ) );
 					}
 
+					// Remove extraneous mods
+					progress?.ReportProgress( "Deleting unwanted mods..." );
+					var modsDir   = Path.Combine( minecraftDir, "mods" );
+					var modFiles  = Directory.EnumerateFiles( modsDir, "*", SearchOption.AllDirectories );
+					var curDelete = 0;
+					var toDelete  = ( from mod in pack.RemoveMods
+									  select modFiles.Where( d => Regex.IsMatch( d, mod ) )
+									  into matching
+									  from file in matching
+									  select file ).ToList();
+					foreach ( var file in toDelete )
+					{
+						progress?.ReportProgress( ++curDelete / (double) toDelete.Count );
+						File.Delete( file );
+					}
+
 					// Download additional mods
+					progress?.ReportProgress( -1, "Downloading additional mods..." );
 					var iMod = 0;
 					foreach ( var mod in pack.AdditionalMods )
 					{
@@ -166,18 +183,6 @@ namespace MinecraftUpgrader.Upgrade
 						downloadTask = $"Downloading additional mod {++iMod} of {pack.AdditionalMods.Length}:\n\n" +
 									   $"{fileName}";
 						await web.DownloadFileTaskAsync( mod, filePath );
-					}
-
-					// Remove extraneous mods
-					var modsDir  = Path.Combine( minecraftDir, "mods" );
-					var modFiles = Directory.EnumerateFiles( modsDir, "*", SearchOption.AllDirectories );
-					foreach ( var file in from mod in pack.RemoveMods
-										  select modFiles.Where( d => Regex.IsMatch( d, mod ) )
-										  into matching
-										  from file in matching
-										  select file )
-					{
-						File.Delete( file );
 					}
 				}
 			}

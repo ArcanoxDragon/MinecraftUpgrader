@@ -361,7 +361,9 @@ namespace MinecraftUpgrader
 			var ci           = new ComputerInfo();
 			var ramSize      = new FileSize( (long) ci.TotalPhysicalMemory );
 			// Set JVM max memory to 2 GB less than the user's total RAM, at most 12 GB
-			var maxRamGb = (int) Math.Min( ramSize.GigaBytes - 2, 12 );
+			var maxRamGb     = (int) Math.Min( ramSize.GigaBytes - 2, 12 );
+			var instanceName = default( string );
+			var successful   = false;
 
 			this.Enabled  =  false;
 			dialog.Cancel += ( o, args ) => {
@@ -399,13 +401,12 @@ namespace MinecraftUpgrader
 					await Upgrader.ConvertInstance( this.config, this.instances[ this.cbInstance.SelectedIndex ].path, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
 				}
 
-				var instanceName = newInstance ? this.txtNewInstanceName.Text : this.instances[ this.cbInstance.SelectedIndex ].name;
+				instanceName = newInstance ? this.txtNewInstanceName.Text : this.instances[ this.cbInstance.SelectedIndex ].name;
 
 				Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.LastMmcPath,  this.txtMmcPath.Text );
 				Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.LastInstance, instanceName );
 
-				this.OfferStartMinecraft( instanceName,
-										  "The mod pack was successfully configured!" );
+				successful = true;
 			}
 			catch ( Exception ex ) when ( ex is TaskCanceledException ||
 										  ex is OperationCanceledException ||
@@ -431,6 +432,10 @@ namespace MinecraftUpgrader
 				dialog.Close();
 				this.Enabled = true;
 				this.BringToFront();
+
+				if ( successful )
+					this.OfferStartMinecraft( instanceName,
+											  "The mod pack was successfully configured!" );
 			}
 		}
 
