@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27019.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinecraftUpgrader", "MinecraftUpgrader\MinecraftUpgrader.csproj", "{DAF876BA-52EC-4D36-BAFE-409039818598}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinecraftUpgrader.Lib", "MinecraftUpgrader.Lib\MinecraftUpgrader.Lib.csproj", "{FFA3FABF-C51E-46FD-BAE1-FFF9CDD84F2B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinecraftUpgrader.Lib", "MinecraftUpgrader.Lib\MinecraftUpgrader.Lib.csproj", "{FFA3FABF-C51E-46FD-BAE1-FFF9CDD84F2B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

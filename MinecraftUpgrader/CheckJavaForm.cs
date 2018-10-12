@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualBasic.Devices;
 using Microsoft.Win32;
+using MinecraftUpgrader.DI;
 using Semver;
 
 namespace MinecraftUpgrader
@@ -95,16 +96,8 @@ namespace MinecraftUpgrader
 			}
 
 			this.Invoke( new Action( () => {
-				MessageBox.Show( "If you have not configured Java in MultiMC yet, make sure to choose " +
-								 "a version starting with \"1.8\" and with an architecture of \"64\".\n\n" +
-								 "If you do not do this, you will get an error from MultiMC when starting " +
-								 "the instance saying that it cannot create the Java Virtual Machine.",
-								 "Java Setup",
-								 MessageBoxButtons.OK,
-								 MessageBoxIcon.Information );
-
 				this.Hide();
-				new MainForm().ShowDialog();
+				Services.CreateInstance<MainForm>().ShowDialog();
 				this.Close();
 			} ) );
 		}
@@ -144,7 +137,7 @@ namespace MinecraftUpgrader
 			}
 
 			var maxJava = results.Select( pair => {
-									 if (!SemVersion.TryParse( pair.Value.version, out var semVersion ))
+									 if ( !SemVersion.TryParse( pair.Value.version, out var semVersion ) )
 										 semVersion = new SemVersion( 0 );
 
 									 return new KeyValuePair<string, SemVersion>( pair.Key, semVersion );
@@ -158,10 +151,10 @@ namespace MinecraftUpgrader
 
 		private Task<(bool valid, string version)> CheckJava( string javaExe )
 		{
-			var task                = new TaskCompletionSource<(bool valid, string version)>();
-			var process             = new Process {
-				EnableRaisingEvents    = true,
-				StartInfo              = {
+			var task = new TaskCompletionSource<(bool valid, string version)>();
+			var process = new Process {
+				EnableRaisingEvents = true,
+				StartInfo = {
 					CreateNoWindow        = true,
 					FileName              = javaExe,
 					Arguments             = "-version",
@@ -173,7 +166,7 @@ namespace MinecraftUpgrader
 
 			this.cancel.Token.Register( () => task.TrySetCanceled() );
 
-			process.Exited       += ( o, e ) => {
+			process.Exited += ( o, e ) => {
 				var output          = process.StandardError.ReadToEnd(); // version information is printed to stderr, because Oracle
 				var versionStrMatch = Regex.Match( output, @"java version ""([^""]+)""", RegexOptions.IgnoreCase );
 
@@ -193,7 +186,7 @@ namespace MinecraftUpgrader
 					return;
 				}
 
-				task.TrySetResult( (major >= 8, version) );
+				task.TrySetResult( ( major >= 8, version ) );
 			};
 
 			process.Start();
@@ -203,11 +196,15 @@ namespace MinecraftUpgrader
 
 		private IEnumerable<string> FindJavaPaths()
 		{
-			var javaRoot  = Path.Combine( Environment.GetFolderPath( Environment.SpecialFolder.ProgramFiles ), "Java" );
+			var javaRoot = Path.Combine( Environment.GetFolderPath( Environment.SpecialFolder.ProgramFiles ), "Java" );
+
+			if ( !Directory.Exists( javaRoot ) )
+				return new string[ 0 ];
+
 			var javaFiles = Directory.EnumerateFiles( javaRoot, "*.exe", SearchOption.AllDirectories );
-			var javaExes  = from file in javaFiles
-							where Path.GetFileName( file )?.ToLower() == "java.exe"
-							select file;
+			var javaExes = from file in javaFiles
+						   where Path.GetFileName( file )?.ToLower() == "java.exe"
+						   select file;
 
 			return javaExes;
 		}
