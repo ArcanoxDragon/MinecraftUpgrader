@@ -172,9 +172,9 @@ namespace MinecraftUpgrader.Upgrade
 							progress?.ReportProgress( "Extracting base pack contents (mods)..." );
 							await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "mods", true, token, progress ) );
 							progress?.ReportProgress( "Extracting base pack contents (resources)..." );
-							await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "resources", false, token, progress ) );
+							await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "resources", false, token, progress ) );
 							progress?.ReportProgress( "Extracting base pack contents (scripts)..." );
-							await zip.ExtractAsync( minecraftDir, new ZipExtractOptions( "scripts", false, token, progress ) );
+							await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "scripts", false, token, progress ) );
 						}
 
 						token.ThrowIfCancellationRequested();
@@ -191,6 +191,8 @@ namespace MinecraftUpgrader.Upgrade
 						using ( var fs = File.Open( clientPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read ) )
 						using ( var zip = new ZipFile( fs ) )
 						{
+							progress?.ReportProgress( "Extracting client overrides (configs)..." );
+							await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/animation", true, token, progress ) );
 							progress?.ReportProgress( "Extracting client overrides (configs)..." );
 							await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/config", true, token, progress ) );
 							progress?.ReportProgress( "Extracting client overrides (mods)..." );

@@ -23,10 +23,10 @@ namespace MinecraftUpgrader.Zip
 		/// </summary>
 		public string DirectoryName { get; set; }
 
-		public bool RecreateFolderStructure { get; set; } = true;
-		public bool OverwriteExisting { get; set; }
-		public CancellationToken? CancellationToken { get; set; }
-		public ProgressReporter ProgressReporter { get; set; }
+		public bool               RecreateFolderStructure { get; set; } = true;
+		public bool               OverwriteExisting       { get; set; }
+		public CancellationToken? CancellationToken       { get; set; }
+		public ProgressReporter   ProgressReporter        { get; set; }
 	}
 
 	public static class ZipExtensions
@@ -41,8 +41,8 @@ namespace MinecraftUpgrader.Zip
 			var token             = options.CancellationToken;
 			var progress          = options.ProgressReporter;
 
-			var t       = token ?? CancellationToken.None;
-			var iEntry  = 0;
+			var t      = token ?? CancellationToken.None;
+			var iEntry = 0;
 			var entries = directoryName == null
 							  ? zip.OfType<ZipEntry>().ToList()
 							  : ( from ZipEntry e in zip
@@ -67,14 +67,13 @@ namespace MinecraftUpgrader.Zip
 					if ( recreateFolder )
 					{
 						if ( directoryName.Contains( "/" ) )
-							dirName = dirName.Substring( directoryName.LastIndexOf( "/", StringComparison.Ordinal ) ); // get relative path
+							dirName = dirName.Substring( directoryName.LastIndexOf( "/", StringComparison.Ordinal ) ) // get relative path
+											 .Trim( '/', '\\' );                                                      // trim leading/trailing slashes that are left over
 					}
 					else
 					{
-						dirName = dirName.Substring( directoryName.Length );
-
-						if ( dirName.StartsWith( "/" ) )
-							dirName = dirName.Substring( 1 );
+						dirName = dirName.Substring( directoryName.Length )
+										 .TrimStart( '/', '\\' );
 					}
 				}
 
@@ -100,7 +99,7 @@ namespace MinecraftUpgrader.Zip
 			}
 		}
 
-		public static async Task<bool> TryExtractAsync(this ZipFile zip, string destination, ZipExtractOptions options)
+		public static async Task<bool> TryExtractAsync( this ZipFile zip, string destination, ZipExtractOptions options )
 		{
 			try
 			{
