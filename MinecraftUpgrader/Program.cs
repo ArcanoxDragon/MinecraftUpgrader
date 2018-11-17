@@ -10,7 +10,7 @@ namespace MinecraftUpgrader
 		private static void Main()
 		{
 			// TODO:
-			Services.Configure( "https://mc.angeldragons.com/" );
+			Services.Configure( "https://mc.officialangeldragons.com/" );
 
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault( false );

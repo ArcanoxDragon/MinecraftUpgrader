@@ -10,7 +10,7 @@ namespace MinecraftUpgrader
 {
 	public partial class UpdateForm : Form
 	{
-		private const string RemoteFileUrl = "https://mc.angeldragons.com/MinecraftDADInstaller.exe";
+		private const string RemoteFileUrl = "https://mc.officialangeldragons.com/MinecraftDADInstaller.exe";
 
 		public UpdateForm()
 		{

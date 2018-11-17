@@ -126,7 +126,7 @@ namespace MinecraftUpgrader.Upgrade
 
 					downloadTask = "Downloading pack icon...";
 					var iconFileName = Path.Combine( mmcConfig.IconsFolder, "dutchie.png" );
-					await web.DownloadFileTaskAsync( "http://mc.angeldragons.com/favicon.png", iconFileName );
+					await web.DownloadFileTaskAsync( "http://mc.officialangeldragons.com/favicon.png", iconFileName );
 
 					// Only download base pack and client overrides if the version is 0 (not installed or old file version),
 					// or if the forceRebuild flag is set
