@@ -9,12 +9,11 @@ namespace MinecraftUpgrader
 		[ STAThread ]
 		private static void Main()
 		{
-			// TODO:
-			Services.Configure( "https://mc.officialangeldragons.com/" );
+			Services.Configure( upgradeUrl: "https://mc.angeldragons.com" );
 
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault( false );
-			Application.Run( new UpdateForm() );
+			Application.Run( Services.CreateInstance<UpdateForm>() );
 		}
 	}
 }

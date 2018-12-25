@@ -5,28 +5,33 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using Microsoft.Extensions.Options;
+using MinecraftUpgrader.Options;
 
 namespace MinecraftUpgrader
 {
 	public partial class UpdateForm : Form
 	{
-		private const string RemoteFileUrl = "https://mc.officialangeldragons.com/MinecraftDADInstaller.exe";
+		private readonly string remoteFileUrl;
 
-		public UpdateForm()
+		public UpdateForm( IOptions<UpgraderOptions> options )
 		{
+			this.remoteFileUrl = $"{options.Value.UpgradeUrl}/MinecraftDADInstaller.exe";
+
 			this.InitializeComponent();
 		}
 
 		private async void UpdateForm_Load( object sender, EventArgs args )
 		{
-			var    skipUpdate = false;
+			var skipUpdate         = false;
+			var md5                = MD5.Create();
+			var curProcess         = Process.GetCurrentProcess();
+			var processFilePath    = curProcess.MainModule.FileName;
+			var processFileOldPath = $"{processFilePath}.old";
+
 			byte[] localHash, remoteHash;
-			var    md5                = MD5.Create();
-			var    curProcess         = Process.GetCurrentProcess();
-			var    processFilePath    = curProcess.MainModule.FileName;
-			var    processFileOldPath = $"{processFilePath}.old";
-			var    otherProcesses     = Process.GetProcessesByName( curProcess.ProcessName )
-											   .Where( p => p.Id != curProcess.Id );
+			var otherProcesses = Process.GetProcessesByName( curProcess.ProcessName )
+										.Where( p => p.Id != curProcess.Id );
 
 #if DEBUG
 			skipUpdate = true;
@@ -48,7 +53,7 @@ namespace MinecraftUpgrader
 
 			using ( var web = new WebClient() )
 			{
-				using ( var remoteStream = await web.OpenReadTaskAsync( RemoteFileUrl ) )
+				using ( var remoteStream = await web.OpenReadTaskAsync( this.remoteFileUrl ) )
 				{
 					remoteHash = md5.ComputeHash( remoteStream );
 				}
@@ -66,8 +71,8 @@ namespace MinecraftUpgrader
 				this.pbDownload.Style = ProgressBarStyle.Continuous;
 
 				web.DownloadProgressChanged += ( o, e ) => this.Invoke( new Action( () => {
-					var dlSize                 = new FileSize( e.BytesReceived );
-					var totalSize              = new FileSize( e.TotalBytesToReceive );
+					var dlSize    = new FileSize( e.BytesReceived );
+					var totalSize = new FileSize( e.TotalBytesToReceive );
 
 					this.lbProgress.Text  = $"Downloading updates... {dlSize} / {totalSize} ({e.ProgressPercentage}%)";
 					this.pbDownload.Value = e.ProgressPercentage;
@@ -78,7 +83,7 @@ namespace MinecraftUpgrader
 				if ( File.Exists( updateFilePath ) )
 					File.Delete( updateFilePath );
 
-				await web.DownloadFileTaskAsync( RemoteFileUrl, updateFilePath );
+				await web.DownloadFileTaskAsync( this.remoteFileUrl, updateFilePath );
 
 				this.lbStatus.Text    = "Installing updates...";
 				this.pbDownload.Style = ProgressBarStyle.Marquee;
@@ -94,10 +99,10 @@ namespace MinecraftUpgrader
 				if ( !newLocalHash.SequenceEqual( remoteHash ) )
 				{
 					MessageBox.Show( this,
-									 "Checksum mismatch! The update file is invalid. Update failed.",
-									 "Update Failed",
-									 MessageBoxButtons.OK,
-									 MessageBoxIcon.Error );
+						"Checksum mismatch! The update file is invalid. Update failed.",
+						"Update Failed",
+						MessageBoxButtons.OK,
+						MessageBoxIcon.Error );
 
 					File.Delete( processFilePath );
 					File.Move( processFileOldPath, processFilePath );
@@ -109,10 +114,10 @@ namespace MinecraftUpgrader
 				}
 
 				MessageBox.Show( this,
-								 "Update complete! Click OK to restart the program and apply the update.",
-								 "Update Complete",
-								 MessageBoxButtons.OK,
-								 MessageBoxIcon.Information );
+					"Update complete! Click OK to restart the program and apply the update.",
+					"Update Complete",
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Information );
 
 				Process.Start( new ProcessStartInfo {
 					FileName        = processFilePath,
