@@ -259,8 +259,8 @@ namespace MinecraftUpgrader
 			var cancelSource = new CancellationTokenSource();
 			var ci           = new ComputerInfo();
 			var ramSize      = new FileSize( (long) ci.TotalPhysicalMemory );
-			// Set JVM max memory to 2 GB less than the user's total RAM, at most 12 GB but at least 3
-			var maxRamGb     = (int) Math.Max( Math.Min( ramSize.GigaBytes - 4, 12 ), 3 );
+			// Set JVM max memory to 2 GB less than the user's total RAM, at most 12 GB but at least 5
+			var maxRamGb     = (int) Math.Max( Math.Min( ramSize.GigaBytes - 4, 12 ), 5 );
 			var instanceName = newInstance ? this.txtNewInstanceName.Text : this.instances[ this.cmbInstance.SelectedIndex ].name;
 			var successful   = false;
 

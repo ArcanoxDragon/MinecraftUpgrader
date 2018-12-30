@@ -23,7 +23,12 @@ namespace MinecraftUpgrader
 
 		private async void UpdateForm_Load( object sender, EventArgs args )
 		{
-			var skipUpdate         = false;
+#if DEBUG
+			const bool SkipUpdate = true;
+#else
+			const bool SkipUpdate = false;
+#endif
+
 			var md5                = MD5.Create();
 			var curProcess         = Process.GetCurrentProcess();
 			var processFilePath    = curProcess.MainModule.FileName;
@@ -32,10 +37,6 @@ namespace MinecraftUpgrader
 			byte[] localHash, remoteHash;
 			var otherProcesses = Process.GetProcessesByName( curProcess.ProcessName )
 										.Where( p => p.Id != curProcess.Id );
-
-#if DEBUG
-			skipUpdate = true;
-#endif
 
 			foreach ( var process in otherProcesses )
 			{
@@ -58,8 +59,7 @@ namespace MinecraftUpgrader
 					remoteHash = md5.ComputeHash( remoteStream );
 				}
 
-				// ReSharper disable once ConditionIsAlwaysTrueOrFalse (compiler conditional)
-				if ( skipUpdate || localHash.SequenceEqual( remoteHash ) )
+				if ( SkipUpdate || localHash.SequenceEqual( remoteHash ) )
 				{
 					this.Hide();
 					new CheckJavaForm().ShowDialog();
@@ -99,10 +99,10 @@ namespace MinecraftUpgrader
 				if ( !newLocalHash.SequenceEqual( remoteHash ) )
 				{
 					MessageBox.Show( this,
-						"Checksum mismatch! The update file is invalid. Update failed.",
-						"Update Failed",
-						MessageBoxButtons.OK,
-						MessageBoxIcon.Error );
+									 "Checksum mismatch! The update file is invalid. Update failed.",
+									 "Update Failed",
+									 MessageBoxButtons.OK,
+									 MessageBoxIcon.Error );
 
 					File.Delete( processFilePath );
 					File.Move( processFileOldPath, processFilePath );
@@ -114,10 +114,10 @@ namespace MinecraftUpgrader
 				}
 
 				MessageBox.Show( this,
-					"Update complete! Click OK to restart the program and apply the update.",
-					"Update Complete",
-					MessageBoxButtons.OK,
-					MessageBoxIcon.Information );
+								 "Update complete! Click OK to restart the program and apply the update.",
+								 "Update Complete",
+								 MessageBoxButtons.OK,
+								 MessageBoxIcon.Information );
 
 				Process.Start( new ProcessStartInfo {
 					FileName        = processFilePath,
