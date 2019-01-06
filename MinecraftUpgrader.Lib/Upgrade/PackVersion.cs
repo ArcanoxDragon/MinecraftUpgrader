@@ -6,5 +6,6 @@ namespace MinecraftUpgrader.Upgrade
 	{
 		public Dictionary<string, PackMod>       Mods               { get; set; }
 		public Dictionary<string, Replacement[]> ConfigReplacements { get; set; }
+		public Dictionary<string, string>        ExtraFiles         { get; set; }
 	}
 }

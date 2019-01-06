@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -266,21 +267,57 @@ namespace MinecraftUpgrader.Upgrade
 
 						if ( version.ConfigReplacements != null )
 						{
+							var configsTask = $"{versionTask}\nApplying config replacements...";
+
 							// Apply config replacements
-							progress?.ReportProgress( -1, "Applying config replacements..." );
-							var configDir = Path.Combine( minecraftDir, "config" );
+							progress?.ReportProgress( -1, configsTask );
+							var configDir     = Path.Combine( minecraftDir, "config" );
+							var currentConfig = 0;
 							foreach ( var (configPath, replacements) in version.ConfigReplacements )
 							{
 								var configFilePath = Path.Combine( configDir, configPath );
 
 								if ( File.Exists( configFilePath ) )
 								{
+									progress?.ReportProgress( ( currentConfig++ / (double) version.ConfigReplacements.Count ),
+															  $"{configsTask}\n" +
+															  $"Config file {currentConfig} of {version.ConfigReplacements.Count}: " +
+															  $"{configPath}" );
+
 									var configFileContents = File.ReadAllText( configFilePath, Encoding.UTF8 );
 
 									foreach ( var replacement in replacements )
 										configFileContents = Regex.Replace( configFileContents, replacement.Replace, replacement.With );
 
 									File.WriteAllText( configFilePath, configFileContents, Encoding.UTF8 );
+								}
+							}
+						}
+
+						if ( version.ExtraFiles != null )
+						{
+							var extraFilesTask = $"{versionTask}\nDownloading extra files...";
+
+							// Download extra files
+							progress?.ReportProgress( -1, extraFilesTask );
+							var currentFile = 0;
+							foreach ( var (filename, url) in version.ExtraFiles )
+							{
+								var filePath = Path.Combine( minecraftDir, filename );
+
+								downloadTask = $"{extraFilesTask}\n" +
+											   $"Downloading extra file {currentFile++} of {version.ExtraFiles.Count}: {filename}";
+
+								try
+								{
+									if ( File.Exists( filePath ) )
+										File.Delete( filePath );
+
+									await web.DownloadFileTaskAsync( url, filePath );
+								}
+								catch
+								{
+									throw new Exception( $"Could not download extra file \"{filename}\" from {url}" );
 								}
 							}
 						}
