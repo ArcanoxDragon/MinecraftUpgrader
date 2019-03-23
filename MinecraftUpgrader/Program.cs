@@ -9,7 +9,7 @@ namespace MinecraftUpgrader
 		[ STAThread ]
 		private static void Main()
 		{
-			Services.Configure( upgradeUrl: "https://mc.angeldragons.com" );
+			Services.Configure( upgradeUrl: "https://dutchies.arcanox.me" );
 
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault( false );
