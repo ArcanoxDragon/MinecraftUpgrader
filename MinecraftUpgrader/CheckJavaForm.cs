@@ -10,12 +10,20 @@ using System.Windows.Forms;
 using Microsoft.VisualBasic.Devices;
 using Microsoft.Win32;
 using MinecraftUpgrader.DI;
+using MinecraftUpgrader.Extensions;
 using Semver;
 
 namespace MinecraftUpgrader
 {
 	public partial class CheckJavaForm : Form
 	{
+		private class JavaCheckResult
+		{
+			public bool   Valid   { get; set; }
+			public string Version { get; set; }
+			public string Error   { get; set; }
+		}
+
 		private readonly CancellationTokenSource cancel;
 
 		public CheckJavaForm()
@@ -105,12 +113,12 @@ namespace MinecraftUpgrader
 		private async Task CheckJavaVersions()
 		{
 			var javaVersions = this.FindJavaPaths();
-			var results      = new Dictionary<string, (bool valid, string version)>();
+			var results      = new Dictionary<string, JavaCheckResult>();
 
 			foreach ( var version in javaVersions )
 				results.Add( version, await this.CheckJava( version ) );
 
-			if ( !results.Values.Any( r => r.valid ) )
+			if ( !results.Values.Any( r => r.Valid ) )
 			{
 				this.Invoke( new Action( () => {
 					var result = MessageBox.Show( "You do not have any compatible Java versions installed; " +
@@ -136,22 +144,25 @@ namespace MinecraftUpgrader
 				Application.Exit();
 			}
 
-			var maxJava = results.Select( pair => {
-									 if ( !SemVersion.TryParse( pair.Value.version, out var semVersion ) )
+			var maxJava = results.Where( result => result.Value.Valid )
+								 .Select( pair => {
+									 var (key, value) = pair;
+
+									 if ( !SemVersion.TryParse( value.Version, out var semVersion ) )
 										 semVersion = new SemVersion( 0 );
 
-									 return new KeyValuePair<string, SemVersion>( pair.Key, semVersion );
+									 return new KeyValuePair<string, SemVersion>( key, semVersion );
 								 } )
 								 .OrderByDescending( pair => pair.Value )
 								 .First().Key;
 
 			Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.JavaPath,    maxJava );
-			Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.JavaVersion, results[ maxJava ].version );
+			Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.JavaVersion, results[ maxJava ].Version );
 		}
 
-		private Task<(bool valid, string version)> CheckJava( string javaExe )
+		private Task<JavaCheckResult> CheckJava( string javaExe )
 		{
-			var task = new TaskCompletionSource<(bool valid, string version)>();
+			var task = new TaskCompletionSource<JavaCheckResult>();
 			var process = new Process {
 				EnableRaisingEvents = true,
 				StartInfo = {
@@ -172,7 +183,7 @@ namespace MinecraftUpgrader
 
 				if ( !versionStrMatch.Success )
 				{
-					task.TrySetException( new Exception( $"Invalid Java process output from Java runtime: {javaExe}" ) );
+					task.TrySetResult( new JavaCheckResult { Valid = false, Error = $"Invalid Java process output from Java runtime: {javaExe}" } );
 					return;
 				}
 
@@ -182,11 +193,11 @@ namespace MinecraftUpgrader
 
 				if ( !versionStrMatch.Success || !int.TryParse( majorStr, out var major ) )
 				{
-					task.TrySetException( new Exception( $"Invalid Java version: {version} ({javaExe})" ) );
+					task.TrySetResult( new JavaCheckResult { Valid = false, Error = $"Invalid Java version: {version} ({javaExe})" } );
 					return;
 				}
 
-				task.TrySetResult( ( major >= 8, version ) );
+				task.TrySetResult( new JavaCheckResult { Valid = major >= 8, Version = version } );
 			};
 
 			process.Start();
