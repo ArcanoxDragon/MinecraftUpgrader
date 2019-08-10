@@ -26,6 +26,8 @@ namespace MinecraftUpgrader.Upgrade
 	{
 		private const int    BufferSize = 4 * 1024 * 1024; // 4 MB
 		private const string ConfigPath = "modpack/pack-upgrade.json";
+		private const string IconPath   = "modpack/icon.png";
+		private const string IconName   = "arcanox";
 
 		private readonly UpgraderOptions options;
 
@@ -58,7 +60,7 @@ namespace MinecraftUpgrader.Upgrade
 			var minecraftDir = Path.Combine( destinationFolder, ".minecraft" );
 			var librariesDir = Path.Combine( destinationFolder, "libraries" );
 			var patchesDir   = Path.Combine( destinationFolder, "patches" );
-			var modsDir      = Path.Combine( minecraftDir,      "mods" );
+			var modsDir      = Path.Combine( minecraftDir, "mods" );
 
 			progress?.ReportProgress( "Updating instance configuration..." );
 
@@ -129,8 +131,8 @@ namespace MinecraftUpgrader.Upgrade
 						Directory.CreateDirectory( mmcConfig.IconsFolder );
 
 					downloadTask = "Downloading pack icon...";
-					var iconFileName = Path.Combine( mmcConfig.IconsFolder, "dutchie.png" );
-					await web.DownloadFileTaskAsync( $"{this.options.UpgradeUrl}/favicon.png", iconFileName );
+					var iconFileName = Path.Combine( mmcConfig.IconsFolder, "arcanox.png" );
+					await web.DownloadFileTaskAsync( $"{this.options.UpgradeUrl}/{IconPath}", iconFileName );
 
 					// Only download base pack and client overrides if the version is 0 (not installed or old file version),
 					// or if the forceRebuild flag is set
@@ -438,7 +440,7 @@ namespace MinecraftUpgrader.Upgrade
 		public async Task NewInstance( MmcConfig mmcConfig, string instName, bool vrEnabled, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null )
 		{
 			var newInstDir = Path.Combine( mmcConfig.InstancesFolder, instName );
-			var newInstCfg = Path.Combine( newInstDir,                "instance.cfg" );
+			var newInstCfg = Path.Combine( newInstDir, "instance.cfg" );
 
 			if ( Directory.Exists( newInstDir ) )
 				throw new InvalidOperationException( "An instance with the specified name already exists" );
@@ -452,7 +454,7 @@ namespace MinecraftUpgrader.Upgrade
 			var pack = await this.LoadConfig();
 			var instance = new MmcInstance {
 				Name             = instName,
-				Icon             = "dutchie",
+				Icon             = IconName,
 				InstanceType     = pack.InstanceType,
 				IntendedVersion  = pack.IntendedVersion,
 				MCLaunchMethod   = "LauncherPart",
@@ -503,6 +505,7 @@ namespace MinecraftUpgrader.Upgrade
 			// Apply Vivecraft JVM arguments
 			instance.OverrideJavaArgs = true;
 			instance.JvmArgs          = VivecraftConstants.VivecraftJvmArgs;
+			instance.Icon             = IconName;
 
 			using ( var fs = File.Open( instCfg, FileMode.Open, FileAccess.Write, FileShare.Read ) )
 			using ( var sr = new StreamWriter( fs ) )
