@@ -274,9 +274,9 @@
 			this.lbVrMode.AutoSize = true;
 			this.lbVrMode.Location = new System.Drawing.Point(9, 211);
 			this.lbVrMode.Name = "lbVrMode";
-			this.lbVrMode.Size = new System.Drawing.Size(90, 13);
+			this.lbVrMode.Size = new System.Drawing.Size(60, 13);
 			this.lbVrMode.TabIndex = 17;
-			this.lbVrMode.Text = "Installation Mode:";
+			this.lbVrMode.Text = "Play Mode:";
 			// 
 			// linkLabel1
 			// 
@@ -289,6 +289,13 @@
 			this.linkLabel1.TabStop = true;
 			this.linkLabel1.Text = "Click here to open MultiMC";
 			this.linkLabel1.Click += new System.EventHandler(this.OnOpenMultiMCClick);
+			// 
+			// appToolTip
+			// 
+			this.appToolTip.AutomaticDelay = 100;
+			this.appToolTip.AutoPopDelay = 10000;
+			this.appToolTip.InitialDelay = 100;
+			this.appToolTip.ReshowDelay = 100;
 			// 
 			// MainForm
 			// 
