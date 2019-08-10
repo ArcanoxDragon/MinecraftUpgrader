@@ -7,7 +7,7 @@
     <ProjectGuid>{DAF876BA-52EC-4D36-BAFE-409039818598}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>MinecraftUpgrader</RootNamespace>
-    <AssemblyName>MinecraftUpgrader</AssemblyName>
+    <AssemblyName>MinecraftInstaller</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
