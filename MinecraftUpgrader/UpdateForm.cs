@@ -1,4 +1,7 @@
-﻿using System;
+﻿#pragma warning disable 162
+// ReSharper disable HeuristicUnreachableCode
+
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -7,6 +10,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using Humanizer;
 using Microsoft.Extensions.Options;
 using MinecraftUpgrader.Options;
 
@@ -78,6 +82,7 @@ namespace MinecraftUpgrader
 					remoteHash = remoteHashSplit.Select( s => byte.Parse( s, NumberStyles.HexNumber ) ).ToArray();
 				}
 
+				// ReSharper disable once RedundantLogicalConditionalExpressionOperand
 				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 				if ( SkipUpdate || localHash.SequenceEqual( remoteHash ) )
 				{
@@ -91,10 +96,10 @@ namespace MinecraftUpgrader
 				this.pbDownload.Style = ProgressBarStyle.Continuous;
 
 				web.DownloadProgressChanged += ( o, e ) => this.Invoke( new Action( () => {
-					var dlSize    = new FileSize( e.BytesReceived );
-					var totalSize = new FileSize( e.TotalBytesToReceive );
+					var dlSize    = e.BytesReceived.Bytes();
+					var totalSize = e.TotalBytesToReceive.Bytes();
 
-					this.lbProgress.Text  = $"Downloading updates... {dlSize} / {totalSize} ({e.ProgressPercentage}%)";
+					this.lbProgress.Text  = $"Downloading updates... {dlSize.ToString( "0.##" )} / {totalSize.ToString( "0.##" )} ({e.ProgressPercentage}%)";
 					this.pbDownload.Value = e.ProgressPercentage;
 				} ) );
 

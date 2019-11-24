@@ -7,8 +7,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Humanizer;
 using Microsoft.VisualBasic.Devices;
-using Microsoft.Win32;
+using MinecraftUpgrader.Config;
 using MinecraftUpgrader.DI;
 using MinecraftUpgrader.Extensions;
 using Semver;
@@ -17,7 +18,7 @@ namespace MinecraftUpgrader
 {
 	public partial class CheckJavaForm : Form
 	{
-		private class JavaCheckResult
+		private sealed class JavaCheckResult
 		{
 			public bool   Valid   { get; set; }
 			public string Version { get; set; }
@@ -46,9 +47,9 @@ namespace MinecraftUpgrader
 			}
 
 			var ci      = new ComputerInfo();
-			var ramSize = new FileSize( (long) ci.TotalPhysicalMemory );
+			var ramSize = ( (long) ci.TotalPhysicalMemory ).Bytes();
 
-			if ( ramSize.GigaBytes < 7.5 )
+			if ( ramSize.Gigabytes < 7.5 )
 			{
 				MessageBox.Show( "You have less than 8 GB of memory installed in your computer.\n\n" +
 								 "Modded Minecraft requires a considerable amount of memory, and there " +
@@ -156,8 +157,10 @@ namespace MinecraftUpgrader
 								 .OrderByDescending( pair => pair.Value )
 								 .First().Key;
 
-			Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.JavaPath,    maxJava );
-			Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.JavaVersion, results[ maxJava ].Version );
+			AppConfig.Update( appConfig => {
+				appConfig.JavaPath    = maxJava;
+				appConfig.JavaVersion = results[ maxJava ].Version;
+			} );
 		}
 
 		private Task<JavaCheckResult> CheckJava( string javaExe )

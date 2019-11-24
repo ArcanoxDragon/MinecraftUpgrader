@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using MinecraftUpgrader.Config;
 using MinecraftUpgrader.MultiMC;
-using MinecraftUpgrader.Util;
+using MinecraftUpgrader.Utility;
 
 namespace MinecraftUpgrader
 {
@@ -37,7 +39,7 @@ namespace MinecraftUpgrader
 				try
 				{
 					await MmcConfigReader.ReadFromMmcFolder( mmcPath );
-					Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.LastMmcPath, mmcPath, RegistryValueKind.String );
+					AppConfig.Update( appConfig => appConfig.LastMmcPath = mmcPath );
 					this.DialogResult = DialogResult.OK;
 				}
 				catch
@@ -55,10 +57,51 @@ namespace MinecraftUpgrader
 		{
 			this.Enabled = false;
 
-			if ( await MultiMcInstaller.InstallMultiMC( this ) )
+			if ( await this.InstallMultiMc() )
 				this.DialogResult = DialogResult.OK;
 			else
 				this.DialogResult = DialogResult.Cancel;
+		}
+
+		private async Task<bool> InstallMultiMc()
+		{
+			var dialog = new ProgressDialog( "Downloading MultiMC" );
+
+			try
+			{
+				var cancelSource = new CancellationTokenSource();
+
+				dialog.Cancel += ( o, args ) => {
+					dialog.Reporter.ReportProgress( -1, "Cancelling...please wait" );
+					cancelSource.Cancel();
+				};
+				dialog.Show( this );
+
+				var mmcInstallPath = await MultiMcInstaller.InstallMultiMC( dialog.Reporter, cancelSource.Token );
+
+				MessageBox.Show( this,
+								 $"Successfully installed MultiMC to \"{mmcInstallPath}\"!",
+								 "MultiMC Setup Complete",
+								 MessageBoxButtons.OK,
+								 MessageBoxIcon.Information );
+
+				return true;
+			}
+			catch ( TaskCanceledException )
+			{
+				MessageBox.Show( this,
+								 "MultiMC setup cancelled. You will need to download it yourself, pick an existing installation," +
+								 "or re-run the installer and start the MultiMC setup again.",
+								 "MultiMC Setup Cancelled",
+								 MessageBoxButtons.OK,
+								 MessageBoxIcon.Error );
+
+				return false;
+			}
+			finally
+			{
+				dialog.Close();
+			}
 		}
 	}
 }

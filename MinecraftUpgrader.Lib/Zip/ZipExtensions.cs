@@ -38,11 +38,9 @@ namespace MinecraftUpgrader.Zip
 			var directoryName     = options.DirectoryName;
 			var recreateFolder    = options.RecreateFolderStructure;
 			var overwriteExisting = options.OverwriteExisting;
-			var token             = options.CancellationToken;
+			var cancellationToken = options.CancellationToken ?? CancellationToken.None;
 			var progress          = options.ProgressReporter;
-
-			var t      = token ?? CancellationToken.None;
-			var iEntry = 0;
+			var iEntry            = 0;
 			var entries = directoryName == null
 							  ? zip.OfType<ZipEntry>().ToList()
 							  : ( from ZipEntry e in zip
@@ -55,7 +53,7 @@ namespace MinecraftUpgrader.Zip
 
 			foreach ( var entry in entries )
 			{
-				if ( t.IsCancellationRequested )
+				if ( cancellationToken.IsCancellationRequested )
 					return;
 
 				var dirName = Path.GetDirectoryName( entry.Name ) ?? "";
@@ -78,21 +76,18 @@ namespace MinecraftUpgrader.Zip
 				}
 
 				var fileName        = Path.GetFileName( entry.Name );
-				var destinationPath = Path.Combine( destination,     dirName );
+				var destinationPath = Path.Combine( destination, dirName );
 				var destinationName = Path.Combine( destinationPath, fileName );
 
 				Directory.CreateDirectory( destinationPath );
 
-				if ( overwriteExisting || !File.Exists( destinationName ) )
+				// Entry name can be a folder name; in this case, fileName will be an empty string and we should skip it
+				if ( !string.IsNullOrEmpty( fileName ) && ( overwriteExisting || !File.Exists( destinationName ) ) )
 				{
-					using ( var fs = File.Open( destinationName,
-												FileMode.Create,
-												FileAccess.Write,
-												FileShare.None ) )
-					using ( var es = zip.GetInputStream( entry ) )
-					{
-						await es.CopyToAsync( fs, BufferSize, t );
-					}
+					using var fs = File.Open( destinationName, FileMode.Create, FileAccess.Write, FileShare.None );
+					using var es = zip.GetInputStream( entry );
+
+					await es.CopyToAsync( fs, BufferSize, cancellationToken );
 				}
 
 				progress?.ReportProgress( ++iEntry / (double) entries.Count );

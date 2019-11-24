@@ -10,6 +10,10 @@ namespace MinecraftUpgrader
 		[ STAThread ]
 		private static void Main()
 		{
+			AppDomain.CurrentDomain.UnhandledException += ( sender, args ) => {
+				MessageBox.Show( $"Error: {( args.ExceptionObject as Exception )?.Message ?? "Unknown"}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error );
+			};
+
 			// Configure dependency injection
 			Services.Configure( upgradeUrl: "https://mc.arcanox.me" );
 

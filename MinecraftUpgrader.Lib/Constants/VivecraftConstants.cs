@@ -9,9 +9,9 @@
 		public const string OptifineMirrorUri        = OptifineBaseUri + "adloadx?f=" + OptifineDownloadFilename;
 
 		public const string VivecraftVersionVr     = "1.12.2-jrbudda-9";
-		public const string VivecraftVersionNonVr  = "1.12.2-jrbudda-NONVR-8";
-		public const string VivecraftRevisionVr    = "r2";
-		public const string VivecraftRevisionNonVr = "r8";
+		public const string VivecraftRevisionVr    = "r6";
+		public const string VivecraftVersionNonVr  = "1.12.2-jrbudda-NONVR-9";
+		public const string VivecraftRevisionNonVr = "r1";
 
 		public const string VivecraftJvmArgs = "-XX:+UseParallelGC -XX:ParallelGCThreads=3 -XX:MaxGCPauseMillis=3 -Xmn256M -Dfml.ignoreInvalidMinecraftCertificates=true -Dfml.ignorePatchDiscrepancies=true";
 

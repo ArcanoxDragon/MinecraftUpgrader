@@ -8,10 +8,11 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.VisualBasic.Devices;
-using Microsoft.Win32;
+using Humanizer;
+using MinecraftUpgrader.Config;
 using MinecraftUpgrader.MultiMC;
 using MinecraftUpgrader.Upgrade;
+using NickStrupat;
 using Semver;
 
 namespace MinecraftUpgrader
@@ -32,7 +33,7 @@ namespace MinecraftUpgrader
 		private IList<(string name, string path)> instances;
 		private PackMode                          currentPackState = PackMode.New;
 		private InstanceMetadata                  currentPackMetadata;
-		private bool                              isVrEnabled = false;
+		private bool                              isVrEnabled;
 
 		public MainForm( Upgrader upgrader )
 		{
@@ -52,7 +53,7 @@ namespace MinecraftUpgrader
 		{
 			this.lbInstanceStatus.Text = "";
 
-			var mmcPath = Registry.GetValue( Constants.Registry.RootKey, Constants.Registry.LastMmcPath, null ) as string;
+			var mmcPath = AppConfig.Get().LastMmcPath;
 
 			if ( string.IsNullOrEmpty( mmcPath ) )
 			{
@@ -70,7 +71,7 @@ namespace MinecraftUpgrader
 			this.txtMmcPath.Text = multiMcPath;
 			await this.RefreshMmcConfig( multiMcPath );
 
-			var lastInstanceName = Registry.GetValue( Constants.Registry.RootKey, Constants.Registry.LastInstance, null ) as string;
+			var lastInstanceName = AppConfig.Get().LastInstance;
 
 			if ( !string.IsNullOrEmpty( lastInstanceName ) )
 			{
@@ -102,7 +103,7 @@ namespace MinecraftUpgrader
 
 			if ( formResult == DialogResult.OK )
 			{
-				lastMmcPath = Registry.GetValue( Constants.Registry.RootKey, Constants.Registry.LastMmcPath, null ) as string;
+				lastMmcPath = AppConfig.Get().LastMmcPath;
 
 				return true;
 			}
@@ -139,7 +140,7 @@ namespace MinecraftUpgrader
 						this.cmbInstance.SelectedIndex = 0;
 					}
 
-					Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.LastMmcPath, path );
+					AppConfig.Update( appConfig => appConfig.LastMmcPath = path );
 				}
 				catch ( Exception )
 				{
@@ -162,14 +163,10 @@ namespace MinecraftUpgrader
 								 MessageBoxButtons.OK,
 								 MessageBoxIcon.Error );
 
-				using ( var subKey = Registry.CurrentUser.OpenSubKey( Constants.Registry.SubKey, true ) )
-				{
-					if ( subKey != null )
-					{
-						subKey.DeleteValue( Constants.Registry.LastMmcPath );
-						subKey.DeleteValue( Constants.Registry.LastInstance );
-					}
-				}
+				AppConfig.Update( appConfig => {
+					appConfig.LastMmcPath  = null;
+					appConfig.LastInstance = null;
+				} );
 			}
 			catch ( Exception )
 			{
@@ -273,7 +270,7 @@ namespace MinecraftUpgrader
 
 					if ( instanceMetadata == null
 						 || instanceMetadata.Version == "0.0.0"
-						 || !SemVersion.TryParse( instanceMetadata.Version,   out var instanceSemVersion )
+						 || !SemVersion.TryParse( instanceMetadata.Version, out var instanceSemVersion )
 						 || !SemVersion.TryParse( packUpgrade.CurrentVersion, out var serverSemVersion ) )
 					{
 						// Never converted
@@ -384,9 +381,9 @@ namespace MinecraftUpgrader
 			var dialog       = new ProgressDialog( $"{actionName} instance" );
 			var cancelSource = new CancellationTokenSource();
 			var ci           = new ComputerInfo();
-			var ramSize      = new FileSize( (long) ci.TotalPhysicalMemory );
+			var ramSize      = ( (long) ci.TotalPhysicalMemory ).Bytes();
 			// Set JVM max memory to 2 GB less than the user's total RAM, at most 12 GB but at least 5
-			var maxRamGb     = (int) Math.Max( Math.Min( ramSize.GigaBytes - 4, 12 ), 5 );
+			var maxRamGb     = (int) Math.Max( Math.Min( ramSize.Gigabytes - 4, 12 ), 5 );
 			var instanceName = newInstance ? this.txtNewInstanceName.Text : this.instances[ this.cmbInstance.SelectedIndex ].name;
 			var successful   = false;
 
@@ -428,8 +425,10 @@ namespace MinecraftUpgrader
 					await this.upgrader.ConvertInstance( this.config, this.instances[ this.cmbInstance.SelectedIndex ].path, forceRebuild, this.isVrEnabled, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
 				}
 
-				Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.LastMmcPath,  this.txtMmcPath.Text );
-				Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.LastInstance, instanceName );
+				AppConfig.Update( appConfig => {
+					appConfig.LastMmcPath  = this.txtMmcPath.Text;
+					appConfig.LastInstance = instanceName;
+				} );
 
 				successful = true;
 			}
@@ -457,6 +456,7 @@ namespace MinecraftUpgrader
 				dialog.Close();
 				this.Enabled = true;
 				this.BringToFront();
+				await this.CheckInstance();
 
 				if ( successful )
 					this.OfferStartMinecraft( instanceName,
