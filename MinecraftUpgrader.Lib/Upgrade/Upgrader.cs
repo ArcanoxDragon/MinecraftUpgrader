@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -16,6 +15,7 @@ using MinecraftUpgrader.Constants;
 using MinecraftUpgrader.Extensions;
 using MinecraftUpgrader.MultiMC;
 using MinecraftUpgrader.Options;
+using MinecraftUpgrader.Web;
 using MinecraftUpgrader.Zip;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -107,9 +107,8 @@ namespace MinecraftUpgrader.Upgrade
 
 			try
 			{
-				using var web = new WebClient();
-
-				var downloadTask = "";
+				using var web          = new CfWebClient();
+				var       downloadTask = "";
 
 				web.DownloadProgressChanged += ( sender, args ) => {
 					// ReSharper disable AccessToModifiedClosure
@@ -129,12 +128,11 @@ namespace MinecraftUpgrader.Upgrade
 				};
 
 				token.ThrowIfCancellationRequested();
-				token.Register( web.CancelAsync );
 
 				// Download MultiMC pack descriptor
 				downloadTask = "Downloading MultiMC pack descriptor...";
 				var packConfigFileName = Path.Combine( destinationFolder, "mmc-pack.json" );
-				await web.DownloadFileTaskAsync( pack.MultiMcPack, packConfigFileName );
+				await web.DownloadFileTaskAsync( pack.MultiMcPack, packConfigFileName, token );
 
 				// Download icon
 				if ( !Directory.Exists( mmcConfig.IconsFolder ) )
@@ -142,7 +140,7 @@ namespace MinecraftUpgrader.Upgrade
 
 				downloadTask = "Downloading pack icon...";
 				var iconFileName = Path.Combine( mmcConfig.IconsFolder, "arcanox.png" );
-				await web.DownloadFileTaskAsync( $"{this.options.UpgradeUrl}/{IconPath}", iconFileName );
+				await web.DownloadFileTaskAsync( $"{this.options.UpgradeUrl}/{IconPath}", iconFileName, token );
 
 				// Only download base pack and client overrides if the version is 0 (not installed or old file version),
 				// or if the forceRebuild flag is set
@@ -173,7 +171,7 @@ namespace MinecraftUpgrader.Upgrade
 					// Download server pack contents
 					downloadTask = "Downloading base pack contents...";
 					var serverPackFileName = Path.Combine( tempDir, "server.zip" );
-					await web.DownloadFileTaskAsync( pack.ServerPack, serverPackFileName );
+					await web.DownloadFileTaskAsync( pack.ServerPack, serverPackFileName, token );
 
 					token.ThrowIfCancellationRequested();
 					progress?.ReportProgress( 0, "Extracting base pack contents..." );
@@ -198,7 +196,7 @@ namespace MinecraftUpgrader.Upgrade
 					// Download client pack overrides
 					downloadTask = "Downloading client overrides...";
 					var clientPackFileName = Path.Combine( tempDir, "client.zip" );
-					await web.DownloadFileTaskAsync( pack.ClientPack, clientPackFileName );
+					await web.DownloadFileTaskAsync( pack.ClientPack, clientPackFileName, token );
 
 					token.ThrowIfCancellationRequested();
 					progress?.ReportProgress( 0, "Extracting client overrides..." );
@@ -276,7 +274,7 @@ namespace MinecraftUpgrader.Upgrade
 								downloadTask = $"{modTask}\n" +
 											   $"Downloading mod archive: {fileName}";
 
-								await web.DownloadFileTaskAsync( archiveUrl, filePath );
+								await web.DownloadFileTaskAsync( archiveUrl, filePath, token );
 							}
 						}
 					}
@@ -329,7 +327,7 @@ namespace MinecraftUpgrader.Upgrade
 								if ( File.Exists( filePath ) )
 									File.Delete( filePath );
 
-								await web.DownloadFileTaskAsync( url, filePath );
+								await web.DownloadFileTaskAsync( url, filePath, token );
 							}
 							catch
 							{
@@ -368,7 +366,7 @@ namespace MinecraftUpgrader.Upgrade
 
 				var vivecraftInstallerUri = VivecraftConstants.GetVivecraftInstallerUri( vrEnabled );
 
-				await web.DownloadFileTaskAsync( vivecraftInstallerUri, vivecraftInstallerFilename );
+				await web.DownloadFileTaskAsync( vivecraftInstallerUri, vivecraftInstallerFilename, token );
 
 				progress?.ReportProgress( -1, $"{vrTask}\nExtracting Vivecraft installer..." );
 
@@ -408,7 +406,7 @@ namespace MinecraftUpgrader.Upgrade
 				downloadTask = $"{vrTask}\n" +
 							   $"Downloading Optifine archive...";
 
-				await web.DownloadFileTaskAsync( optifineDownloadUrl, Path.Combine( librariesDir, VivecraftConstants.OptifineLibraryFilename ) );
+				await web.DownloadFileTaskAsync( optifineDownloadUrl, Path.Combine( librariesDir, VivecraftConstants.OptifineLibraryFilename ), token );
 
 				// Write patch file
 				progress?.ReportProgress( -1, "Writing Vivecraft patch file..." );
