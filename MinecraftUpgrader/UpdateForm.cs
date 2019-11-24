@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.Extensions.Options;
 using MinecraftUpgrader.Options;
@@ -13,10 +15,12 @@ namespace MinecraftUpgrader
 	public partial class UpdateForm : Form
 	{
 		private readonly string remoteFileUrl;
+		private readonly string remoteMd5Url;
 
 		public UpdateForm( IOptions<UpgraderOptions> options )
 		{
-			this.remoteFileUrl = $"{options.Value.UpgradeUrl}/MinecraftDADInstaller.exe";
+			this.remoteFileUrl = $"{options.Value.UpgradeUrl}/MinecraftInstaller.exe";
+			this.remoteMd5Url  = $"{options.Value.UpgradeUrl}/installercheck.php";
 
 			this.InitializeComponent();
 		}
@@ -31,8 +35,19 @@ namespace MinecraftUpgrader
 
 			var md5                = MD5.Create();
 			var curProcess         = Process.GetCurrentProcess();
-			var processFilePath    = curProcess.MainModule.FileName;
+			var processFilePath    = curProcess.MainModule?.FileName;
 			var processFileOldPath = $"{processFilePath}.old";
+
+			if ( string.IsNullOrEmpty( processFilePath ) )
+			{
+				MessageBox.Show( this,
+								 "Fatal error...could not locate the running program on the file system.",
+								 "Update Failed",
+								 MessageBoxButtons.OK,
+								 MessageBoxIcon.Error );
+
+				return;
+			}
 
 			byte[] localHash, remoteHash;
 			var otherProcesses = Process.GetProcessesByName( curProcess.ProcessName )
@@ -54,11 +69,16 @@ namespace MinecraftUpgrader
 
 			using ( var web = new WebClient() )
 			{
-				using ( var remoteStream = await web.OpenReadTaskAsync( this.remoteFileUrl ) )
+				using ( var remoteStream = await web.OpenReadTaskAsync( this.remoteMd5Url ) )
+				using ( var reader = new StreamReader( remoteStream ) )
 				{
-					remoteHash = md5.ComputeHash( remoteStream );
+					var remoteHashString = await reader.ReadToEndAsync();
+					var remoteHashSplit  = Regex.Split( remoteHashString, @"([a-f0-9]{2})", RegexOptions.IgnoreCase ).Where( s => !string.IsNullOrEmpty( s ) );
+
+					remoteHash = remoteHashSplit.Select( s => byte.Parse( s, NumberStyles.HexNumber ) ).ToArray();
 				}
 
+				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 				if ( SkipUpdate || localHash.SequenceEqual( remoteHash ) )
 				{
 					this.Hide();
@@ -78,7 +98,7 @@ namespace MinecraftUpgrader
 					this.pbDownload.Value = e.ProgressPercentage;
 				} ) );
 
-				var updateFilePath = Path.Combine( Path.GetTempPath(), "MinecraftDADInstaller.exe" );
+				var updateFilePath = Path.Combine( Path.GetTempPath(), "MinecraftInstaller.exe" );
 
 				if ( File.Exists( updateFilePath ) )
 					File.Delete( updateFilePath );
@@ -89,7 +109,7 @@ namespace MinecraftUpgrader
 				this.pbDownload.Style = ProgressBarStyle.Marquee;
 
 				File.Move( processFilePath, processFileOldPath );
-				File.Move( updateFilePath,  processFilePath );
+				File.Move( updateFilePath, processFilePath );
 
 				byte[] newLocalHash;
 

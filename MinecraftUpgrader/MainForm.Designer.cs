@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 			this.lbInstancesFolder = new System.Windows.Forms.Label();
 			this.lbInstancesFolderStatic = new System.Windows.Forms.Label();
@@ -42,7 +43,14 @@
 			this.buttonLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
 			this.btnRebuild = new System.Windows.Forms.Button();
 			this.btnGo = new System.Windows.Forms.Button();
+			this.vrModeLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+			this.btnNonVR = new System.Windows.Forms.Button();
+			this.btnVR = new System.Windows.Forms.Button();
+			this.lbVrMode = new System.Windows.Forms.Label();
+			this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+			this.appToolTip = new System.Windows.Forms.ToolTip(this.components);
 			this.buttonLayoutPanel.SuspendLayout();
+			this.vrModeLayoutPanel.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// lbInstancesFolder
@@ -71,7 +79,9 @@
 			this.btnBrowseMmc.Size = new System.Drawing.Size(33, 23);
 			this.btnBrowseMmc.TabIndex = 6;
 			this.btnBrowseMmc.Text = "...";
+			this.appToolTip.SetToolTip(this.btnBrowseMmc, "Switch MultiMC instance...");
 			this.btnBrowseMmc.UseVisualStyleBackColor = true;
+			this.btnBrowseMmc.Click += new System.EventHandler(this.OnBtnBrowseMmcClick);
 			// 
 			// txtMmcPath
 			// 
@@ -157,11 +167,12 @@
 			this.buttonLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
 			this.buttonLayoutPanel.Controls.Add(this.btnRebuild, 0, 0);
 			this.buttonLayoutPanel.Controls.Add(this.btnGo, 1, 0);
-			this.buttonLayoutPanel.Location = new System.Drawing.Point(15, 224);
+			this.buttonLayoutPanel.Location = new System.Drawing.Point(12, 286);
 			this.buttonLayoutPanel.Name = "buttonLayoutPanel";
 			this.buttonLayoutPanel.RowCount = 1;
 			this.buttonLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-			this.buttonLayoutPanel.Size = new System.Drawing.Size(409, 60);
+			this.buttonLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
+			this.buttonLayoutPanel.Size = new System.Drawing.Size(412, 60);
 			this.buttonLayoutPanel.TabIndex = 16;
 			// 
 			// btnRebuild
@@ -177,7 +188,7 @@
 			this.btnRebuild.ForeColor = System.Drawing.SystemColors.ControlText;
 			this.btnRebuild.Location = new System.Drawing.Point(3, 3);
 			this.btnRebuild.Name = "btnRebuild";
-			this.btnRebuild.Size = new System.Drawing.Size(198, 54);
+			this.btnRebuild.Size = new System.Drawing.Size(200, 54);
 			this.btnRebuild.TabIndex = 2;
 			this.btnRebuild.Text = "Rebuild";
 			this.btnRebuild.UseVisualStyleBackColor = false;
@@ -194,20 +205,107 @@
 			this.btnGo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
 			this.btnGo.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.btnGo.ForeColor = System.Drawing.Color.White;
-			this.btnGo.Location = new System.Drawing.Point(207, 3);
+			this.btnGo.Location = new System.Drawing.Point(209, 3);
 			this.btnGo.Name = "btnGo";
-			this.btnGo.Size = new System.Drawing.Size(199, 54);
+			this.btnGo.Size = new System.Drawing.Size(200, 54);
 			this.btnGo.TabIndex = 1;
 			this.btnGo.Text = "Go!";
 			this.btnGo.UseVisualStyleBackColor = false;
 			this.btnGo.Click += new System.EventHandler(this.OnBtnGoClick);
+			// 
+			// vrModeLayoutPanel
+			// 
+			this.vrModeLayoutPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.vrModeLayoutPanel.ColumnCount = 2;
+			this.vrModeLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.vrModeLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.vrModeLayoutPanel.Controls.Add(this.btnNonVR, 0, 0);
+			this.vrModeLayoutPanel.Controls.Add(this.btnVR, 1, 0);
+			this.vrModeLayoutPanel.Location = new System.Drawing.Point(12, 227);
+			this.vrModeLayoutPanel.Name = "vrModeLayoutPanel";
+			this.vrModeLayoutPanel.RowCount = 1;
+			this.vrModeLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+			this.vrModeLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
+			this.vrModeLayoutPanel.Size = new System.Drawing.Size(412, 32);
+			this.vrModeLayoutPanel.TabIndex = 16;
+			// 
+			// btnNonVR
+			// 
+			this.btnNonVR.BackColor = System.Drawing.Color.DodgerBlue;
+			this.btnNonVR.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.btnNonVR.FlatAppearance.BorderSize = 0;
+			this.btnNonVR.FlatAppearance.MouseDownBackColor = System.Drawing.Color.DodgerBlue;
+			this.btnNonVR.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(72)))), ((int)(((byte)(175)))), ((int)(((byte)(255)))));
+			this.btnNonVR.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.btnNonVR.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.btnNonVR.ForeColor = System.Drawing.Color.White;
+			this.btnNonVR.Location = new System.Drawing.Point(3, 3);
+			this.btnNonVR.Name = "btnNonVR";
+			this.btnNonVR.Size = new System.Drawing.Size(200, 26);
+			this.btnNonVR.TabIndex = 2;
+			this.btnNonVR.Text = "Non-VR";
+			this.appToolTip.SetToolTip(this.btnNonVR, "If you don\'t have a VR headset, or don\'t wish to play Minecraft in VR,\r\nuse this " +
+        "mode. You will be able to see players who are playing in VR,\r\nbut don\'t have to " +
+        "play in VR yourself.");
+			this.btnNonVR.UseVisualStyleBackColor = false;
+			this.btnNonVR.Click += new System.EventHandler(this.OnBtnNonVRClick);
+			// 
+			// btnVR
+			// 
+			this.btnVR.BackColor = System.Drawing.SystemColors.Control;
+			this.btnVR.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.btnVR.FlatAppearance.BorderSize = 0;
+			this.btnVR.FlatAppearance.MouseDownBackColor = System.Drawing.Color.DodgerBlue;
+			this.btnVR.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(72)))), ((int)(((byte)(175)))), ((int)(((byte)(255)))));
+			this.btnVR.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.btnVR.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.btnVR.Location = new System.Drawing.Point(209, 3);
+			this.btnVR.Name = "btnVR";
+			this.btnVR.Size = new System.Drawing.Size(200, 26);
+			this.btnVR.TabIndex = 1;
+			this.btnVR.Text = "VR";
+			this.appToolTip.SetToolTip(this.btnVR, resources.GetString("btnVR.ToolTip"));
+			this.btnVR.UseVisualStyleBackColor = false;
+			this.btnVR.Click += new System.EventHandler(this.OnBtnVRClick);
+			// 
+			// lbVrMode
+			// 
+			this.lbVrMode.AutoSize = true;
+			this.lbVrMode.Location = new System.Drawing.Point(9, 211);
+			this.lbVrMode.Name = "lbVrMode";
+			this.lbVrMode.Size = new System.Drawing.Size(60, 13);
+			this.lbVrMode.TabIndex = 17;
+			this.lbVrMode.Text = "Play Mode:";
+			// 
+			// linkLabel1
+			// 
+			this.linkLabel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.linkLabel1.AutoSize = true;
+			this.linkLabel1.Location = new System.Drawing.Point(290, 349);
+			this.linkLabel1.Name = "linkLabel1";
+			this.linkLabel1.Size = new System.Drawing.Size(134, 13);
+			this.linkLabel1.TabIndex = 18;
+			this.linkLabel1.TabStop = true;
+			this.linkLabel1.Text = "Click here to open MultiMC";
+			this.linkLabel1.Click += new System.EventHandler(this.OnOpenMultiMCClick);
+			// 
+			// appToolTip
+			// 
+			this.appToolTip.AutomaticDelay = 100;
+			this.appToolTip.AutoPopDelay = 10000;
+			this.appToolTip.InitialDelay = 100;
+			this.appToolTip.ReshowDelay = 100;
 			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
-			this.ClientSize = new System.Drawing.Size(436, 296);
+			this.ClientSize = new System.Drawing.Size(436, 371);
+			this.Controls.Add(this.linkLabel1);
+			this.Controls.Add(this.lbVrMode);
+			this.Controls.Add(this.vrModeLayoutPanel);
 			this.Controls.Add(this.buttonLayoutPanel);
 			this.Controls.Add(this.lbInstanceStatus);
 			this.Controls.Add(this.rbInstanceNew);
@@ -219,13 +317,16 @@
 			this.Controls.Add(this.lbInstancesFolderStatic);
 			this.Controls.Add(this.btnBrowseMmc);
 			this.Controls.Add(this.txtMmcPath);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+			this.MaximizeBox = false;
 			this.MinimumSize = new System.Drawing.Size(330, 330);
 			this.Name = "MainForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "Minecraft Upgrader";
+			this.Text = "Minecraft Mod Installer";
 			this.Load += new System.EventHandler(this.OnFormLoad);
 			this.buttonLayoutPanel.ResumeLayout(false);
+			this.vrModeLayoutPanel.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -246,6 +347,12 @@
 		private System.Windows.Forms.TableLayoutPanel buttonLayoutPanel;
 		private System.Windows.Forms.Button btnRebuild;
 		private System.Windows.Forms.Button btnGo;
+		private System.Windows.Forms.TableLayoutPanel vrModeLayoutPanel;
+		private System.Windows.Forms.Button btnNonVR;
+		private System.Windows.Forms.Button btnVR;
+		private System.Windows.Forms.Label lbVrMode;
+		private System.Windows.Forms.LinkLabel linkLabel1;
+		private System.Windows.Forms.ToolTip appToolTip;
 	}
 }
 

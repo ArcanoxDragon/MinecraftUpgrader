@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -29,7 +30,9 @@ namespace MinecraftUpgrader
 
 		private MmcConfig                         config;
 		private IList<(string name, string path)> instances;
-		private PackMode                          currentPackMode = PackMode.New;
+		private PackMode                          currentPackState = PackMode.New;
+		private InstanceMetadata                  currentPackMetadata;
+		private bool                              isVrEnabled = false;
 
 		public MainForm( Upgrader upgrader )
 		{
@@ -49,28 +52,25 @@ namespace MinecraftUpgrader
 		{
 			this.lbInstanceStatus.Text = "";
 
-			var lastMmcPath      = Registry.GetValue( Constants.Registry.RootKey, Constants.Registry.LastMmcPath,  null ) as string;
-			var lastInstanceName = Registry.GetValue( Constants.Registry.RootKey, Constants.Registry.LastInstance, null ) as string;
+			var mmcPath = Registry.GetValue( Constants.Registry.RootKey, Constants.Registry.LastMmcPath, null ) as string;
 
-			if ( string.IsNullOrEmpty( lastMmcPath ) )
+			if ( string.IsNullOrEmpty( mmcPath ) )
 			{
-				this.Hide();
-
-				var findMultiMcResult = new ConfigureMultiMcForm().ShowDialog( this );
-
-				if ( findMultiMcResult == DialogResult.OK )
-				{
-					this.Show();
-					lastMmcPath = Registry.GetValue( Constants.Registry.RootKey, Constants.Registry.LastMmcPath, null ) as string;
-				}
-				else
+				if ( !this.ShowConfigureMultiMC( out mmcPath ) )
 				{
 					this.Close();
 				}
 			}
 
-			this.txtMmcPath.Text = lastMmcPath;
-			await this.RefreshMmcConfig( lastMmcPath );
+			await this.LoadMultiMCInstances( mmcPath );
+		}
+
+		private async Task LoadMultiMCInstances( string multiMcPath )
+		{
+			this.txtMmcPath.Text = multiMcPath;
+			await this.RefreshMmcConfig( multiMcPath );
+
+			var lastInstanceName = Registry.GetValue( Constants.Registry.RootKey, Constants.Registry.LastInstance, null ) as string;
 
 			if ( !string.IsNullOrEmpty( lastInstanceName ) )
 			{
@@ -84,6 +84,33 @@ namespace MinecraftUpgrader
 					this.cmbInstance.SelectedIndex  = this.instances.IndexOf( lastInstance );
 					await this.CheckInstance();
 				}
+			}
+		}
+
+		private bool ShowConfigureMultiMC( out string lastMmcPath, string exitText = null )
+		{
+			this.Hide();
+
+			var form = new ConfigureMultiMcForm();
+
+			if ( !string.IsNullOrEmpty( exitText ) )
+				form.ExitText = exitText;
+
+			var formResult = form.ShowDialog( this );
+
+			this.Show();
+
+			if ( formResult == DialogResult.OK )
+			{
+				lastMmcPath = Registry.GetValue( Constants.Registry.RootKey, Constants.Registry.LastMmcPath, null ) as string;
+
+				return true;
+			}
+			else
+			{
+				lastMmcPath = null;
+
+				return false;
 			}
 		}
 
@@ -150,6 +177,14 @@ namespace MinecraftUpgrader
 			}
 		}
 
+		private async void OnBtnBrowseMmcClick( object sender, EventArgs e )
+		{
+			if ( this.ShowConfigureMultiMC( out var mmcPath ) )
+			{
+				await this.LoadMultiMCInstances( mmcPath );
+			}
+		}
+
 		private async void OnRbInstanceChecked( object sender, EventArgs e )
 		{
 			this.txtNewInstanceName.Enabled = this.rbInstanceNew.Checked;
@@ -167,18 +202,17 @@ namespace MinecraftUpgrader
 			await this.CheckInstance();
 		}
 
-		private async Task CheckInstance()
+		private void UpdateLayoutFromPackState()
 		{
 			this.buttonLayoutPanel.ColumnStyles[ 0 ].Width    = 0;
 			this.buttonLayoutPanel.ColumnStyles[ 0 ].SizeType = SizeType.Absolute;
 			this.buttonLayoutPanel.ColumnStyles[ 1 ].Width    = 100;
 			this.buttonLayoutPanel.ColumnStyles[ 1 ].SizeType = SizeType.Percent;
 
-			if ( this.rbInstanceNew.Checked )
+			if ( this.currentPackState == PackMode.New )
 			{
-				this.btnGo.Enabled   = !string.IsNullOrWhiteSpace( this.txtNewInstanceName.Text );
-				this.btnGo.Text      = "Create!";
-				this.currentPackMode = PackMode.New;
+				this.btnGo.Enabled = !string.IsNullOrWhiteSpace( this.txtNewInstanceName.Text );
+				this.btnGo.Text    = "Create!";
 			}
 			else
 			{
@@ -189,21 +223,12 @@ namespace MinecraftUpgrader
 
 				if ( instanceSelected )
 				{
-					var selectedInstance = this.instances[ this.cmbInstance.SelectedIndex ];
-					var instanceVersion  = PackVersionReader.ReadPackVersion( selectedInstance.path );
-					var packUpgrade      = await this.upgrader.LoadConfig();
-
-					if ( instanceVersion == null
-						 || instanceVersion.Version == "0.0.0"
-						 || !SemVersion.TryParse( instanceVersion.Version,    out var instanceSemVersion )
-						 || !SemVersion.TryParse( packUpgrade.CurrentVersion, out var serverSemVersion ) )
+					if ( this.currentPackState == PackMode.NeedsConversion )
 					{
-						// Never converted
 						this.btnRebuild.Enabled = false;
 
 						this.btnGo.Text            = "Convert!";
 						this.lbInstanceStatus.Text = "Instance must be converted to custom pack";
-						this.currentPackMode       = PackMode.NeedsConversion;
 					}
 					else
 					{
@@ -213,23 +238,119 @@ namespace MinecraftUpgrader
 						this.buttonLayoutPanel.ColumnStyles[ 1 ].Width    = 50;
 						this.buttonLayoutPanel.ColumnStyles[ 1 ].SizeType = SizeType.Percent;
 
-						if ( instanceSemVersion < serverSemVersion || instanceVersion.BuiltFromServerPack != packUpgrade.ServerPack )
+						if ( this.currentPackState == PackMode.NeedsUpdate )
 						{
-							// Out of date
 							this.btnGo.Text            = "Update!";
 							this.lbInstanceStatus.Text = "Instance is out of date and must be updated";
-							this.currentPackMode       = PackMode.NeedsUpdate;
 						}
 						else
 						{
-							// Up-to-date
+							// Ready To Play
+
 							this.btnGo.Text            = "Play!";
 							this.lbInstanceStatus.Text = "This instance is ready to play!";
-							this.currentPackMode       = PackMode.ReadyToPlay;
 						}
 					}
 				}
 			}
+		}
+
+		private async Task CheckInstance()
+		{
+			if ( this.rbInstanceNew.Checked )
+			{
+				this.currentPackState = PackMode.New;
+			}
+			else
+			{
+				var instanceSelected = this.cmbInstance.SelectedItem != null;
+
+				if ( instanceSelected )
+				{
+					var selectedInstance = this.instances[ this.cmbInstance.SelectedIndex ];
+					var instanceMetadata = InstanceMetadataReader.ReadInstanceMetadata( selectedInstance.path );
+					var packUpgrade      = await this.upgrader.LoadConfig();
+
+					if ( instanceMetadata == null
+						 || instanceMetadata.Version == "0.0.0"
+						 || !SemVersion.TryParse( instanceMetadata.Version,   out var instanceSemVersion )
+						 || !SemVersion.TryParse( packUpgrade.CurrentVersion, out var serverSemVersion ) )
+					{
+						// Never converted
+						this.currentPackState = PackMode.NeedsConversion;
+					}
+					else
+					{
+						if ( instanceSemVersion < serverSemVersion
+							 || instanceMetadata.BuiltFromServerPack != packUpgrade.ServerPack )
+						{
+							// Out of date
+							this.currentPackState = PackMode.NeedsUpdate;
+						}
+						else
+						{
+							// Up-to-date
+							this.currentPackState = PackMode.ReadyToPlay;
+							this.isVrEnabled      = instanceMetadata.VrEnabled;
+
+							this.RefreshVRButtons();
+						}
+					}
+
+					this.currentPackMetadata = instanceMetadata;
+				}
+			}
+
+			this.UpdateLayoutFromPackState();
+		}
+
+		private async void OnBtnNonVRClick( object sender, EventArgs e )
+		{
+			this.isVrEnabled = false;
+			this.RefreshVRButtons();
+
+			await this.CheckVRState();
+		}
+
+		private async void OnBtnVRClick( object sender, EventArgs e )
+		{
+			this.isVrEnabled = true;
+			this.RefreshVRButtons();
+
+			await this.CheckVRState();
+		}
+
+		private async Task CheckVRState()
+		{
+			if ( this.currentPackMetadata != null )
+			{
+				if ( this.currentPackState == PackMode.ReadyToPlay && this.currentPackMetadata.VrEnabled != this.isVrEnabled )
+				{
+					this.currentPackState = PackMode.NeedsUpdate;
+					this.UpdateLayoutFromPackState();
+				}
+
+				if ( this.currentPackState != PackMode.ReadyToPlay && this.currentPackMetadata.VrEnabled == this.isVrEnabled )
+				{
+					await this.CheckInstance();
+				}
+			}
+		}
+
+		private void RefreshVRButtons()
+		{
+			var buttons = new[] { this.btnNonVR, this.btnVR };
+
+			foreach ( var button in buttons )
+			{
+				button.BackColor = SystemColors.Control;
+				button.ForeColor = SystemColors.ControlText;
+			}
+
+			var selectedButton = this.isVrEnabled ? this.btnVR : this.btnNonVR;
+
+			selectedButton.BackColor = Color.DodgerBlue;
+			selectedButton.ForeColor = Color.White;
 		}
 
 		private async void OnBtnRebuildClick( object sender, EventArgs e )
@@ -237,7 +358,7 @@ namespace MinecraftUpgrader
 
 		private async void OnBtnGoClick( object sender, EventArgs e )
 		{
-			if ( this.currentPackMode == PackMode.ReadyToPlay )
+			if ( this.currentPackState == PackMode.ReadyToPlay )
 			{
 				// Button says "Play"; user doesn't expect another prompt to start MC
 
@@ -250,10 +371,15 @@ namespace MinecraftUpgrader
 			await this.DoConfigurePack( false );
 		}
 
+		private void OnOpenMultiMCClick( object sender, EventArgs e )
+		{
+			this.StartMultiMC();
+		}
+
 		private async Task DoConfigurePack( bool forceRebuild )
 		{
 			var newInstance  = this.rbInstanceNew.Checked;
-			var updating     = this.currentPackMode == PackMode.NeedsUpdate;
+			var updating     = this.currentPackState == PackMode.NeedsUpdate;
 			var actionName   = ( newInstance || forceRebuild ) ? "Building new" : updating ? "Updating" : "Converting";
 			var dialog       = new ProgressDialog( $"{actionName} instance" );
 			var cancelSource = new CancellationTokenSource();
@@ -288,16 +414,18 @@ namespace MinecraftUpgrader
 						process.Kill();
 				}
 
-				this.config.UpdateChannel = "develop";
+				// TODO: Uncomment the following line if a development branch of MultiMC is required
+				// this.config.UpdateChannel = "develop";
+
 				await MmcConfigReader.UpdateConfig( this.txtMmcPath.Text, this.config );
 
 				if ( newInstance )
 				{
-					await this.upgrader.NewInstance( this.config, this.txtNewInstanceName.Text, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
+					await this.upgrader.NewInstance( this.config, this.txtNewInstanceName.Text, this.isVrEnabled, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
 				}
 				else // Convert instance
 				{
-					await this.upgrader.ConvertInstance( this.config, this.instances[ this.cmbInstance.SelectedIndex ].path, forceRebuild, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
+					await this.upgrader.ConvertInstance( this.config, this.instances[ this.cmbInstance.SelectedIndex ].path, forceRebuild, this.isVrEnabled, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
 				}
 
 				Registry.SetValue( Constants.Registry.RootKey, Constants.Registry.LastMmcPath,  this.txtMmcPath.Text );
@@ -352,6 +480,17 @@ namespace MinecraftUpgrader
 			{
 				this.StartMinecraft( instanceName );
 			}
+		}
+
+		private void StartMultiMC()
+		{
+			var startInfo = new ProcessStartInfo {
+				UseShellExecute  = true,
+				FileName         = Path.Combine( this.txtMmcPath.Text, "MultiMC.exe" ),
+				WorkingDirectory = this.txtMmcPath.Text
+			};
+
+			Process.Start( startInfo );
 		}
 
 		private void StartMinecraft( string instanceName )

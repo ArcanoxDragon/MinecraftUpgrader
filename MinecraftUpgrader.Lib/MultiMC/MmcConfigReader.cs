@@ -54,7 +54,8 @@ namespace MinecraftUpgrader.MultiMC
 				InstancesFolder = "instances",
 				IconsFolder     = "icons",
 				Language        = "en",
-				UpdateChannel   = "develop",
+				// TODO: Uncomment the following line if a development MultiMC version is required
+				// UpdateChannel   = "develop",
 				MinMemAlloc     = 512,
 				MaxMemAlloc     = 1024
 			};

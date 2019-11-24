@@ -16,6 +16,12 @@ namespace MinecraftUpgrader
 			this.InitializeComponent();
 		}
 
+		public string ExitText
+		{
+			get => this.btnExit.Text;
+			set => this.btnExit.Text = value;
+		}
+
 		private async void btnBrowse_Click( object sender, EventArgs e )
 		{
 			var dialog = new CommonOpenFileDialog {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Windows.Forms;
 using MinecraftUpgrader.DI;
 
@@ -9,7 +10,12 @@ namespace MinecraftUpgrader
 		[ STAThread ]
 		private static void Main()
 		{
-			Services.Configure( upgradeUrl: "https://dutchies.arcanox.me" );
+			// Configure dependency injection
+			Services.Configure( upgradeUrl: "https://mc.arcanox.me" );
+
+			// Configure web clients
+			ServicePointManager.Expect100Continue = true;
+			ServicePointManager.SecurityProtocol  = SecurityProtocolType.Tls12;
 
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault( false );

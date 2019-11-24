@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -12,6 +11,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Extensions.Options;
 using MinecraftUpgrader.Async;
 using MinecraftUpgrader.Config;
+using MinecraftUpgrader.Constants;
 using MinecraftUpgrader.Extensions;
 using MinecraftUpgrader.MultiMC;
 using MinecraftUpgrader.Options;
@@ -26,6 +26,8 @@ namespace MinecraftUpgrader.Upgrade
 	{
 		private const int    BufferSize = 4 * 1024 * 1024; // 4 MB
 		private const string ConfigPath = "modpack/pack-upgrade.json";
+		private const string IconPath   = "modpack/icon.png";
+		private const string IconName   = "arcanox";
 
 		private readonly UpgraderOptions options;
 
@@ -50,13 +52,15 @@ namespace MinecraftUpgrader.Upgrade
 			return config;
 		}
 
-		private async Task SetupPack( MmcConfig mmcConfig, PackUpgrade pack, string destinationFolder, bool forceRebuild, CancellationToken token, ProgressReporter progress, int? maxRamMb = null )
+		private async Task SetupPack( MmcConfig mmcConfig, PackUpgrade pack, string destinationFolder, bool forceRebuild, bool vrEnabled, CancellationToken token, ProgressReporter progress, int? maxRamMb = null )
 		{
-			var versionFile  = Path.Combine( destinationFolder, "packVersion.json" );
+			var metadataFile = Path.Combine( destinationFolder, "packMeta.json" );
 			var cfgFile      = Path.Combine( destinationFolder, "instance.cfg" );
 			var tempDir      = Path.Combine( destinationFolder, "temp" );
 			var minecraftDir = Path.Combine( destinationFolder, ".minecraft" );
-			var modsDir      = Path.Combine( minecraftDir,      "mods" );
+			var librariesDir = Path.Combine( destinationFolder, "libraries" );
+			var patchesDir   = Path.Combine( destinationFolder, "patches" );
+			var modsDir      = Path.Combine( minecraftDir, "mods" );
 
 			progress?.ReportProgress( "Updating instance configuration..." );
 
@@ -79,21 +83,22 @@ namespace MinecraftUpgrader.Upgrade
 
 			// If forceRebuild is set, we don't even bother checking the current version.
 			// Just redo everything.
-			if ( !forceRebuild && File.Exists( versionFile ) )
+			if ( !forceRebuild && File.Exists( metadataFile ) )
 			{
-				var currentInstanceVersion = JsonConvert.DeserializeObject<InstanceVersion>( File.ReadAllText( versionFile ) );
+				var currentInstanceMetadata = JsonConvert.DeserializeObject<InstanceMetadata>( File.ReadAllText( metadataFile ) );
 
-				if ( currentInstanceVersion.FileVersion == InstanceVersion.CurrentFileVersion )
+				if ( currentInstanceMetadata.FileVersion >= 2 )
 				{
-					currentVersion    = currentInstanceVersion.Version;
-					currentServerPack = currentInstanceVersion.BuiltFromServerPack;
+					currentVersion    = currentInstanceMetadata.Version;
+					currentServerPack = currentInstanceMetadata.BuiltFromServerPack;
 				}
 			}
 
-			var instanceVersion = new InstanceVersion {
-				FileVersion         = InstanceVersion.CurrentFileVersion,
+			var instanceMetadata = new InstanceMetadata {
+				FileVersion         = InstanceMetadata.CurrentFileVersion,
 				Version             = pack.CurrentVersion,
-				BuiltFromServerPack = pack.ServerPack
+				BuiltFromServerPack = pack.ServerPack,
+				VrEnabled           = vrEnabled,
 			};
 
 			Directory.CreateDirectory( minecraftDir );
@@ -126,8 +131,8 @@ namespace MinecraftUpgrader.Upgrade
 						Directory.CreateDirectory( mmcConfig.IconsFolder );
 
 					downloadTask = "Downloading pack icon...";
-					var iconFileName = Path.Combine( mmcConfig.IconsFolder, "dutchie.png" );
-					await web.DownloadFileTaskAsync( $"{this.options.UpgradeUrl}/favicon.png", iconFileName );
+					var iconFileName = Path.Combine( mmcConfig.IconsFolder, "arcanox.png" );
+					await web.DownloadFileTaskAsync( $"{this.options.UpgradeUrl}/{IconPath}", iconFileName );
 
 					// Only download base pack and client overrides if the version is 0 (not installed or old file version),
 					// or if the forceRebuild flag is set
@@ -140,10 +145,9 @@ namespace MinecraftUpgrader.Upgrade
 						currentVersion = "0.0.0";
 
 						// Clear out old files if present since we're downloading the base pack fresh
-						var patchesDir   = Path.Combine( destinationFolder, "patches" );
-						var configDir    = Path.Combine( minecraftDir,      "config" );
-						var resourcesDir = Path.Combine( minecraftDir,      "resources" );
-						var scriptsDir   = Path.Combine( minecraftDir,      "scripts" );
+						var configDir    = Path.Combine( minecraftDir, "config" );
+						var resourcesDir = Path.Combine( minecraftDir, "resources" );
+						var scriptsDir   = Path.Combine( minecraftDir, "scripts" );
 
 						if ( Directory.Exists( patchesDir ) )
 							Directory.Delete( patchesDir, true );
@@ -255,7 +259,7 @@ namespace MinecraftUpgrader.Upgrade
 									var fileName = $"{modId}.jar";
 									var filePath = Path.Combine( minecraftDir, "mods", fileName );
 									// TODO: Allow non-CurseForge URLs
-									var archiveUrl = $"https://minecraft.curseforge.com/projects/{modId}/files/{mod.FileId}/download";
+									var archiveUrl = $"https://www.curseforge.com/minecraft/mc-mods/{modId}/download/{mod.FileId}/file";
 
 									downloadTask = $"{modTask}\n" +
 												   $"Downloading mod archive: {fileName}";
@@ -323,10 +327,108 @@ namespace MinecraftUpgrader.Upgrade
 						}
 					}
 
+					#region VR Stuff
+
+					// Handle VR-specific pack settings
+					string vrTask = $"Setting up Vivecraft for {( vrEnabled ? "VR" : "non-VR" )} play...";
+
+					progress?.ReportProgress( -1, vrTask );
+
+					var optifineDownloadRegex = new Regex( @"href=(['""])(downloadx\?f=[^'""]+)\1", RegexOptions.Compiled | RegexOptions.IgnoreCase );
+
+					// Set up temporary directory
+					var installDirectory = Path.Combine( Path.GetTempPath(), "MinecraftInstaller" );
+
+					if ( !Directory.Exists( installDirectory ) )
+						Directory.CreateDirectory( installDirectory );
+					if ( !Directory.Exists( librariesDir ) )
+						Directory.CreateDirectory( librariesDir );
+					if ( !Directory.Exists( patchesDir ) )
+						Directory.CreateDirectory( patchesDir );
+
+					// Download Vivecraft installer
+					var vivecraftVersion           = vrEnabled ? VivecraftConstants.VivecraftVersionVr : VivecraftConstants.VivecraftVersionNonVr;
+					var vivecraftRevision          = vrEnabled ? VivecraftConstants.VivecraftRevisionVr : VivecraftConstants.VivecraftRevisionNonVr;
+					var vivecraftInstallerFilename = Path.Combine( installDirectory, "vivecraft_installer.exe" );
+
+					downloadTask = $"{vrTask}\n" +
+								   $"Downloading Vivecraft installer...";
+
+					var vivecraftInstallerUri = VivecraftConstants.GetVivecraftInstallerUri( vrEnabled );
+
+					await web.DownloadFileTaskAsync( vivecraftInstallerUri, vivecraftInstallerFilename );
+
+					progress?.ReportProgress( -1, $"{vrTask}\nExtracting Vivecraft installer..." );
+
+					using ( var fs = File.Open( vivecraftInstallerFilename, FileMode.Open, FileAccess.Read ) )
+					using ( var zip = new ZipFile( fs ) )
+					{
+						var versionJarEntry = zip.GetEntry( "version.jar" );
+
+						if ( versionJarEntry == null || !versionJarEntry.IsFile )
+							throw new Exception( "Could not find Vivecraft jar file in the installer" );
+
+						var minecriftFilename = $"minecrift-{vivecraftVersion}-{vivecraftRevision}.jar";
+
+						using ( var entryStream = zip.GetInputStream( versionJarEntry ) )
+						using ( var destStream = File.Open( Path.Combine( librariesDir, minecriftFilename ), FileMode.Create, FileAccess.Write ) )
+						{
+							await entryStream.CopyToAsync( destStream );
+							await destStream.FlushAsync();
+						}
+					}
+
+					// Download Optifine
+					downloadTask = $"{vrTask}\n" +
+								   $"Fetching Optifine download information...";
+
+					var optifineDownloadPage = await web.DownloadStringTaskAsync( VivecraftConstants.OptifineMirrorUri );
+
+					if ( string.IsNullOrEmpty( optifineDownloadPage ) )
+						throw new Exception( "Could not download Optifine from the mirror" );
+
+					var mirrorPageMatch = optifineDownloadRegex.Match( optifineDownloadPage );
+
+					if ( !mirrorPageMatch.Success )
+						throw new Exception( "Unexpected response from Optifine mirror" );
+
+					var optifineDownloadUrl = VivecraftConstants.OptifineBaseUri + mirrorPageMatch.Groups[ 2 ].Value;
+
+					downloadTask = $"{vrTask}\n" +
+								   $"Downloading Optifine archive...";
+
+					await web.DownloadFileTaskAsync( optifineDownloadUrl, Path.Combine( librariesDir, VivecraftConstants.OptifineLibraryFilename ) );
+
+					// Write patch file
+					progress?.ReportProgress( -1, "Writing Vivecraft patch file..." );
+
+					var patchFileJson = JsonConvert.SerializeObject(
+						vrEnabled ? MmcPatchDefinitions.VivecraftPatchVr : MmcPatchDefinitions.VivecraftPatchNonVr,
+						new JsonSerializerSettings {
+							NullValueHandling = NullValueHandling.Ignore,
+						}
+					);
+
+					File.WriteAllText( Path.Combine( patchesDir, "vivecraft.json" ), patchFileJson );
+
+					// Clean up temporary installation files
+					progress?.ReportProgress( -1, "Cleaning up temporary files..." );
+
+					try
+					{
+						Directory.Delete( installDirectory );
+					}
+					catch
+					{
+						/* Ignored */
+					}
+
+					#endregion
+
 					// Finally write the current version to the instance version file
 					// We do this last so that if a version upgrade fails, the user
 					// can resume at the last fully completed version
-					File.WriteAllText( versionFile, JsonConvert.SerializeObject( instanceVersion ) );
+					File.WriteAllText( metadataFile, JsonConvert.SerializeObject( instanceMetadata ) );
 				}
 			}
 			finally
@@ -335,10 +437,10 @@ namespace MinecraftUpgrader.Upgrade
 			}
 		}
 
-		public async Task NewInstance( MmcConfig mmcConfig, string instName, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null )
+		public async Task NewInstance( MmcConfig mmcConfig, string instName, bool vrEnabled, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null )
 		{
 			var newInstDir = Path.Combine( mmcConfig.InstancesFolder, instName );
-			var newInstCfg = Path.Combine( newInstDir,                "instance.cfg" );
+			var newInstCfg = Path.Combine( newInstDir, "instance.cfg" );
 
 			if ( Directory.Exists( newInstDir ) )
 				throw new InvalidOperationException( "An instance with the specified name already exists" );
@@ -351,11 +453,13 @@ namespace MinecraftUpgrader.Upgrade
 
 			var pack = await this.LoadConfig();
 			var instance = new MmcInstance {
-				Name            = instName,
-				Icon            = "dutchie",
-				InstanceType    = pack.InstanceType,
-				IntendedVersion = pack.IntendedVersion,
-				MCLaunchMethod  = "LauncherPart"
+				Name             = instName,
+				Icon             = IconName,
+				InstanceType     = pack.InstanceType,
+				IntendedVersion  = pack.IntendedVersion,
+				MCLaunchMethod   = "LauncherPart",
+				OverrideJavaArgs = true,
+				JvmArgs          = VivecraftConstants.VivecraftJvmArgs,
 			};
 
 			token.ThrowIfCancellationRequested();
@@ -367,16 +471,16 @@ namespace MinecraftUpgrader.Upgrade
 				await ConfigReader.WriteConfig( instance, sw );
 			}
 
-			await this.SetupPack( mmcConfig, pack, newInstDir, true, token, progress, maxRamMb );
+			await this.SetupPack( mmcConfig, pack, newInstDir, true, vrEnabled, token, progress, maxRamMb );
 		}
 
-		public async Task ConvertInstance( MmcConfig mmcConfig, string instPath, bool forceRebuild, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null )
+		public async Task ConvertInstance( MmcConfig mmcConfig, string instPath, bool forceRebuild, bool vrEnabled, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null )
 		{
 			if ( !Directory.Exists( instPath ) )
 				throw new InvalidOperationException( "The specified instance folder was not found" );
 
 			if ( Directory.Exists( Path.Combine( instPath, "minecraft" ) ) || !Directory.Exists( Path.Combine( instPath, ".minecraft" ) ) )
-				throw new InvalidOperationException( "The existing instance is using the old MultiMC pack format." +
+				throw new InvalidOperationException( "The existing instance is using the old MultiMC pack format. " +
 													 "This installer cannot upgrade an instance to the new MultiMC pack format.\n\n" +
 													 "Please use the \"New Instance\" option to create a new MultiMC instance." );
 
@@ -391,14 +495,25 @@ namespace MinecraftUpgrader.Upgrade
 			}
 
 			token.ThrowIfCancellationRequested();
-			if ( instance.InstanceType != pack.InstanceType || instance.IntendedVersion != pack.IntendedVersion )
+			if ( instance.InstanceType != pack.InstanceType || ( instance.IntendedVersion != null && instance.IntendedVersion != pack.IntendedVersion ) )
 				throw new InvalidOperationException( "The existing instance is set up for a different version of Minecraft " +
 													 "than the target instance. The upgrader cannot convert an existing instance " +
 													 "to a different Minecraft version.\n\n" +
 													 "Please create a new instance, or manually upgrade the existing instance to " +
 													 $"Minecraft {pack.IntendedVersion}" );
 
-			await this.SetupPack( mmcConfig, pack, instPath, forceRebuild, token, progress, maxRamMb );
+			// Apply Vivecraft JVM arguments
+			instance.OverrideJavaArgs = true;
+			instance.JvmArgs          = VivecraftConstants.VivecraftJvmArgs;
+			instance.Icon             = IconName;
+
+			using ( var fs = File.Open( instCfg, FileMode.Open, FileAccess.Write, FileShare.Read ) )
+			using ( var sr = new StreamWriter( fs ) )
+			{
+				await ConfigReader.WriteConfig( instance, sr );
+			}
+
+			await this.SetupPack( mmcConfig, pack, instPath, forceRebuild, vrEnabled, token, progress, maxRamMb );
 		}
 	}
 }
