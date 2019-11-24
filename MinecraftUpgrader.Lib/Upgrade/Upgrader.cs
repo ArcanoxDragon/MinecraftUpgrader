@@ -107,7 +107,7 @@ namespace MinecraftUpgrader.Upgrade
 
 			try
 			{
-				using var web          = new CfWebClient();
+				using var web          = new CefWebClient();
 				var       downloadTask = "";
 
 				web.DownloadProgressChanged += ( sender, args ) => {
