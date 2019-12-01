@@ -266,17 +266,15 @@ namespace MinecraftUpgrader.Upgrade
 							}
 
 							// Install new version if necessary
-							if ( mod.FileId.HasValue )
+							if ( !string.IsNullOrEmpty( mod.FileUri ) )
 							{
 								var fileName = $"{modId}.jar";
 								var filePath = Path.Combine( minecraftDir, "mods", fileName );
-								// TODO: Allow non-CurseForge URLs
-								var archiveUrl = $"https://www.curseforge.com/minecraft/mc-mods/{modId}/download/{mod.FileId}/file";
 
 								downloadTask = $"{modTask}\n" +
 											   $"Downloading mod archive: {fileName}";
 
-								await web.DownloadFileTaskAsync( archiveUrl, filePath );
+								await web.DownloadFileTaskAsync( mod.FileUri, filePath );
 							}
 						}
 					}

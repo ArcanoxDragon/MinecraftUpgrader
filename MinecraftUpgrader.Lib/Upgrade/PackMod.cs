@@ -2,7 +2,7 @@
 {
 	public class PackMod
 	{
-		public long?  FileId        { get; set; }
+		public string FileUri       { get; set; }
 		public bool   RemoveOld     { get; set; }
 		public string RemovePattern { get; set; }
 	}
