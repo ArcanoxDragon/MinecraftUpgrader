@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.Zip;
@@ -10,12 +11,13 @@ namespace MinecraftUpgrader.Zip
 {
 	public class ZipExtractOptions
 	{
-		public ZipExtractOptions( string directoryName = null, bool overwriteExisting = false, CancellationToken? cancellationToken = null, ProgressReporter progressReporter = null )
+		public ZipExtractOptions( string directoryName = null, bool overwriteExisting = false, CancellationToken? cancellationToken = null, ProgressReporter progressReporter = null, string filenamePattern = null )
 		{
 			this.DirectoryName     = directoryName;
 			this.OverwriteExisting = overwriteExisting;
 			this.CancellationToken = cancellationToken;
 			this.ProgressReporter  = progressReporter;
+			this.FilenamePattern   = filenamePattern;
 		}
 
 		/// <summary>
@@ -27,6 +29,7 @@ namespace MinecraftUpgrader.Zip
 		public bool               OverwriteExisting       { get; set; }
 		public CancellationToken? CancellationToken       { get; set; }
 		public ProgressReporter   ProgressReporter        { get; set; }
+		public string             FilenamePattern         { get; set; }
 	}
 
 	public static class ZipExtensions
@@ -50,6 +53,9 @@ namespace MinecraftUpgrader.Zip
 
 			if ( directoryName != null && entries.Count == 0 )
 				throw new DirectoryNotFoundException( $"The directory \"{directoryName}\" was not found in the archive" );
+
+			if ( !string.IsNullOrEmpty( options.FilenamePattern ) )
+				entries = entries.Where( e => Regex.IsMatch( e.Name, options.FilenamePattern, RegexOptions.IgnoreCase ) ).ToList();
 
 			foreach ( var entry in entries )
 			{

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using static MinecraftUpgrader.Constants.VivecraftConstants;
+using static MinecraftUpgrader.Utility.Constants.Vivecraft;
 
 namespace MinecraftUpgrader.MultiMC
 {

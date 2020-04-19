@@ -12,10 +12,10 @@ using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Extensions.Options;
 using MinecraftUpgrader.Async;
 using MinecraftUpgrader.Config;
-using MinecraftUpgrader.Constants;
 using MinecraftUpgrader.Extensions;
 using MinecraftUpgrader.MultiMC;
 using MinecraftUpgrader.Options;
+using MinecraftUpgrader.Utility;
 using MinecraftUpgrader.Zip;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -191,21 +191,24 @@ namespace MinecraftUpgrader.Upgrade
 						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "resources", false, token, progress ) );
 						progress?.ReportProgress( "Extracting base pack contents (scripts)..." );
 						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "scripts", false, token, progress ) );
+						progress?.ReportProgress( "Extracting base pack contents..." );
+						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( overwriteExisting: false, cancellationToken: token, progressReporter: progress, filenamePattern: @"servers\.dat" ) );
 					}
 
 					token.ThrowIfCancellationRequested();
 
-					// Download client pack overrides
-					downloadTask = "Downloading client overrides...";
-					var clientPackFileName = Path.Combine( tempDir, "client.zip" );
-					await web.DownloadFileTaskAsync( pack.ClientPack, clientPackFileName );
-
-					token.ThrowIfCancellationRequested();
-					progress?.ReportProgress( 0, "Extracting client overrides..." );
-
-					// Extract client pack contents
-					using ( var fs = File.Open( clientPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read ) )
+					if ( !string.IsNullOrEmpty( pack.ClientPack ) )
 					{
+						// Download client pack overrides
+						downloadTask = "Downloading client overrides...";
+						var clientPackFileName = Path.Combine( tempDir, "client.zip" );
+						await web.DownloadFileTaskAsync( pack.ClientPack, clientPackFileName );
+
+						token.ThrowIfCancellationRequested();
+						progress?.ReportProgress( 0, "Extracting client overrides..." );
+
+						// Extract client pack contents
+						using var fs  = File.Open( clientPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read );
 						using var zip = new ZipFile( fs );
 
 						progress?.ReportProgress( "Extracting client overrides (configs)..." );
@@ -357,14 +360,14 @@ namespace MinecraftUpgrader.Upgrade
 					Directory.CreateDirectory( patchesDir );
 
 				// Download Vivecraft installer
-				var vivecraftVersion           = vrEnabled ? VivecraftConstants.VivecraftVersionVr : VivecraftConstants.VivecraftVersionNonVr;
-				var vivecraftRevision          = vrEnabled ? VivecraftConstants.VivecraftRevisionVr : VivecraftConstants.VivecraftRevisionNonVr;
+				var vivecraftVersion           = vrEnabled ? Constants.Vivecraft.VivecraftVersionVr : Constants.Vivecraft.VivecraftVersionNonVr;
+				var vivecraftRevision          = vrEnabled ? Constants.Vivecraft.VivecraftRevisionVr : Constants.Vivecraft.VivecraftRevisionNonVr;
 				var vivecraftInstallerFilename = Path.Combine( installDirectory, "vivecraft_installer.exe" );
 
 				downloadTask = $"{vrTask}\n" +
 							   $"Downloading Vivecraft installer...";
 
-				var vivecraftInstallerUri = VivecraftConstants.GetVivecraftInstallerUri( vrEnabled );
+				var vivecraftInstallerUri = Constants.Vivecraft.GetVivecraftInstallerUri( vrEnabled );
 
 				await web.DownloadFileTaskAsync( vivecraftInstallerUri, vivecraftInstallerFilename );
 
@@ -391,7 +394,7 @@ namespace MinecraftUpgrader.Upgrade
 				downloadTask = $"{vrTask}\n" +
 							   $"Fetching Optifine download information...";
 
-				var optifineDownloadPage = await web.DownloadStringTaskAsync( VivecraftConstants.OptifineMirrorUri );
+				var optifineDownloadPage = await web.DownloadStringTaskAsync( Constants.Vivecraft.OptifineMirrorUri );
 
 				if ( string.IsNullOrEmpty( optifineDownloadPage ) )
 					throw new Exception( "Could not download Optifine from the mirror" );
@@ -401,12 +404,12 @@ namespace MinecraftUpgrader.Upgrade
 				if ( !mirrorPageMatch.Success )
 					throw new Exception( "Unexpected response from Optifine mirror" );
 
-				var optifineDownloadUrl = VivecraftConstants.OptifineBaseUri + mirrorPageMatch.Groups[ 2 ].Value;
+				var optifineDownloadUrl = Constants.Vivecraft.OptifineBaseUri + mirrorPageMatch.Groups[ 2 ].Value;
 
 				downloadTask = $"{vrTask}\n" +
 							   $"Downloading Optifine archive...";
 
-				await web.DownloadFileTaskAsync( optifineDownloadUrl, Path.Combine( librariesDir, VivecraftConstants.OptifineLibraryFilename ) );
+				await web.DownloadFileTaskAsync( optifineDownloadUrl, Path.Combine( librariesDir, Constants.Vivecraft.OptifineLibraryFilename ) );
 
 				// Write patch file
 				progress?.ReportProgress( -1, "Writing Vivecraft patch file..." );
@@ -467,7 +470,7 @@ namespace MinecraftUpgrader.Upgrade
 				IntendedVersion  = pack.IntendedVersion,
 				MCLaunchMethod   = "LauncherPart",
 				OverrideJavaArgs = true,
-				JvmArgs          = VivecraftConstants.VivecraftJvmArgs,
+				JvmArgs          = Constants.Vivecraft.VivecraftJvmArgs,
 			};
 
 			token.ThrowIfCancellationRequested();
@@ -514,7 +517,7 @@ namespace MinecraftUpgrader.Upgrade
 
 			// Apply Vivecraft JVM arguments
 			instance.OverrideJavaArgs = true;
-			instance.JvmArgs          = VivecraftConstants.VivecraftJvmArgs;
+			instance.JvmArgs          = Constants.Vivecraft.VivecraftJvmArgs;
 			instance.Icon             = IconName;
 
 			using ( var fs = File.Open( instCfg, FileMode.Open, FileAccess.Write, FileShare.Read ) )
