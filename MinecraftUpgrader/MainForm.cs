@@ -32,6 +32,7 @@ namespace MinecraftUpgrader
 		private MmcConfig                         config;
 		private IList<(string name, string path)> instances;
 		private PackMode                          currentPackState = PackMode.New;
+		private PackUpgrade                       packUpgrade;
 		private InstanceMetadata                  currentPackMetadata;
 		private bool                              isVrEnabled;
 
@@ -83,7 +84,7 @@ namespace MinecraftUpgrader
 					this.rbInstanceExisting.Checked = true;
 					this.cmbInstance.Enabled        = true;
 					this.cmbInstance.SelectedIndex  = this.instances.IndexOf( lastInstance );
-					await this.CheckInstance();
+					await this.UpdatePackMetadata();
 				}
 			}
 		}
@@ -186,21 +187,38 @@ namespace MinecraftUpgrader
 		{
 			this.txtNewInstanceName.Enabled = this.rbInstanceNew.Checked;
 			this.cmbInstance.Enabled        = this.rbInstanceExisting.Checked;
-			await this.CheckInstance();
+			await this.UpdatePackMetadata();
 		}
 
 		private async void OnTxtNewInstanceNameChanged( object sender, EventArgs e )
 		{
-			await this.CheckInstance();
+			await this.UpdatePackMetadata();
 		}
 
 		private async void OnCbInstanceChanged( object sender, EventArgs e )
 		{
-			await this.CheckInstance();
+			await this.UpdatePackMetadata();
 		}
 
-		private void UpdateLayoutFromPackState()
+		private void UpdateLayoutFromState()
 		{
+			if ( this.packUpgrade.SupportsVR )
+			{
+				if ( !this.panelVR.Visible )
+				{
+					this.panelVR.Visible =  true;
+					this.Height          += this.panelVR.Height;
+				}
+			}
+			else
+			{
+				if ( this.panelVR.Visible )
+				{
+					this.panelVR.Visible =  false;
+					this.Height          -= this.panelVR.Height;
+				}
+			}
+
 			this.buttonLayoutPanel.ColumnStyles[ 0 ].Width    = 0;
 			this.buttonLayoutPanel.ColumnStyles[ 0 ].SizeType = SizeType.Absolute;
 			this.buttonLayoutPanel.ColumnStyles[ 1 ].Width    = 100;
@@ -252,53 +270,59 @@ namespace MinecraftUpgrader
 			}
 		}
 
-		private async Task CheckInstance()
+		private async Task UpdatePackMetadata()
 		{
+			this.packUpgrade = await this.upgrader.LoadConfig();
+
 			if ( this.rbInstanceNew.Checked )
 			{
 				this.currentPackState = PackMode.New;
 			}
 			else
 			{
-				var instanceSelected = this.cmbInstance.SelectedItem != null;
+				this.CheckCurrentInstance();
+			}
 
-				if ( instanceSelected )
+			this.UpdateLayoutFromState();
+		}
+
+		private void CheckCurrentInstance()
+		{
+			var instanceSelected = this.cmbInstance.SelectedItem != null;
+
+			if ( instanceSelected )
+			{
+				var selectedInstance = this.instances[ this.cmbInstance.SelectedIndex ];
+				var instanceMetadata = InstanceMetadataReader.ReadInstanceMetadata( selectedInstance.path );
+
+				if ( instanceMetadata == null
+					 || instanceMetadata.Version == "0.0.0"
+					 || !SemVersion.TryParse( instanceMetadata.Version, out var instanceSemVersion )
+					 || !SemVersion.TryParse( this.packUpgrade.CurrentVersion, out var serverSemVersion ) )
 				{
-					var selectedInstance = this.instances[ this.cmbInstance.SelectedIndex ];
-					var instanceMetadata = InstanceMetadataReader.ReadInstanceMetadata( selectedInstance.path );
-					var packUpgrade      = await this.upgrader.LoadConfig();
-
-					if ( instanceMetadata == null
-						 || instanceMetadata.Version == "0.0.0"
-						 || !SemVersion.TryParse( instanceMetadata.Version, out var instanceSemVersion )
-						 || !SemVersion.TryParse( packUpgrade.CurrentVersion, out var serverSemVersion ) )
+					// Never converted
+					this.currentPackState = PackMode.NeedsConversion;
+				}
+				else
+				{
+					if ( instanceSemVersion < serverSemVersion
+						 || instanceMetadata.BuiltFromServerPack != this.packUpgrade.ServerPack )
 					{
-						// Never converted
-						this.currentPackState = PackMode.NeedsConversion;
+						// Out of date
+						this.currentPackState = PackMode.NeedsUpdate;
 					}
 					else
 					{
-						if ( instanceSemVersion < serverSemVersion
-							 || instanceMetadata.BuiltFromServerPack != packUpgrade.ServerPack )
-						{
-							// Out of date
-							this.currentPackState = PackMode.NeedsUpdate;
-						}
-						else
-						{
-							// Up-to-date
-							this.currentPackState = PackMode.ReadyToPlay;
-							this.isVrEnabled      = instanceMetadata.VrEnabled;
+						// Up-to-date
+						this.currentPackState = PackMode.ReadyToPlay;
+						this.isVrEnabled      = instanceMetadata.VrEnabled;
 
-							this.RefreshVRButtons();
-						}
+						this.RefreshVRButtons();
 					}
-
-					this.currentPackMetadata = instanceMetadata;
 				}
-			}
 
-			this.UpdateLayoutFromPackState();
+				this.currentPackMetadata = instanceMetadata;
+			}
 		}
 
 		private async void OnBtnNonVRClick( object sender, EventArgs e )
@@ -324,12 +348,12 @@ namespace MinecraftUpgrader
 				if ( this.currentPackState == PackMode.ReadyToPlay && this.currentPackMetadata.VrEnabled != this.isVrEnabled )
 				{
 					this.currentPackState = PackMode.NeedsUpdate;
-					this.UpdateLayoutFromPackState();
+					this.UpdateLayoutFromState();
 				}
 
 				if ( this.currentPackState != PackMode.ReadyToPlay && this.currentPackMetadata.VrEnabled == this.isVrEnabled )
 				{
-					await this.CheckInstance();
+					await this.UpdatePackMetadata();
 				}
 			}
 		}
@@ -456,7 +480,7 @@ namespace MinecraftUpgrader
 				dialog.Close();
 				this.Enabled = true;
 				this.BringToFront();
-				await this.CheckInstance();
+				await this.UpdatePackMetadata();
 
 				if ( successful )
 					this.OfferStartMinecraft( instanceName,

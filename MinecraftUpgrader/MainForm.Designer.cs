@@ -43,13 +43,15 @@
 			this.buttonLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
 			this.btnRebuild = new System.Windows.Forms.Button();
 			this.btnGo = new System.Windows.Forms.Button();
+			this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+			this.appToolTip = new System.Windows.Forms.ToolTip(this.components);
+			this.panelVR = new System.Windows.Forms.Panel();
+			this.lbVrMode = new System.Windows.Forms.Label();
 			this.vrModeLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
 			this.btnNonVR = new System.Windows.Forms.Button();
 			this.btnVR = new System.Windows.Forms.Button();
-			this.lbVrMode = new System.Windows.Forms.Label();
-			this.linkLabel1 = new System.Windows.Forms.LinkLabel();
-			this.appToolTip = new System.Windows.Forms.ToolTip(this.components);
 			this.buttonLayoutPanel.SuspendLayout();
+			this.panelVR.SuspendLayout();
 			this.vrModeLayoutPanel.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -213,6 +215,43 @@
 			this.btnGo.UseVisualStyleBackColor = false;
 			this.btnGo.Click += new System.EventHandler(this.OnBtnGoClick);
 			// 
+			// linkLabel1
+			// 
+			this.linkLabel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.linkLabel1.AutoSize = true;
+			this.linkLabel1.Location = new System.Drawing.Point(290, 349);
+			this.linkLabel1.Name = "linkLabel1";
+			this.linkLabel1.Size = new System.Drawing.Size(134, 13);
+			this.linkLabel1.TabIndex = 18;
+			this.linkLabel1.TabStop = true;
+			this.linkLabel1.Text = "Click here to open MultiMC";
+			this.linkLabel1.Click += new System.EventHandler(this.OnOpenMultiMCClick);
+			// 
+			// appToolTip
+			// 
+			this.appToolTip.AutomaticDelay = 100;
+			this.appToolTip.AutoPopDelay = 10000;
+			this.appToolTip.InitialDelay = 100;
+			this.appToolTip.ReshowDelay = 100;
+			// 
+			// panelVR
+			// 
+			this.panelVR.Controls.Add(this.lbVrMode);
+			this.panelVR.Controls.Add(this.vrModeLayoutPanel);
+			this.panelVR.Location = new System.Drawing.Point(12, 207);
+			this.panelVR.Name = "panelVR";
+			this.panelVR.Size = new System.Drawing.Size(412, 48);
+			this.panelVR.TabIndex = 19;
+			// 
+			// lbVrMode
+			// 
+			this.lbVrMode.AutoSize = true;
+			this.lbVrMode.Location = new System.Drawing.Point(-3, 0);
+			this.lbVrMode.Name = "lbVrMode";
+			this.lbVrMode.Size = new System.Drawing.Size(60, 13);
+			this.lbVrMode.TabIndex = 19;
+			this.lbVrMode.Text = "Play Mode:";
+			// 
 			// vrModeLayoutPanel
 			// 
 			this.vrModeLayoutPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -222,13 +261,13 @@
 			this.vrModeLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
 			this.vrModeLayoutPanel.Controls.Add(this.btnNonVR, 0, 0);
 			this.vrModeLayoutPanel.Controls.Add(this.btnVR, 1, 0);
-			this.vrModeLayoutPanel.Location = new System.Drawing.Point(12, 227);
+			this.vrModeLayoutPanel.Location = new System.Drawing.Point(0, 16);
 			this.vrModeLayoutPanel.Name = "vrModeLayoutPanel";
 			this.vrModeLayoutPanel.RowCount = 1;
 			this.vrModeLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
 			this.vrModeLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 32F));
 			this.vrModeLayoutPanel.Size = new System.Drawing.Size(412, 32);
-			this.vrModeLayoutPanel.TabIndex = 16;
+			this.vrModeLayoutPanel.TabIndex = 18;
 			// 
 			// btnNonVR
 			// 
@@ -249,7 +288,6 @@
         "mode. You will be able to see players who are playing in VR,\r\nbut don\'t have to " +
         "play in VR yourself.");
 			this.btnNonVR.UseVisualStyleBackColor = false;
-			this.btnNonVR.Click += new System.EventHandler(this.OnBtnNonVRClick);
 			// 
 			// btnVR
 			// 
@@ -267,35 +305,6 @@
 			this.btnVR.Text = "VR";
 			this.appToolTip.SetToolTip(this.btnVR, resources.GetString("btnVR.ToolTip"));
 			this.btnVR.UseVisualStyleBackColor = false;
-			this.btnVR.Click += new System.EventHandler(this.OnBtnVRClick);
-			// 
-			// lbVrMode
-			// 
-			this.lbVrMode.AutoSize = true;
-			this.lbVrMode.Location = new System.Drawing.Point(9, 211);
-			this.lbVrMode.Name = "lbVrMode";
-			this.lbVrMode.Size = new System.Drawing.Size(60, 13);
-			this.lbVrMode.TabIndex = 17;
-			this.lbVrMode.Text = "Play Mode:";
-			// 
-			// linkLabel1
-			// 
-			this.linkLabel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.linkLabel1.AutoSize = true;
-			this.linkLabel1.Location = new System.Drawing.Point(290, 349);
-			this.linkLabel1.Name = "linkLabel1";
-			this.linkLabel1.Size = new System.Drawing.Size(134, 13);
-			this.linkLabel1.TabIndex = 18;
-			this.linkLabel1.TabStop = true;
-			this.linkLabel1.Text = "Click here to open MultiMC";
-			this.linkLabel1.Click += new System.EventHandler(this.OnOpenMultiMCClick);
-			// 
-			// appToolTip
-			// 
-			this.appToolTip.AutomaticDelay = 100;
-			this.appToolTip.AutoPopDelay = 10000;
-			this.appToolTip.InitialDelay = 100;
-			this.appToolTip.ReshowDelay = 100;
 			// 
 			// MainForm
 			// 
@@ -303,9 +312,8 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
 			this.ClientSize = new System.Drawing.Size(436, 371);
+			this.Controls.Add(this.panelVR);
 			this.Controls.Add(this.linkLabel1);
-			this.Controls.Add(this.lbVrMode);
-			this.Controls.Add(this.vrModeLayoutPanel);
 			this.Controls.Add(this.buttonLayoutPanel);
 			this.Controls.Add(this.lbInstanceStatus);
 			this.Controls.Add(this.rbInstanceNew);
@@ -326,6 +334,8 @@
 			this.Text = "Minecraft Mod Installer";
 			this.Load += new System.EventHandler(this.OnFormLoad);
 			this.buttonLayoutPanel.ResumeLayout(false);
+			this.panelVR.ResumeLayout(false);
+			this.panelVR.PerformLayout();
 			this.vrModeLayoutPanel.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
@@ -347,12 +357,13 @@
 		private System.Windows.Forms.TableLayoutPanel buttonLayoutPanel;
 		private System.Windows.Forms.Button btnRebuild;
 		private System.Windows.Forms.Button btnGo;
+		private System.Windows.Forms.LinkLabel linkLabel1;
+		private System.Windows.Forms.ToolTip appToolTip;
+		private System.Windows.Forms.Panel panelVR;
+		private System.Windows.Forms.Label lbVrMode;
 		private System.Windows.Forms.TableLayoutPanel vrModeLayoutPanel;
 		private System.Windows.Forms.Button btnNonVR;
 		private System.Windows.Forms.Button btnVR;
-		private System.Windows.Forms.Label lbVrMode;
-		private System.Windows.Forms.LinkLabel linkLabel1;
-		private System.Windows.Forms.ToolTip appToolTip;
 	}
 }
 

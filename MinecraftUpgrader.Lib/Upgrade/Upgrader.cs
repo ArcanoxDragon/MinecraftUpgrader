@@ -192,7 +192,12 @@ namespace MinecraftUpgrader.Upgrade
 						progress?.ReportProgress( "Extracting base pack contents (scripts)..." );
 						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "scripts", false, token, progress ) );
 						progress?.ReportProgress( "Extracting base pack contents..." );
-						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( overwriteExisting: false, cancellationToken: token, progressReporter: progress, filenamePattern: @"servers\.dat" ) );
+
+						// Individual files that might exist
+						foreach ( var filename in pack.AdditionalBasePackFiles )
+						{
+							await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( filenamePattern: Regex.Escape( filename ), overwriteExisting: false, cancellationToken: token, progressReporter: progress ) );
+						}
 					}
 
 					token.ThrowIfCancellationRequested();
@@ -342,97 +347,100 @@ namespace MinecraftUpgrader.Upgrade
 
 				#region VR Stuff
 
-				// Handle VR-specific pack settings
-				string vrTask = $"Setting up Vivecraft for {( vrEnabled ? "VR" : "non-VR" )} play...";
-
-				progress?.ReportProgress( -1, vrTask );
-
-				var optifineDownloadRegex = new Regex( @"href=(['""])(downloadx\?f=[^'""]+)\1", RegexOptions.Compiled | RegexOptions.IgnoreCase );
-
-				// Set up temporary directory
-				var installDirectory = Path.Combine( Path.GetTempPath(), "MinecraftInstaller" );
-
-				if ( !Directory.Exists( installDirectory ) )
-					Directory.CreateDirectory( installDirectory );
-				if ( !Directory.Exists( librariesDir ) )
-					Directory.CreateDirectory( librariesDir );
-				if ( !Directory.Exists( patchesDir ) )
-					Directory.CreateDirectory( patchesDir );
-
-				// Download Vivecraft installer
-				var vivecraftVersion           = vrEnabled ? Constants.Vivecraft.VivecraftVersionVr : Constants.Vivecraft.VivecraftVersionNonVr;
-				var vivecraftRevision          = vrEnabled ? Constants.Vivecraft.VivecraftRevisionVr : Constants.Vivecraft.VivecraftRevisionNonVr;
-				var vivecraftInstallerFilename = Path.Combine( installDirectory, "vivecraft_installer.exe" );
-
-				downloadTask = $"{vrTask}\n" +
-							   $"Downloading Vivecraft installer...";
-
-				var vivecraftInstallerUri = Constants.Vivecraft.GetVivecraftInstallerUri( vrEnabled );
-
-				await web.DownloadFileTaskAsync( vivecraftInstallerUri, vivecraftInstallerFilename );
-
-				progress?.ReportProgress( -1, $"{vrTask}\nExtracting Vivecraft installer..." );
-
-				using ( var fs = File.Open( vivecraftInstallerFilename, FileMode.Open, FileAccess.Read ) )
+				if ( pack.SupportsVR )
 				{
-					using var zip             = new ZipFile( fs );
-					var       versionJarEntry = zip.GetEntry( "version.jar" );
+					// Handle VR-specific pack settings
+					string vrTask = $"Setting up Vivecraft for {( vrEnabled ? "VR" : "non-VR" )} play...";
 
-					if ( versionJarEntry == null || !versionJarEntry.IsFile )
-						throw new Exception( "Could not find Vivecraft jar file in the installer" );
+					progress?.ReportProgress( -1, vrTask );
 
-					var minecriftFilename = $"minecrift-{vivecraftVersion}-{vivecraftRevision}.jar";
+					var optifineDownloadRegex = new Regex( @"href=(['""])(downloadx\?f=[^'""]+)\1", RegexOptions.Compiled | RegexOptions.IgnoreCase );
 
-					using var entryStream = zip.GetInputStream( versionJarEntry );
-					using var destStream  = File.Open( Path.Combine( librariesDir, minecriftFilename ), FileMode.Create, FileAccess.Write );
+					// Set up temporary directory
+					var installDirectory = Path.Combine( Path.GetTempPath(), "MinecraftInstaller" );
 
-					await entryStream.CopyToAsync( destStream );
-					await destStream.FlushAsync();
-				}
+					if ( !Directory.Exists( installDirectory ) )
+						Directory.CreateDirectory( installDirectory );
+					if ( !Directory.Exists( librariesDir ) )
+						Directory.CreateDirectory( librariesDir );
+					if ( !Directory.Exists( patchesDir ) )
+						Directory.CreateDirectory( patchesDir );
 
-				// Download Optifine
-				downloadTask = $"{vrTask}\n" +
-							   $"Fetching Optifine download information...";
+					// Download Vivecraft installer
+					var vivecraftVersion           = vrEnabled ? Constants.Vivecraft.VivecraftVersionVr : Constants.Vivecraft.VivecraftVersionNonVr;
+					var vivecraftRevision          = vrEnabled ? Constants.Vivecraft.VivecraftRevisionVr : Constants.Vivecraft.VivecraftRevisionNonVr;
+					var vivecraftInstallerFilename = Path.Combine( installDirectory, "vivecraft_installer.exe" );
 
-				var optifineDownloadPage = await web.DownloadStringTaskAsync( Constants.Vivecraft.OptifineMirrorUri );
+					downloadTask = $"{vrTask}\n" +
+								   $"Downloading Vivecraft installer...";
 
-				if ( string.IsNullOrEmpty( optifineDownloadPage ) )
-					throw new Exception( "Could not download Optifine from the mirror" );
+					var vivecraftInstallerUri = Constants.Vivecraft.GetVivecraftInstallerUri( vrEnabled );
 
-				var mirrorPageMatch = optifineDownloadRegex.Match( optifineDownloadPage );
+					await web.DownloadFileTaskAsync( vivecraftInstallerUri, vivecraftInstallerFilename );
 
-				if ( !mirrorPageMatch.Success )
-					throw new Exception( "Unexpected response from Optifine mirror" );
+					progress?.ReportProgress( -1, $"{vrTask}\nExtracting Vivecraft installer..." );
 
-				var optifineDownloadUrl = Constants.Vivecraft.OptifineBaseUri + mirrorPageMatch.Groups[ 2 ].Value;
+					using ( var fs = File.Open( vivecraftInstallerFilename, FileMode.Open, FileAccess.Read ) )
+					{
+						using var zip             = new ZipFile( fs );
+						var       versionJarEntry = zip.GetEntry( "version.jar" );
 
-				downloadTask = $"{vrTask}\n" +
-							   $"Downloading Optifine archive...";
+						if ( versionJarEntry == null || !versionJarEntry.IsFile )
+							throw new Exception( "Could not find Vivecraft jar file in the installer" );
 
-				await web.DownloadFileTaskAsync( optifineDownloadUrl, Path.Combine( librariesDir, Constants.Vivecraft.OptifineLibraryFilename ) );
+						var minecriftFilename = $"minecrift-{vivecraftVersion}-{vivecraftRevision}.jar";
 
-				// Write patch file
-				progress?.ReportProgress( -1, "Writing Vivecraft patch file..." );
+						using var entryStream = zip.GetInputStream( versionJarEntry );
+						using var destStream  = File.Open( Path.Combine( librariesDir, minecriftFilename ), FileMode.Create, FileAccess.Write );
 
-				var patchFileJson = JsonConvert.SerializeObject(
-					vrEnabled ? MmcPatchDefinitions.VivecraftPatchVr : MmcPatchDefinitions.VivecraftPatchNonVr,
-					new JsonSerializerSettings {
-						NullValueHandling = NullValueHandling.Ignore,
+						await entryStream.CopyToAsync( destStream );
+						await destStream.FlushAsync();
 					}
-				);
 
-				File.WriteAllText( Path.Combine( patchesDir, "vivecraft.json" ), patchFileJson );
+					// Download Optifine
+					downloadTask = $"{vrTask}\n" +
+								   $"Fetching Optifine download information...";
 
-				// Clean up temporary installation files
-				progress?.ReportProgress( -1, "Cleaning up temporary files..." );
+					var optifineDownloadPage = await web.DownloadStringTaskAsync( Constants.Vivecraft.OptifineMirrorUri );
 
-				try
-				{
-					Directory.Delete( installDirectory );
-				}
-				catch
-				{
-					/* Ignored */
+					if ( string.IsNullOrEmpty( optifineDownloadPage ) )
+						throw new Exception( "Could not download Optifine from the mirror" );
+
+					var mirrorPageMatch = optifineDownloadRegex.Match( optifineDownloadPage );
+
+					if ( !mirrorPageMatch.Success )
+						throw new Exception( "Unexpected response from Optifine mirror" );
+
+					var optifineDownloadUrl = Constants.Vivecraft.OptifineBaseUri + mirrorPageMatch.Groups[ 2 ].Value;
+
+					downloadTask = $"{vrTask}\n" +
+								   $"Downloading Optifine archive...";
+
+					await web.DownloadFileTaskAsync( optifineDownloadUrl, Path.Combine( librariesDir, Constants.Vivecraft.OptifineLibraryFilename ) );
+
+					// Write patch file
+					progress?.ReportProgress( -1, "Writing Vivecraft patch file..." );
+
+					var patchFileJson = JsonConvert.SerializeObject(
+						vrEnabled ? MmcPatchDefinitions.VivecraftPatchVr : MmcPatchDefinitions.VivecraftPatchNonVr,
+						new JsonSerializerSettings {
+							NullValueHandling = NullValueHandling.Ignore,
+						}
+					);
+
+					File.WriteAllText( Path.Combine( patchesDir, "vivecraft.json" ), patchFileJson );
+
+					// Clean up temporary installation files
+					progress?.ReportProgress( -1, "Cleaning up temporary files..." );
+
+					try
+					{
+						Directory.Delete( installDirectory );
+					}
+					catch
+					{
+						/* Ignored */
+					}
 				}
 
 				#endregion
