@@ -38,19 +38,14 @@ namespace MinecraftUpgrader.Upgrade
 
 		public async Task<PackUpgrade> LoadConfig()
 		{
-			var json   = new JsonSerializer { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-			var config = default( PackUpgrade );
+			using var http = new HttpClient();
+			using var str  = await http.GetStreamAsync( $"{this.options.UpgradeUrl}/{ConfigPath}" );
+			using var sr   = new StreamReader( str );
+			using var jr   = new JsonTextReader( sr );
 
-			using ( var http = new HttpClient() )
-			{
-				using var str = await http.GetStreamAsync( $"{this.options.UpgradeUrl}/{ConfigPath}" );
-				using var sr  = new StreamReader( str );
-				using var jr  = new JsonTextReader( sr );
+			var json = new JsonSerializer { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 
-				config = json.Deserialize<PackUpgrade>( jr );
-			}
-
-			return config;
+			return json.Deserialize<PackUpgrade>( jr );
 		}
 
 		private async Task SetupPack( MmcConfig mmcConfig, PackUpgrade pack, string destinationFolder, bool forceRebuild, bool vrEnabled, CancellationToken token, ProgressReporter progress, int? maxRamMb = null )
@@ -79,8 +74,9 @@ namespace MinecraftUpgrader.Upgrade
 
 			progress?.ReportProgress( "Creating instance folder structure..." );
 
-			var currentVersion    = "0.0.0";
-			var currentServerPack = default( string );
+			var currentVersion          = "0.0.0";
+			var currentServerPack       = default(string);
+			var currentMinecraftVersion = default(string);
 
 			// If forceRebuild is set, we don't even bother checking the current version.
 			// Just redo everything.
@@ -90,8 +86,9 @@ namespace MinecraftUpgrader.Upgrade
 
 				if ( currentInstanceMetadata.FileVersion >= 2 )
 				{
-					currentVersion    = currentInstanceMetadata.Version;
-					currentServerPack = currentInstanceMetadata.BuiltFromServerPack;
+					currentVersion          = currentInstanceMetadata.Version;
+					currentServerPack       = currentInstanceMetadata.BuiltFromServerPack;
+					currentMinecraftVersion = currentInstanceMetadata.IntendedMinecraftVersion;
 				}
 			}
 
@@ -118,11 +115,13 @@ namespace MinecraftUpgrader.Upgrade
 
 					if ( args.TotalBytesToReceive > 0 )
 					{
-						progress?.ReportProgress( args.BytesReceived / (double) args.TotalBytesToReceive,
+						// TODO: When Humanizer update is released, replace ToString calls below with interpolation shorthand
+						progress?.ReportProgress( args.BytesReceived / (double)args.TotalBytesToReceive,
 												  $"{downloadTask} ({dlSize.ToString( "0.##" )} / {totalSize.ToString( "0.##" )})" );
 					}
 					else
 					{
+						// TODO: When Humanizer update is released, replace ToString calls below with interpolation shorthand
 						progress?.ReportProgress( -1, $"{downloadTask} ({dlSize.ToString( "0.##" )})" );
 					}
 					// ReSharper restore AccessToModifiedClosure
@@ -146,7 +145,7 @@ namespace MinecraftUpgrader.Upgrade
 
 				// Only download base pack and client overrides if the version is 0 (not installed or old file version),
 				// or if the forceRebuild flag is set
-				if ( currentVersion == "0.0.0" || currentServerPack != pack.ServerPack )
+				if ( currentVersion == "0.0.0" || currentServerPack != pack.ServerPack || currentMinecraftVersion != pack.IntendedMinecraftVersion )
 				{
 					// Set this again in case we got here from "currentServerPack" not matching
 					// This forces all versions to install later on in this method even if the
@@ -161,12 +160,16 @@ namespace MinecraftUpgrader.Upgrade
 
 					if ( Directory.Exists( patchesDir ) )
 						Directory.Delete( patchesDir, true );
+
 					if ( Directory.Exists( configDir ) )
 						Directory.Delete( configDir, true );
+
 					if ( Directory.Exists( modsDir ) )
 						Directory.Delete( modsDir, true );
+
 					if ( Directory.Exists( resourcesDir ) )
 						Directory.Delete( resourcesDir, true );
+
 					if ( Directory.Exists( scriptsDir ) )
 						Directory.Delete( scriptsDir, true );
 
@@ -301,7 +304,7 @@ namespace MinecraftUpgrader.Upgrade
 
 							if ( File.Exists( configFilePath ) )
 							{
-								progress?.ReportProgress( ( currentConfig++ / (double) version.ConfigReplacements.Count ),
+								progress?.ReportProgress( ( currentConfig++ / (double)version.ConfigReplacements.Count ),
 														  $"{configsTask}\n" +
 														  $"Config file {currentConfig} of {version.ConfigReplacements.Count}: " +
 														  $"{configPath}" );
@@ -361,8 +364,10 @@ namespace MinecraftUpgrader.Upgrade
 
 					if ( !Directory.Exists( installDirectory ) )
 						Directory.CreateDirectory( installDirectory );
+
 					if ( !Directory.Exists( librariesDir ) )
 						Directory.CreateDirectory( librariesDir );
+
 					if ( !Directory.Exists( patchesDir ) )
 						Directory.CreateDirectory( patchesDir );
 
@@ -475,7 +480,7 @@ namespace MinecraftUpgrader.Upgrade
 				Name             = instName,
 				Icon             = IconName,
 				InstanceType     = pack.InstanceType,
-				IntendedVersion  = pack.IntendedVersion,
+				IntendedVersion  = pack.IntendedMinecraftVersion,
 				MCLaunchMethod   = "LauncherPart",
 				OverrideJavaArgs = true,
 				JvmArgs          = Constants.Vivecraft.VivecraftJvmArgs,
@@ -516,12 +521,12 @@ namespace MinecraftUpgrader.Upgrade
 			}
 
 			token.ThrowIfCancellationRequested();
-			if ( instance.InstanceType != pack.InstanceType || ( instance.IntendedVersion != null && instance.IntendedVersion != pack.IntendedVersion ) )
+			if ( instance.InstanceType != pack.InstanceType || ( instance.IntendedVersion != null && instance.IntendedVersion != pack.IntendedMinecraftVersion ) )
 				throw new InvalidOperationException( "The existing instance is set up for a different version of Minecraft " +
 													 "than the target instance. The upgrader cannot convert an existing instance " +
 													 "to a different Minecraft version.\n\n" +
 													 "Please create a new instance, or manually upgrade the existing instance to " +
-													 $"Minecraft {pack.IntendedVersion}" );
+													 $"Minecraft {pack.IntendedMinecraftVersion}" );
 
 			// Apply Vivecraft JVM arguments
 			instance.OverrideJavaArgs = true;
