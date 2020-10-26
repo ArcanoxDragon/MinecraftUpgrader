@@ -238,11 +238,8 @@ namespace MinecraftLauncher
 		{
 			var choice = MessageBox.Show( this,
 										  initialPrompt +
-										  "\n\nWould you like to start Minecraft now?\n\n" +
-										  "Note: If you haven't set up a Minecraft account in MultiMC yet, " +
-										  "you will have to run either this app or MultiMC again after setting " +
-										  "up your account to actually start Minecraft.",
-										  "Start MultiMC?",
+										  "\n\nWould you like to start Minecraft now?",
+										  "Start Minecraft?",
 										  MessageBoxButtons.YesNo,
 										  MessageBoxIcon.Question );
 
@@ -269,7 +266,7 @@ namespace MinecraftLauncher
 				} );
 			}
 
-			if (true|| !CheckSession() /* Try manual login */ )
+			if ( !CheckSession() /* Try manual login */ )
 			{
 				var loginForm   = Services.CreateInstance<LoginForm>();
 				var loginResult = loginForm.ShowDialog( this );
@@ -283,7 +280,7 @@ namespace MinecraftLauncher
 			if ( !CheckSession() /* Should never get here */ )
 			{
 				MessageBox.Show( this,
-								 "Could not start a valid Mojang session for Minecraft.",
+								 "Could not start a valid Mojang user session for Minecraft.",
 								 "Session Failure",
 								 MessageBoxButtons.OK,
 								 MessageBoxIcon.Error );
