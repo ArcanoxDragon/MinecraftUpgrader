@@ -88,6 +88,7 @@
 			// btnCancel
 			// 
 			this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.btnCancel.AutoSize = true;
 			this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
 			this.btnCancel.Location = new System.Drawing.Point(453, 141);
 			this.btnCancel.Name = "btnCancel";
@@ -114,6 +115,7 @@
 			this.panelStatus.ResumeLayout(false);
 			this.panelStatus.PerformLayout();
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 		}
 

@@ -63,6 +63,7 @@ namespace MinecraftLauncher
 			{
 				this.Cancel?.Invoke( this, new EventArgs() );
 				this.btnCancel.Enabled = false;
+				this.btnCancel.Text    = "Cancelling...";
 			}
 		}
 	}

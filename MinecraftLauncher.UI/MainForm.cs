@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,8 +21,7 @@ namespace MinecraftLauncher
 	{
 		private enum PackMode
 		{
-			New,
-			NeedsConversion,
+			NeedsInstallation,
 			NeedsUpdate,
 			ReadyToPlay,
 		}
@@ -28,7 +29,7 @@ namespace MinecraftLauncher
 		private readonly PackBuilder packBuilder;
 
 		private PackMetadata     packMetadata;
-		private PackMode         currentPackState = PackMode.New;
+		private PackMode         currentPackState = PackMode.NeedsInstallation;
 		private InstanceMetadata instanceMetadata;
 
 		// private bool isVrEnabled;
@@ -49,7 +50,15 @@ namespace MinecraftLauncher
 
 		private async void OnFormLoad( object sender, EventArgs e )
 		{
-			this.lbMinecraftPath.Text = this.packBuilder.ProfilePath;
+			var mcProfilePath = this.packBuilder.ProfilePath;
+
+			this.lbMinecraftPath.Text = mcProfilePath;
+			this.appToolTip.SetToolTip( this.lbMinecraftPath, mcProfilePath );
+
+			if ( Directory.Exists( mcProfilePath ) )
+				this.lbMinecraftPath.LinkArea = new LinkArea( 0, mcProfilePath.Length );
+			else
+				this.lbMinecraftPath.LinkArea = new LinkArea( 0, 0 );
 
 			await this.LoadPackMetadataAsync();
 			this.CheckCurrentInstance();
@@ -59,7 +68,7 @@ namespace MinecraftLauncher
 		{
 			this.Enabled = false;
 
-			var progressDialog = new ProgressDialog( "Loading mod pack info..." );
+			var progressDialog = new ProgressDialog( "Loading Mod Pack Info" );
 
 			try
 			{
@@ -92,14 +101,15 @@ namespace MinecraftLauncher
 				 !SemVersion.TryParse( this.packMetadata.CurrentVersion, out var serverSemVersion ) ||
 				 instanceMetadata.CurrentLaunchVersion == null ||
 				 instanceMetadata.CurrentMinecraftVersion != this.packMetadata.IntendedMinecraftVersion ||
-				 instanceMetadata.CurrentForgeVersion != this.packMetadata.RequiredForgeVersion )
+				 instanceMetadata.CurrentForgeVersion != this.packMetadata.RequiredForgeVersion ||
+				 instanceMetadata.BuiltFromServerPack != this.packMetadata.ServerPack )
 			{
 				// Never converted
-				this.currentPackState = PackMode.NeedsConversion;
+				this.currentPackState = PackMode.NeedsInstallation;
 			}
 			else
 			{
-				if ( instanceSemVersion < serverSemVersion || instanceMetadata.BuiltFromServerPack != this.packMetadata.ServerPack )
+				if ( instanceSemVersion < serverSemVersion )
 				{
 					// Out of date
 					this.currentPackState = PackMode.NeedsUpdate;
@@ -124,41 +134,34 @@ namespace MinecraftLauncher
 			this.buttonLayoutPanel.ColumnStyles[ 1 ].Width    = 100;
 			this.buttonLayoutPanel.ColumnStyles[ 1 ].SizeType = SizeType.Percent;
 
-			if ( this.currentPackState == PackMode.New )
+			this.lbInstanceStatus.Text = "";
+
+			if ( this.currentPackState == PackMode.NeedsInstallation )
 			{
-				this.btnGo.Text = "Create!";
+				this.btnRebuild.Enabled = false;
+
+				this.btnGo.Text            = "Install!";
+				this.lbInstanceStatus.Text = "Mod pack must be installed into a new Minecraft profile";
 			}
 			else
 			{
-				this.lbInstanceStatus.Text = "";
+				this.btnRebuild.Enabled                           = true;
+				this.buttonLayoutPanel.ColumnStyles[ 0 ].Width    = 50;
+				this.buttonLayoutPanel.ColumnStyles[ 0 ].SizeType = SizeType.Percent;
+				this.buttonLayoutPanel.ColumnStyles[ 1 ].Width    = 50;
+				this.buttonLayoutPanel.ColumnStyles[ 1 ].SizeType = SizeType.Percent;
 
-				if ( this.currentPackState == PackMode.NeedsConversion )
+				if ( this.currentPackState == PackMode.NeedsUpdate )
 				{
-					this.btnRebuild.Enabled = false;
-
-					this.btnGo.Text            = "Install!";
-					this.lbInstanceStatus.Text = "Mod pack must be installed into a new Minecraft profile";
+					this.btnGo.Text            = "Update!";
+					this.lbInstanceStatus.Text = "Instance is out of date and must be updated";
 				}
 				else
 				{
-					this.btnRebuild.Enabled                           = true;
-					this.buttonLayoutPanel.ColumnStyles[ 0 ].Width    = 50;
-					this.buttonLayoutPanel.ColumnStyles[ 0 ].SizeType = SizeType.Percent;
-					this.buttonLayoutPanel.ColumnStyles[ 1 ].Width    = 50;
-					this.buttonLayoutPanel.ColumnStyles[ 1 ].SizeType = SizeType.Percent;
+					// Ready To Play
 
-					if ( this.currentPackState == PackMode.NeedsUpdate )
-					{
-						this.btnGo.Text            = "Update!";
-						this.lbInstanceStatus.Text = "Instance is out of date and must be updated";
-					}
-					else
-					{
-						// Ready To Play
-
-						this.btnGo.Text            = "Play!";
-						this.lbInstanceStatus.Text = "This instance is ready to play!";
-					}
+					this.btnGo.Text            = "Play!";
+					this.lbInstanceStatus.Text = "This instance is ready to play!";
 				}
 			}
 		}
@@ -179,14 +182,28 @@ namespace MinecraftLauncher
 			await this.DoConfigurePack( false );
 		}
 
+		private void lbMinecraftPath_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
+		{
+			if ( Directory.Exists( this.lbMinecraftPath.Text ) )
+			{
+				Process.Start( "explorer.exe", this.lbMinecraftPath.Text );
+			}
+		}
+
 		private async Task DoConfigurePack( bool forceRebuild )
 		{
-			var newInstance  = this.currentPackState == PackMode.New;
 			var updating     = this.currentPackState == PackMode.NeedsUpdate;
-			var actionName   = ( newInstance || forceRebuild ) ? "Building new" : updating ? "Updating" : "Converting";
-			var dialog       = new ProgressDialog( $"{actionName} instance" ) { ConfirmCancel = true };
+			var actionName   = updating ? "Updating" : forceRebuild ? "Rebuilding" : "Installing";
+			var dialog       = new ProgressDialog( $"{actionName} Mod Pack" ) { ConfirmCancel = true };
 			var cancelSource = new CancellationTokenSource();
 			var successful   = false;
+
+			// Don't need to do this, necessarily, but to be polite to Mojang, we should check
+			// for a valid session *before* downloading all of the Minecraft assets.
+			var session = await this.GetSessionAsync();
+
+			if ( session == null )
+				return;
 
 			this.Enabled = false;
 
@@ -252,41 +269,10 @@ namespace MinecraftLauncher
 			if ( this.instanceMetadata == null )
 				return;
 
-			var login   = new MLogin();
-			var session = login.ReadSessionCache();
+			var session = await this.GetSessionAsync();
 
-			bool CheckSession() => session?.CheckIsValid() == true;
-
-			if ( !CheckSession() /* Try auto-login */ )
-			{
-				session = await Task.Run( () => {
-					var loginResult = login.TryAutoLogin( session );
-
-					return loginResult.IsSuccess ? loginResult.Session : null;
-				} );
-			}
-
-			if ( !CheckSession() /* Try manual login */ )
-			{
-				var loginForm   = Services.CreateInstance<LoginForm>();
-				var loginResult = loginForm.ShowDialog( this );
-
-				if ( loginResult != DialogResult.OK )
-					return;
-
-				session = loginForm.Session;
-			}
-
-			if ( !CheckSession() /* Should never get here */ )
-			{
-				MessageBox.Show( this,
-								 "Could not start a valid Mojang user session for Minecraft.",
-								 "Session Failure",
-								 MessageBoxButtons.OK,
-								 MessageBoxIcon.Error );
-
+			if ( session == null )
 				return;
-			}
 
 			var launchOptions = this.CreateLaunchOptions( session );
 
@@ -307,6 +293,47 @@ namespace MinecraftLauncher
 
 			consoleWindow.FormClosed += ( sender, args ) => this.Show();
 			consoleWindow.Show();
+		}
+
+		private async Task<MSession> GetSessionAsync()
+		{
+			var login   = new MLogin();
+			var session = login.ReadSessionCache();
+
+			bool CheckSession() => session?.CheckIsValid() == true;
+
+			if ( !CheckSession() /* Try auto-login */ )
+			{
+				session = await Task.Run( () => {
+					var loginResult = login.TryAutoLogin( session );
+
+					return loginResult.IsSuccess ? loginResult.Session : null;
+				} );
+			}
+
+			if ( !CheckSession() /* Try manual login */ )
+			{
+				var loginForm   = Services.CreateInstance<LoginForm>();
+				var loginResult = loginForm.ShowDialog( this );
+
+				if ( loginResult != DialogResult.OK )
+					return null;
+
+				session = loginForm.Session;
+			}
+
+			if ( !CheckSession() /* Should never get here */ )
+			{
+				MessageBox.Show( this,
+								 "Could not start a valid Mojang user session for Minecraft.",
+								 "Session Failure",
+								 MessageBoxButtons.OK,
+								 MessageBoxIcon.Error );
+
+				return null;
+			}
+
+			return session;
 		}
 
 		private MLaunchOption CreateLaunchOptions( MSession session )

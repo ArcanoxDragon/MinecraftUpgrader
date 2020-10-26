@@ -41,7 +41,7 @@ namespace MinecraftLauncher.Utility
 			}
 
 			var cancellationTokenSource = new CancellationTokenSource();
-			var progressDialog = new ProgressDialog( "Checking Java version..." ) {
+			var progressDialog = new ProgressDialog( "Checking Java Compatibility" ) {
 				AllowCancel   = true,
 				ConfirmCancel = false,
 			};

@@ -110,7 +110,7 @@ namespace MinecraftLauncher
 						this.pbDownload.Value = e.ProgressPercentage;
 					} ) );
 
-					var updateFilePath = Path.Combine( Path.GetTempPath(), "MinecraftInstaller.exe" );
+					var updateFilePath = Path.Combine( Path.GetTempPath(), "MinecraftLauncher.exe" );
 
 					if ( File.Exists( updateFilePath ) )
 						File.Delete( updateFilePath );
