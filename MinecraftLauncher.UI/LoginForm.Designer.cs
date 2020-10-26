@@ -53,7 +53,7 @@
 			// label1
 			// 
 			label1.AutoSize = true;
-			label1.Location = new System.Drawing.Point(6, 9);
+			label1.Location = new System.Drawing.Point(12, 9);
 			label1.Name = "label1";
 			label1.Size = new System.Drawing.Size(224, 13);
 			label1.TabIndex = 0;
@@ -62,7 +62,7 @@
 			// label2
 			// 
 			label2.AutoSize = true;
-			label2.Location = new System.Drawing.Point(6, 33);
+			label2.Location = new System.Drawing.Point(12, 33);
 			label2.Name = "label2";
 			label2.Size = new System.Drawing.Size(38, 13);
 			label2.TabIndex = 2;
@@ -71,7 +71,7 @@
 			// label3
 			// 
 			label3.AutoSize = true;
-			label3.Location = new System.Drawing.Point(6, 59);
+			label3.Location = new System.Drawing.Point(12, 59);
 			label3.Name = "label3";
 			label3.Size = new System.Drawing.Size(56, 13);
 			label3.TabIndex = 2;
@@ -79,23 +79,24 @@
 			// 
 			// label4
 			// 
-			label4.AutoSize = true;
+			label4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			label4.ForeColor = System.Drawing.SystemColors.GrayText;
-			label4.Location = new System.Drawing.Point(6, 95);
+			label4.Location = new System.Drawing.Point(15, 95);
 			label4.Name = "label4";
-			label4.Size = new System.Drawing.Size(372, 26);
+			label4.Size = new System.Drawing.Size(392, 26);
 			label4.TabIndex = 0;
-			label4.Text = "These credentials are sent securely to Mojang\'s authentication server and are\r\nno" +
-    "t stored anywhere or sent anywhere else.";
+			label4.Text = "These credentials are sent securely to Mojang\'s authentication server and are not" +
+    " stored anywhere or sent anywhere else.";
 			// 
 			// textBoxUsername
 			// 
 			this.textBoxUsername.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.textBoxUsername.Location = new System.Drawing.Point(70, 30);
+			this.textBoxUsername.Location = new System.Drawing.Point(74, 30);
 			this.textBoxUsername.Name = "textBoxUsername";
-			this.textBoxUsername.Size = new System.Drawing.Size(371, 20);
+			this.textBoxUsername.Size = new System.Drawing.Size(333, 20);
 			this.textBoxUsername.TabIndex = 0;
 			this.textBoxUsername.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.OnTextBoxKeyPressed);
 			// 
@@ -103,9 +104,9 @@
 			// 
 			this.textBoxPassword.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.textBoxPassword.Location = new System.Drawing.Point(70, 56);
+			this.textBoxPassword.Location = new System.Drawing.Point(74, 56);
 			this.textBoxPassword.Name = "textBoxPassword";
-			this.textBoxPassword.Size = new System.Drawing.Size(371, 20);
+			this.textBoxPassword.Size = new System.Drawing.Size(333, 20);
 			this.textBoxPassword.TabIndex = 1;
 			this.textBoxPassword.UseSystemPasswordChar = true;
 			this.textBoxPassword.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.OnTextBoxKeyPressed);
@@ -122,7 +123,7 @@
 			this.tableLayoutPanel1.RowCount = 2;
 			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
 			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 48F));
-			this.tableLayoutPanel1.Size = new System.Drawing.Size(453, 179);
+			this.tableLayoutPanel1.Size = new System.Drawing.Size(419, 179);
 			this.tableLayoutPanel1.TabIndex = 3;
 			// 
 			// panel1
@@ -139,7 +140,7 @@
 			this.panel1.Margin = new System.Windows.Forms.Padding(0);
 			this.panel1.Name = "panel1";
 			this.panel1.Padding = new System.Windows.Forms.Padding(3);
-			this.panel1.Size = new System.Drawing.Size(453, 131);
+			this.panel1.Size = new System.Drawing.Size(419, 131);
 			this.panel1.TabIndex = 0;
 			// 
 			// panel2
@@ -152,7 +153,7 @@
 			this.panel2.Margin = new System.Windows.Forms.Padding(0);
 			this.panel2.Name = "panel2";
 			this.panel2.Padding = new System.Windows.Forms.Padding(10);
-			this.panel2.Size = new System.Drawing.Size(453, 48);
+			this.panel2.Size = new System.Drawing.Size(419, 48);
 			this.panel2.TabIndex = 1;
 			// 
 			// labelStatus
@@ -166,8 +167,9 @@
 			// 
 			// buttonLogin
 			// 
+			this.buttonLogin.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonLogin.Enabled = false;
-			this.buttonLogin.Location = new System.Drawing.Point(285, 13);
+			this.buttonLogin.Location = new System.Drawing.Point(251, 13);
 			this.buttonLogin.Name = "buttonLogin";
 			this.buttonLogin.Size = new System.Drawing.Size(75, 23);
 			this.buttonLogin.TabIndex = 0;
@@ -177,8 +179,9 @@
 			// 
 			// buttonCancel
 			// 
+			this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.buttonCancel.Location = new System.Drawing.Point(366, 13);
+			this.buttonCancel.Location = new System.Drawing.Point(332, 13);
 			this.buttonCancel.Name = "buttonCancel";
 			this.buttonCancel.Size = new System.Drawing.Size(75, 23);
 			this.buttonCancel.TabIndex = 1;
@@ -191,7 +194,7 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.buttonCancel;
-			this.ClientSize = new System.Drawing.Size(453, 179);
+			this.ClientSize = new System.Drawing.Size(419, 179);
 			this.Controls.Add(this.tableLayoutPanel1);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
