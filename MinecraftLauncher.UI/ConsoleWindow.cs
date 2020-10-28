@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MinecraftLauncher.Extensions;
@@ -12,11 +14,15 @@ namespace MinecraftLauncher
 	{
 		private static readonly Guid SaveFileGuid = Guid.Parse( "f9422b8c-b94f-41be-bef4-1104450086ce" );
 
-		private readonly Process process;
+		private readonly Process       process;
+		private readonly Mutex         bufferMutex;
+		private readonly StringBuilder bufferBuilder;
 
 		public ConsoleWindow( Process minecraftProcess )
 		{
-			this.process = minecraftProcess;
+			this.process       = minecraftProcess;
+			this.bufferMutex   = new Mutex();
+			this.bufferBuilder = new StringBuilder();
 
 			this.InitializeComponent();
 		}
@@ -31,12 +37,28 @@ namespace MinecraftLauncher
 			this.process.BeginOutputReadLine();
 		}
 
-		private void AppendText( string text )
+		private void AppendTextToConsole( string text )
 		{
 			var (stripped, foreground, background) = AnsiUtility.ParseFirstFgAnsiColor( text );
 
 			this.richTextBoxLog.AppendText( stripped, foreground, background );
 			this.AutoScrollLog();
+		}
+
+		private void AppendTextToBuffer( string text )
+		{
+			lock ( this.bufferMutex )
+			{
+				try
+				{
+					this.bufferMutex.WaitOne();
+					this.bufferBuilder.Append( text );
+				}
+				finally
+				{
+					this.bufferMutex.ReleaseMutex();
+				}
+			}
 		}
 
 		private void AutoScrollLog()
@@ -71,18 +93,18 @@ namespace MinecraftLauncher
 			if ( string.IsNullOrEmpty( e.Data ) )
 				return;
 
-			this.AppendText( e.Data + "\r\n" );
+			this.AppendTextToBuffer( e.Data + "\r\n" );
 		} );
 
 		private void OnOutputDataReceived( object sender, DataReceivedEventArgs e ) => this.TryBeginInvoke( () => {
 			if ( string.IsNullOrEmpty( e.Data ) )
 				return;
 
-			this.AppendText( e.Data + "\r\n" );
+			this.AppendTextToBuffer( e.Data + "\r\n" );
 		} );
 
 		private void OnProcessExited( object sender, EventArgs e ) => this.TryBeginInvoke( () => {
-			this.AppendText( $"\r\n\r\nProcess exited with exit code {this.process.ExitCode}\r\n\r\n\r\n\r\n\r\n\r\n" );
+			this.AppendTextToBuffer( $"\r\n\r\nProcess exited with exit code {this.process.ExitCode}\r\n\r\n\r\n\r\n\r\n\r\n" );
 			this.buttonKillMinecraft.Enabled = false;
 		} );
 
@@ -102,12 +124,12 @@ namespace MinecraftLauncher
 			}
 		}
 
-		private void buttonKillMinecraft_Click( object sender, EventArgs e )
+		private void OnButtonCopyToClipboard_Click( object sender, EventArgs e )
 		{
-			this.ConfirmKillMinecraft();
+			Clipboard.SetText( this.richTextBoxLog.Text );
 		}
 
-		private void buttonSaveToFile_Click( object sender, EventArgs e )
+		private void OnButtonSaveToFile_Click( object sender, EventArgs e )
 		{
 			var saveFileDialog = new CommonSaveFileDialog {
 				Filters = {
@@ -128,9 +150,30 @@ namespace MinecraftLauncher
 			}
 		}
 
-		private void buttonCopyToClipboard_Click( object sender, EventArgs e )
+		private void OnButtonKillMinecraft_Click( object sender, EventArgs e )
 		{
-			Clipboard.SetText( this.richTextBoxLog.Text );
+			this.ConfirmKillMinecraft();
+		}
+
+		private void OnTimerFlushBuffer_Tick( object sender, EventArgs e )
+		{
+			lock ( this.bufferMutex )
+			{
+				if ( this.bufferBuilder.Length > 0 )
+				{
+					try
+					{
+						this.bufferMutex.WaitOne();
+
+						this.AppendTextToConsole( this.bufferBuilder.ToString() );
+						this.bufferBuilder.Clear();
+					}
+					finally
+					{
+						this.bufferMutex.ReleaseMutex();
+					}
+				}
+			}
 		}
 	}
 }

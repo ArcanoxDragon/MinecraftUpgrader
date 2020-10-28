@@ -28,14 +28,16 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConsoleWindow));
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
 			this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
 			this.panel1 = new System.Windows.Forms.Panel();
 			this.checkBoxAutoScroll = new System.Windows.Forms.CheckBox();
+			this.buttonCopyToClipboard = new System.Windows.Forms.Button();
 			this.buttonSaveToFile = new System.Windows.Forms.Button();
 			this.buttonKillMinecraft = new System.Windows.Forms.Button();
-			this.buttonCopyToClipboard = new System.Windows.Forms.Button();
+			this.timerFlushBuffer = new System.Windows.Forms.Timer(this.components);
 			this.tableLayoutPanel1.SuspendLayout();
 			this.panel1.SuspendLayout();
 			this.SuspendLayout();
@@ -94,6 +96,17 @@
 			this.checkBoxAutoScroll.Text = "Auto-scroll console";
 			this.checkBoxAutoScroll.UseVisualStyleBackColor = true;
 			// 
+			// buttonCopyToClipboard
+			// 
+			this.buttonCopyToClipboard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonCopyToClipboard.Location = new System.Drawing.Point(742, 12);
+			this.buttonCopyToClipboard.Name = "buttonCopyToClipboard";
+			this.buttonCopyToClipboard.Size = new System.Drawing.Size(100, 24);
+			this.buttonCopyToClipboard.TabIndex = 0;
+			this.buttonCopyToClipboard.Text = "Copy to Clipboard";
+			this.buttonCopyToClipboard.UseVisualStyleBackColor = true;
+			this.buttonCopyToClipboard.Click += new System.EventHandler(this.OnButtonCopyToClipboard_Click);
+			// 
 			// buttonSaveToFile
 			// 
 			this.buttonSaveToFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -103,7 +116,7 @@
 			this.buttonSaveToFile.TabIndex = 0;
 			this.buttonSaveToFile.Text = "Save To File...";
 			this.buttonSaveToFile.UseVisualStyleBackColor = true;
-			this.buttonSaveToFile.Click += new System.EventHandler(this.buttonSaveToFile_Click);
+			this.buttonSaveToFile.Click += new System.EventHandler(this.OnButtonSaveToFile_Click);
 			// 
 			// buttonKillMinecraft
 			// 
@@ -114,18 +127,12 @@
 			this.buttonKillMinecraft.TabIndex = 0;
 			this.buttonKillMinecraft.Text = "Kill Minecraft";
 			this.buttonKillMinecraft.UseVisualStyleBackColor = true;
-			this.buttonKillMinecraft.Click += new System.EventHandler(this.buttonKillMinecraft_Click);
+			this.buttonKillMinecraft.Click += new System.EventHandler(this.OnButtonKillMinecraft_Click);
 			// 
-			// buttonCopyToClipboard
+			// timerFlushBuffer
 			// 
-			this.buttonCopyToClipboard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonCopyToClipboard.Location = new System.Drawing.Point(742, 12);
-			this.buttonCopyToClipboard.Name = "buttonCopyToClipboard";
-			this.buttonCopyToClipboard.Size = new System.Drawing.Size(100, 24);
-			this.buttonCopyToClipboard.TabIndex = 0;
-			this.buttonCopyToClipboard.Text = "Copy to Clipboard";
-			this.buttonCopyToClipboard.UseVisualStyleBackColor = true;
-			this.buttonCopyToClipboard.Click += new System.EventHandler(this.buttonCopyToClipboard_Click);
+			this.timerFlushBuffer.Enabled = true;
+			this.timerFlushBuffer.Tick += new System.EventHandler(this.OnTimerFlushBuffer_Tick);
 			// 
 			// ConsoleWindow
 			// 
@@ -155,5 +162,6 @@
 		private System.Windows.Forms.Button buttonKillMinecraft;
 		private System.Windows.Forms.Button buttonSaveToFile;
 		private System.Windows.Forms.Button buttonCopyToClipboard;
+		private System.Windows.Forms.Timer timerFlushBuffer;
 	}
 }
