@@ -390,7 +390,11 @@ namespace MinecraftLauncher.Modpack
 				// Finally write the current version to the instance version file
 				// We do this last so that if a version upgrade fails, the user
 				// can resume at the last fully completed version
-				File.WriteAllText( metadataFile, JsonConvert.SerializeObject( instanceMetadata ) );
+				using var packMetaFileStream = File.Open( metadataFile, FileMode.Create, FileAccess.Write, FileShare.None );
+				using var packMetaWriter     = new StreamWriter( packMetaFileStream );
+
+				JsonSerializer.Serialize( packMetaWriter, instanceMetadata );
+				await packMetaWriter.FlushAsync();
 			}
 			finally
 			{
