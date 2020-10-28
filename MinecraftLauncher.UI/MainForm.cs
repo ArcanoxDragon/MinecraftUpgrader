@@ -11,6 +11,7 @@ using CmlLib.Core.Version;
 using Humanizer;
 using MinecraftLauncher.Config;
 using MinecraftLauncher.DI;
+using MinecraftLauncher.Extensions;
 using MinecraftLauncher.Modpack;
 using NickStrupat;
 using Semver;
@@ -167,10 +168,9 @@ namespace MinecraftLauncher
 		}
 
 		private async void OnBtnRebuildClick( object sender, EventArgs e )
-			=> await this.DoConfigurePack( true );
+			=> await this.DisableWhile( () => this.DoConfigurePack( true ) );
 
-		private async void OnBtnGoClick( object sender, EventArgs e )
-		{
+		private async void OnBtnGoClick( object sender, EventArgs e ) => await this.DisableWhile( async () => {
 			if ( this.currentPackState == PackMode.ReadyToPlay )
 			{
 				// Button says "Play"; user doesn't expect another prompt to start MC
@@ -180,7 +180,7 @@ namespace MinecraftLauncher
 			}
 
 			await this.DoConfigurePack( false );
-		}
+		} );
 
 		private void lbMinecraftPath_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
 		{
@@ -204,8 +204,6 @@ namespace MinecraftLauncher
 
 			if ( session == null )
 				return;
-
-			this.Enabled = false;
 
 			dialog.Cancel += ( o, args ) => {
 				cancelSource.Cancel();
@@ -242,7 +240,6 @@ namespace MinecraftLauncher
 			finally
 			{
 				dialog.Close();
-				this.Enabled = true;
 				this.BringToFront();
 				this.CheckCurrentInstance();
 
@@ -302,7 +299,7 @@ namespace MinecraftLauncher
 
 			bool CheckSession() => session?.CheckIsValid() == true;
 
-			if ( !CheckSession() /* Try auto-login */ )
+			if ( CheckSession() /* Try auto-login if a valid session existed in the cache */ )
 			{
 				session = await Task.Run( () => {
 					var loginResult = login.TryAutoLogin( session );

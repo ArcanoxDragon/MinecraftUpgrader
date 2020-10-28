@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MinecraftLauncher.Extensions
 {
 	public static class WinFormsExtensions
 	{
+		#region Invoke Extensions
+
 		public static void Invoke( this Control control, Action action )
 			=> control.Invoke( new Action( action ) );
 
@@ -33,6 +36,40 @@ namespace MinecraftLauncher.Extensions
 			catch
 			{
 				// Ignored
+			}
+		}
+
+		#endregion
+
+		public static void DisableWhile( this Control control, Action action )
+		{
+			var wasEnabled = control.Enabled;
+
+			control.Enabled = false;
+
+			try
+			{
+				action();
+			}
+			finally
+			{
+				control.Enabled = wasEnabled;
+			}
+		}
+
+		public static async Task DisableWhile( this Control control, Func<Task> action )
+		{
+			var wasEnabled = control.Enabled;
+
+			control.Enabled = false;
+
+			try
+			{
+				await action();
+			}
+			finally
+			{
+				control.Enabled = wasEnabled;
 			}
 		}
 
