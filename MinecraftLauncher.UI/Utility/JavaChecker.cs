@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using CmlLib.Core.Downloader;
 using Humanizer;
-using Microsoft.VisualBasic.Devices;
 using MinecraftLauncher.Async;
 using MinecraftLauncher.Config;
+using NickStrupat;
 
 namespace MinecraftLauncher.Utility
 {
@@ -57,7 +57,7 @@ namespace MinecraftLauncher.Utility
 			}
 			catch ( Exception ex )
 			{
-				if ( !( ex is TaskCanceledException ) )
+				if ( !( ex is TaskCanceledException || ex is OperationCanceledException ) )
 				{
 					MessageBox.Show( $"An error occurred while checking Java:\n\n{ex.Message}",
 									 "Unexpected Error",
