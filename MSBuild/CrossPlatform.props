@@ -12,13 +12,13 @@
 		<DefineConstants>$(DefineConstants);PLATFORM_WIN</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="$(Configuration.Contains('Windows')) And $(TargetFramework.Contains('netcoreapp'))">
-		<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="$(Configuration.Contains('macOS'))">
 		<DefineConstants>$(DefineConstants);PLATFORM_MAC</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="$(Configuration.Contains('macOS')) And $(TargetFramework.Contains('netcoreapp'))">
-		<RuntimeIdentifiers>osx-x64</RuntimeIdentifiers>
+		<RuntimeIdentifier>osx-x64</RuntimeIdentifier>
 	</PropertyGroup>
 </Project>
