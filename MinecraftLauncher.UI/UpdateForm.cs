@@ -46,7 +46,7 @@ namespace MinecraftLauncher
 #if DEBUG
 				const bool SkipUpdate = true;
 #else
-			const bool SkipUpdate = false;
+				const bool SkipUpdate = false;
 #endif
 
 				var md5                = MD5.Create();
@@ -155,6 +155,12 @@ namespace MinecraftLauncher
 
 					return Result.NeedsRestart;
 				}
+			}
+			catch ( Exception ex )
+			{
+				Console.WriteLine( "Exception in updater:" );
+				Console.WriteLine( ex );
+				throw;
 			}
 			finally
 			{

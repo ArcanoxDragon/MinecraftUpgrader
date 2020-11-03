@@ -301,11 +301,9 @@ namespace MinecraftLauncher
 
 			if ( CheckSession() /* Try auto-login if a valid session existed in the cache */ )
 			{
-				session = await Task.Run( () => {
-					var loginResult = login.TryAutoLogin( session );
+				var loginResult = await login.TryAutoLoginAsync( session );
 
-					return loginResult.IsSuccess ? loginResult.Session : null;
-				} );
+				session = loginResult.IsSuccess ? loginResult.Session : null;
 			}
 
 			if ( !CheckSession() /* Try manual login */ )
@@ -352,7 +350,8 @@ namespace MinecraftLauncher
 
 		private async Task<MVersion> GetVersionMetadataAsync( string versionString )
 		{
-			var versions = await Task.Run( () => MVersionLoader.GetVersionMetadatas( new MinecraftPath( this.packBuilder.ProfilePath ) ) );
+			var versionLoader = new MVersionLoader( new MinecraftPath( this.packBuilder.ProfilePath ) );
+			var versions      = await versionLoader.GetVersionMetadatasAsync();
 
 			return versions.GetVersion( versionString );
 		}

@@ -65,9 +65,10 @@ namespace MinecraftLauncher.Modpack
 
 		private async Task<string> SetupNewProfileAsync( PackMetadata pack, CancellationToken token = default, ProgressReporter progress = default )
 		{
-			var mcVersions = await Task.Run( () => MVersionLoader.GetVersionMetadatas( new MinecraftPath( this.ProfilePath ) ) );
-			var mcVersion  = mcVersions.GetVersion( pack.IntendedMinecraftVersion );
-			var mcPath     = new MinecraftPath( this.ProfilePath );
+			var mcVersionLoader = new MVersionLoader( new MinecraftPath( this.ProfilePath ) );
+			var mcVersions      = await mcVersionLoader.GetVersionMetadatasAsync( token );
+			var mcVersion       = mcVersions.GetVersion( pack.IntendedMinecraftVersion );
+			var mcPath          = new MinecraftPath( this.ProfilePath );
 
 			// Install base MC jar
 			var downloader = new MDownloader( mcPath, mcVersion );
@@ -77,7 +78,7 @@ namespace MinecraftLauncher.Modpack
 
 			downloader.ChangeProgress += ( sender, args ) => progress?.ReportProgress( args.ProgressPercentage / 100.0 );
 
-			await Task.Run( () => downloader.DownloadMinecraft(), token );
+			await downloader.DownloadMinecraftAsync( token );
 			token.ThrowIfCancellationRequested();
 
 			// Install Minecraft Forge
@@ -88,11 +89,11 @@ namespace MinecraftLauncher.Modpack
 
 			forgeInstall.InstallerOutput += ( sender, message ) => progress?.ReportProgress( $"Installing Minecraft Forge...\n{message}" );
 
-			var forgeVersionInstalled = await Task.Run( () => forgeInstall.InstallForge( pack.IntendedMinecraftVersion, pack.RequiredForgeVersion ), token );
+			var forgeVersionInstalled = await forgeInstall.InstallForgeAsync( pack.IntendedMinecraftVersion, pack.RequiredForgeVersion, token );
 			token.ThrowIfCancellationRequested();
 
 			// Refresh version info now that Forge is installed
-			mcVersions = await Task.Run( () => MVersionLoader.GetVersionMetadatasFromLocal( mcPath ) );
+			mcVersions = mcVersionLoader.GetVersionMetadatasFromLocal();
 			mcVersion  = mcVersions.GetVersion( forgeVersionInstalled );
 
 			// Install MC assets
@@ -100,9 +101,7 @@ namespace MinecraftLauncher.Modpack
 			downloader.ChangeFile += args => progress?.ReportProgress( args.ProgressedFileCount / (double) args.TotalFileCount,
 																	   $"Downloading Minecraft assets...\nDownloading file {args.FileName} (file {args.ProgressedFileCount} / {args.TotalFileCount})" );
 
-			downloader.ChangeProgress += ( sender, args ) => progress?.ReportProgress( args.ProgressPercentage / 100.0 );
-
-			await Task.Run( () => downloader.DownloadAll(), token );
+			await downloader.DownloadAllAsync( cancellationToken: token );
 			token.ThrowIfCancellationRequested();
 
 			return forgeVersionInstalled;

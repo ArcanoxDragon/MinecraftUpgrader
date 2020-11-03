@@ -48,7 +48,7 @@ namespace MinecraftLauncher
 			{
 				var username    = this.textBoxUsername.Text;
 				var password    = this.textBoxPassword.Text;
-				var loginResult = await Task.Run( () => new MLogin().Authenticate( username, password ) );
+				var loginResult = await new MLogin().AuthenticateAsync( username, password );
 
 				if ( loginResult.IsSuccess )
 				{

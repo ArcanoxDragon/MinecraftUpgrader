@@ -75,15 +75,13 @@ namespace MinecraftLauncher.Utility
 
 		private static async Task CheckJavaVersionAsync( CancellationToken cancellationToken, ProgressReporter progressDialogReporter )
 		{
-			var javaPath = await Task.Run( () => {
-				var java = new MJava();
+			var java = new MJava();
 
-				java.ProgressChanged += ( sender, args ) => {
-					progressDialogReporter?.ReportProgress( args.ProgressPercentage / 100.0, "Installing Java..." );
-				};
+			java.ProgressChanged += ( sender, args ) => {
+				progressDialogReporter?.ReportProgress( args.ProgressPercentage / 100.0, "Installing Java..." );
+			};
 
-				return java.CheckJava();
-			}, cancellationToken );
+			var javaPath = await java.CheckJavaAsync(cancellationToken);
 
 			cancellationToken.ThrowIfCancellationRequested();
 
