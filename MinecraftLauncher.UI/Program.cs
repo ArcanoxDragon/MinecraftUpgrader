@@ -3,32 +3,24 @@ using System.IO;
 using System.Net;
 using System.Windows.Forms;
 using MinecraftLauncher.DI;
-using MinecraftLauncher.Modpack;
 using MinecraftLauncher.Utility;
 
 namespace MinecraftLauncher
 {
 	static class Program
 	{
-		private static readonly string LF      = Environment.NewLine;
-		private static readonly object LogLock = new object();
+		private static readonly string LF = Environment.NewLine;
 
 		[ STAThread ]
 		private static void Main()
 		{
+			var consoleLogWriter = new ConsoleLogWriter( GetLogPath(), Console.Out );
+
+			Console.SetOut( consoleLogWriter );
+
 			AppDomain.CurrentDomain.FirstChanceException += ( sender, args ) => {
-				try
-				{
-					lock ( LogLock )
-					{
-						File.AppendAllText( GetLogPath(), $"=== Exception occurred at {DateTime.Now:yyyy-MM-dd hh:mm:ss tt} ==={LF}" );
-						File.AppendAllText( GetLogPath(), $"{args.Exception}{LF}{LF}" );
-					}
-				}
-				catch
-				{
-					// Ignored
-				}
+				Console.WriteLine( $"=== Exception occurred at {DateTime.Now:yyyy-MM-dd hh:mm:ss tt} ==={LF}" );
+				Console.WriteLine( $"{args.Exception}{LF}{LF}" );
 			};
 
 			AppDomain.CurrentDomain.UnhandledException += ( sender, args ) => {
@@ -81,14 +73,14 @@ namespace MinecraftLauncher
 			}
 			catch ( Exception ex )
 			{
-				File.AppendAllText( GetLogPath(), $"An exception occurred during program startup: {ex}{LF}{LF}" );
+				Console.WriteLine( $"An exception occurred during program startup: {ex}{LF}{LF}" );
 				Application.Exit();
 			}
 		}
 
 		private static string GetLogPath() => Path.Combine(
 			Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ),
-			".mcupgrader",
+			".mcarcanox",
 			"log.txt"
 		);
 	}
