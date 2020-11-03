@@ -3,17 +3,15 @@
 
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Humanizer;
 using Microsoft.Extensions.Options;
 using MinecraftLauncher.Options;
+using MinecraftLauncher.Utility;
 
 namespace MinecraftLauncher
 {
@@ -49,7 +47,6 @@ namespace MinecraftLauncher
 				const bool SkipUpdate = false;
 #endif
 
-				var md5                = MD5.Create();
 				var curProcess         = Process.GetCurrentProcess();
 				var processFilePath    = curProcess.MainModule?.FileName;
 				var processFileOldPath = $"{processFilePath}.old";
@@ -65,7 +62,6 @@ namespace MinecraftLauncher
 					return Result.Failed;
 				}
 
-				byte[] localHash, remoteHash;
 				var otherProcesses = Process.GetProcessesByName( curProcess.ProcessName )
 											.Where( p => p.Id != curProcess.Id );
 
@@ -78,83 +74,68 @@ namespace MinecraftLauncher
 				if ( File.Exists( processFileOldPath ) )
 					File.Delete( processFileOldPath );
 
-				using ( var fs = new FileStream( processFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite ) )
+				using var web = new WebClient();
+
+				var localHash  = CryptoUtility.CalculateFileMd5( processFilePath );
+				var remoteHash = await web.DownloadStringTaskAsync( this.remoteMd5Url );
+
+				// ReSharper disable once RedundantLogicalConditionalExpressionOperand
+				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
+				if ( SkipUpdate || localHash == remoteHash )
+					return Result.NoUpdateNeeded;
+
+				this.lbStatus.Text    = "Updating program...";
+				this.pbDownload.Style = ProgressBarStyle.Continuous;
+
+				web.DownloadProgressChanged += ( o, e ) => this.Invoke( new Action( () => {
+					var dlSize    = e.BytesReceived.Bytes();
+					var totalSize = e.TotalBytesToReceive.Bytes();
+
+					this.lbProgress.Text  = $"Downloading updates... {dlSize.ToString( "0.##" )} / {totalSize.ToString( "0.##" )} ({e.ProgressPercentage}%)";
+					this.pbDownload.Value = e.ProgressPercentage;
+				} ) );
+
+				var updateFilePath = Path.Combine( Path.GetTempPath(), "MinecraftLauncher.exe" );
+
+				if ( File.Exists( updateFilePath ) )
+					File.Delete( updateFilePath );
+
+				await web.DownloadFileTaskAsync( this.remoteFileUrl, updateFilePath );
+
+				this.lbStatus.Text    = "Installing updates...";
+				this.pbDownload.Style = ProgressBarStyle.Marquee;
+
+				File.Move( processFilePath, processFileOldPath );
+				File.Move( updateFilePath, processFilePath );
+
+				var newLocalHash = CryptoUtility.CalculateFileMd5( processFilePath );
+
+				if ( newLocalHash != remoteHash )
 				{
-					localHash = md5.ComputeHash( fs );
-				}
-
-				using ( var web = new WebClient() )
-				{
-					using ( var remoteStream = await web.OpenReadTaskAsync( this.remoteMd5Url ) )
-					using ( var reader = new StreamReader( remoteStream ) )
-					{
-						var remoteHashString = await reader.ReadToEndAsync();
-						var remoteHashSplit  = Regex.Split( remoteHashString, @"([a-f0-9]{2})", RegexOptions.IgnoreCase ).Where( s => !string.IsNullOrEmpty( s ) );
-
-						remoteHash = remoteHashSplit.Select( s => byte.Parse( s, NumberStyles.HexNumber ) ).ToArray();
-					}
-
-					// ReSharper disable once RedundantLogicalConditionalExpressionOperand
-					// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-					if ( SkipUpdate || localHash.SequenceEqual( remoteHash ) )
-						return Result.NoUpdateNeeded;
-
-					this.lbStatus.Text    = "Updating program...";
-					this.pbDownload.Style = ProgressBarStyle.Continuous;
-
-					web.DownloadProgressChanged += ( o, e ) => this.Invoke( new Action( () => {
-						var dlSize    = e.BytesReceived.Bytes();
-						var totalSize = e.TotalBytesToReceive.Bytes();
-
-						this.lbProgress.Text  = $"Downloading updates... {dlSize.ToString( "0.##" )} / {totalSize.ToString( "0.##" )} ({e.ProgressPercentage}%)";
-						this.pbDownload.Value = e.ProgressPercentage;
-					} ) );
-
-					var updateFilePath = Path.Combine( Path.GetTempPath(), "MinecraftLauncher.exe" );
-
-					if ( File.Exists( updateFilePath ) )
-						File.Delete( updateFilePath );
-
-					await web.DownloadFileTaskAsync( this.remoteFileUrl, updateFilePath );
-
-					this.lbStatus.Text    = "Installing updates...";
-					this.pbDownload.Style = ProgressBarStyle.Marquee;
-
-					File.Move( processFilePath, processFileOldPath );
-					File.Move( updateFilePath, processFilePath );
-
-					byte[] newLocalHash;
-
-					using ( var fs = new FileStream( processFilePath, FileMode.Open, FileAccess.ReadWrite ) )
-						newLocalHash = md5.ComputeHash( fs );
-
-					if ( !newLocalHash.SequenceEqual( remoteHash ) )
-					{
-						MessageBox.Show( this,
-										 "Checksum mismatch! The update file is invalid. Update failed.",
-										 "Update Failed",
-										 MessageBoxButtons.OK,
-										 MessageBoxIcon.Error );
-
-						File.Delete( processFilePath );
-						File.Move( processFileOldPath, processFilePath );
-
-						return Result.Failed;
-					}
-
 					MessageBox.Show( this,
-									 "Update complete! Click OK to restart the program and apply the update.",
-									 "Update Complete",
+									 "Checksum mismatch! The update file is invalid. Update failed.",
+									 "Update Failed",
 									 MessageBoxButtons.OK,
-									 MessageBoxIcon.Information );
+									 MessageBoxIcon.Error );
 
-					Process.Start( new ProcessStartInfo {
-						FileName        = processFilePath,
-						UseShellExecute = true,
-					} );
+					File.Delete( processFilePath );
+					File.Move( processFileOldPath, processFilePath );
 
-					return Result.NeedsRestart;
+					return Result.Failed;
 				}
+
+				MessageBox.Show( this,
+								 "Update complete! Click OK to restart the program and apply the update.",
+								 "Update Complete",
+								 MessageBoxButtons.OK,
+								 MessageBoxIcon.Information );
+
+				Process.Start( new ProcessStartInfo {
+					FileName        = processFilePath,
+					UseShellExecute = true,
+				} );
+
+				return Result.NeedsRestart;
 			}
 			catch ( Exception ex )
 			{

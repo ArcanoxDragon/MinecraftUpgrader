@@ -62,7 +62,7 @@ namespace MinecraftLauncher
 				this.lbMinecraftPath.LinkArea = new LinkArea( 0, 0 );
 
 			await this.LoadPackMetadataAsync();
-			this.CheckCurrentInstance();
+			await this.CheckCurrentInstanceAsync();
 		}
 
 		private async Task LoadPackMetadataAsync()
@@ -91,7 +91,7 @@ namespace MinecraftLauncher
 			}
 		}
 
-		private void CheckCurrentInstance()
+		private async Task CheckCurrentInstanceAsync()
 		{
 			var instanceMetadata = InstanceMetadataReader.ReadInstanceMetadata( this.packBuilder.ProfilePath );
 
@@ -110,7 +110,19 @@ namespace MinecraftLauncher
 			}
 			else
 			{
-				if ( instanceSemVersion < serverSemVersion )
+				var outOfDate = instanceSemVersion < serverSemVersion;
+
+				// Check server pack MD5 if necessary
+				if ( this.packMetadata.VerifyServerPackMd5 )
+				{
+					using var web            = new WebClient();
+					var       basePackMd5Url = $"{this.packMetadata.ServerPack}.md5";
+					var       basePackMd5    = await web.DownloadStringTaskAsync( basePackMd5Url );
+
+					outOfDate |= basePackMd5 != instanceMetadata.BuiltFromServerPackMd5;
+				}
+
+				if ( outOfDate )
 				{
 					// Out of date
 					this.currentPackState = PackMode.NeedsUpdate;
@@ -241,7 +253,7 @@ namespace MinecraftLauncher
 			{
 				dialog.Close();
 				this.BringToFront();
-				this.CheckCurrentInstance();
+				await this.CheckCurrentInstanceAsync();
 
 				if ( successful )
 					await this.OfferStartMinecraftAsync( "The mod pack was successfully configured!" );

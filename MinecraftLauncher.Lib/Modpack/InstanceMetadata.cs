@@ -6,6 +6,7 @@
 
 		public string Version                 { get; set; } = "0.0.0";
 		public string BuiltFromServerPack     { get; set; }
+		public string BuiltFromServerPackMd5  { get; set; }
 		public string CurrentMinecraftVersion { get; set; }
 		public string CurrentForgeVersion     { get; set; }
 		public string CurrentLaunchVersion    { get; set; }
