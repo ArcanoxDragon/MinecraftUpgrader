@@ -146,6 +146,7 @@ namespace MinecraftLauncher.Modpack
 				CurrentLaunchVersion    = currentLaunchVersion,
 				Version                 = pack.CurrentVersion,
 				BuiltFromServerPack     = pack.ServerPack,
+				BuiltFromServerPackMd5  = currentBasePackMd5,
 			};
 
 			Directory.CreateDirectory( this.ProfilePath );
@@ -290,8 +291,6 @@ namespace MinecraftLauncher.Modpack
 				}
 
 				// Process version upgrades
-				var modFiles = Directory.EnumerateFiles( modsDir, "*", SearchOption.AllDirectories ).ToList();
-
 				foreach ( var versionKey in pack.Versions.Keys )
 				{
 					if ( !SemVersion.TryParse( versionKey, out _ ) )
@@ -311,11 +310,26 @@ namespace MinecraftLauncher.Modpack
 
 					progress?.ReportProgress( versionTask );
 
+					var futureVersions = pack.Versions.Keys
+											 .Where( vk => SemVersion.Parse( vk ) > thisSemVersion )
+											 .Select( vk => pack.Versions[ vk ] )
+											 .ToList();
+
 					if ( version.Mods != null )
 					{
-						var currentMod = 0;
+						var currentModFiles = Directory.EnumerateFiles( modsDir, "*", SearchOption.AllDirectories ).ToList();
+						var currentMod      = 0;
+
 						foreach ( var (modId, mod) in version.Mods )
 						{
+							bool VersionInstallsThisMod( PackVersion v )
+								// See if there are any mods in this version with the same mod ID and which download a new JAR
+								=> v.Mods.Any( pair => pair.Key == modId && !string.IsNullOrEmpty( pair.Value.FileUri ) );
+
+							if ( futureVersions.Any( VersionInstallsThisMod ) )
+								// Skip the mod in this version because a later version installs it
+								continue;
+
 							var modTask = $"{versionTask}\nProcessing mod {modId} ({++currentMod} / {version.Mods.Count})...";
 
 							progress?.ReportProgress( modTask );
@@ -327,7 +341,7 @@ namespace MinecraftLauncher.Modpack
 														  $"Deleting old versions..." );
 
 								var deletePattern = mod.RemovePattern ?? $"{modId}.*";
-								var toDelete      = modFiles.Where( file => Regex.IsMatch( file, deletePattern ) ).ToList();
+								var toDelete      = currentModFiles.Where( file => Regex.IsMatch( file, deletePattern ) ).ToList();
 
 								foreach ( var file in toDelete )
 									File.Delete( file );
