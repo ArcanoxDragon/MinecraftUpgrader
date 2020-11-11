@@ -54,6 +54,7 @@
 			pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
 			pictureBox1.TabIndex = 21;
 			pictureBox1.TabStop = false;
+			this.appToolTip.SetToolTip(pictureBox1, "Art by Firestoem!");
 			// 
 			// label2
 			// 
