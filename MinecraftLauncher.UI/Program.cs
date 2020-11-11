@@ -14,9 +14,17 @@ namespace MinecraftLauncher
 		[ STAThread ]
 		private static void Main()
 		{
-			var consoleLogWriter = new ConsoleLogWriter( GetLogPath(), Console.Out );
+			try
+			{
+				var consoleLogWriter = new ConsoleLogWriter( GetLogPath(), Console.Out );
 
-			Console.SetOut( consoleLogWriter );
+				Console.SetOut( consoleLogWriter );
+			}
+			catch ( IOException ex ) when ( ex.Message.Contains( "cannot access the file" ) )
+			{
+				MessageBox.Show( "Only one instance of the program can be open at a time", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error );
+				return;
+			}
 
 			AppDomain.CurrentDomain.FirstChanceException += ( sender, args ) => {
 				Console.WriteLine( $"=== Exception occurred at {DateTime.Now:yyyy-MM-dd hh:mm:ss tt} ==={LF}" );
