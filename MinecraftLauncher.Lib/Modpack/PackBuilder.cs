@@ -31,6 +31,7 @@ namespace MinecraftLauncher.Modpack
 		};
 
 		private const string ConfigPath = "modpack/pack-info.json";
+		public static string ProfilePath => Path.Combine( MinecraftPath.GetOSDefaultPath(), Constants.Minecraft.ProfileSubfolder );
 
 		private readonly PackBuilderOptions options;
 
@@ -40,7 +41,6 @@ namespace MinecraftLauncher.Modpack
 		}
 
 		public string PackMetadataUrl => $"{this.options.ModPackUrl}/{ConfigPath}";
-		public string ProfilePath     => Path.Combine( MinecraftPath.GetOSDefaultPath(), Constants.Minecraft.ProfileSubfolder );
 
 		public async Task<PackMetadata> LoadConfigAsync( CancellationToken cancellationToken = default, ProgressReporter progressReporter = default )
 		{
@@ -65,10 +65,10 @@ namespace MinecraftLauncher.Modpack
 
 		private async Task<string> SetupNewProfileAsync( PackMetadata pack, CancellationToken token = default, ProgressReporter progress = default )
 		{
-			var mcVersionLoader = new MVersionLoader( new MinecraftPath( this.ProfilePath ) );
+			var mcVersionLoader = new MVersionLoader( new MinecraftPath( ProfilePath ) );
 			var mcVersions      = await mcVersionLoader.GetVersionMetadatasAsync( token );
 			var mcVersion       = mcVersions.GetVersion( pack.IntendedMinecraftVersion );
-			var mcPath          = new MinecraftPath( this.ProfilePath );
+			var mcPath          = new MinecraftPath( ProfilePath );
 
 			// Install base MC jar
 			var downloader = new MDownloader( mcPath, mcVersion );
@@ -109,9 +109,9 @@ namespace MinecraftLauncher.Modpack
 
 		public async Task SetupPackAsync( PackMetadata pack, bool forceRebuild, CancellationToken token = default, ProgressReporter progress = default )
 		{
-			var metadataFile = Path.Combine( this.ProfilePath, "packMeta.json" );
-			var tempDir      = Path.Combine( this.ProfilePath, "temp" );
-			var modsDir      = Path.Combine( this.ProfilePath, "mods" );
+			var metadataFile = Path.Combine( ProfilePath, "packMeta.json" );
+			var tempDir      = Path.Combine( ProfilePath, "temp" );
+			var modsDir      = Path.Combine( ProfilePath, "mods" );
 
 			progress?.ReportProgress( "Creating instance folder structure..." );
 
@@ -149,7 +149,7 @@ namespace MinecraftLauncher.Modpack
 				BuiltFromServerPackMd5  = currentBasePackMd5,
 			};
 
-			Directory.CreateDirectory( this.ProfilePath );
+			Directory.CreateDirectory( ProfilePath );
 			Directory.CreateDirectory( tempDir );
 
 			try
@@ -213,9 +213,9 @@ namespace MinecraftLauncher.Modpack
 					currentVersion = "0.0.0";
 
 					// Clear out old files if present since we're downloading the base pack fresh
-					var configDir    = Path.Combine( this.ProfilePath, "config" );
-					var resourcesDir = Path.Combine( this.ProfilePath, "resources" );
-					var scriptsDir   = Path.Combine( this.ProfilePath, "scripts" );
+					var configDir    = Path.Combine( ProfilePath, "config" );
+					var resourcesDir = Path.Combine( ProfilePath, "resources" );
+					var scriptsDir   = Path.Combine( ProfilePath, "scripts" );
 
 					if ( Directory.Exists( configDir ) )
 						Directory.Delete( configDir, true );
@@ -245,19 +245,19 @@ namespace MinecraftLauncher.Modpack
 						using var zip = new ZipFile( fs );
 
 						progress?.ReportProgress( "Extracting base pack contents (configs)..." );
-						await zip.ExtractAsync( this.ProfilePath, new ZipExtractOptions( "config", false, token, progress ) );
+						await zip.ExtractAsync( ProfilePath, new ZipExtractOptions( "config", false, token, progress ) );
 						progress?.ReportProgress( "Extracting base pack contents (mods)..." );
-						await zip.ExtractAsync( this.ProfilePath, new ZipExtractOptions( "mods", true, token, progress ) );
+						await zip.ExtractAsync( ProfilePath, new ZipExtractOptions( "mods", true, token, progress ) );
 						progress?.ReportProgress( "Extracting base pack contents (resources)..." );
-						await zip.TryExtractAsync( this.ProfilePath, new ZipExtractOptions( "resources", false, token, progress ) );
+						await zip.TryExtractAsync( ProfilePath, new ZipExtractOptions( "resources", false, token, progress ) );
 						progress?.ReportProgress( "Extracting base pack contents (scripts)..." );
-						await zip.TryExtractAsync( this.ProfilePath, new ZipExtractOptions( "scripts", false, token, progress ) );
+						await zip.TryExtractAsync( ProfilePath, new ZipExtractOptions( "scripts", false, token, progress ) );
 						progress?.ReportProgress( "Extracting base pack contents..." );
 
 						// Individual files that might exist
 						foreach ( var filename in pack.AdditionalBasePackFiles )
 						{
-							await zip.TryExtractAsync( this.ProfilePath, new ZipExtractOptions( filenamePattern: Regex.Escape( filename ), overwriteExisting: false, cancellationToken: token, progressReporter: progress ) );
+							await zip.TryExtractAsync( ProfilePath, new ZipExtractOptions( filenamePattern: Regex.Escape( filename ), overwriteExisting: false, cancellationToken: token, progressReporter: progress ) );
 						}
 					}
 
@@ -278,15 +278,15 @@ namespace MinecraftLauncher.Modpack
 						using var zip = new ZipFile( fs );
 
 						progress?.ReportProgress( "Extracting client overrides (configs)..." );
-						await zip.TryExtractAsync( this.ProfilePath, new ZipExtractOptions( "overrides/animation", true, token, progress ) );
+						await zip.TryExtractAsync( ProfilePath, new ZipExtractOptions( "overrides/animation", true, token, progress ) );
 						progress?.ReportProgress( "Extracting client overrides (configs)..." );
-						await zip.TryExtractAsync( this.ProfilePath, new ZipExtractOptions( "overrides/config", true, token, progress ) );
+						await zip.TryExtractAsync( ProfilePath, new ZipExtractOptions( "overrides/config", true, token, progress ) );
 						progress?.ReportProgress( "Extracting client overrides (mods)..." );
-						await zip.TryExtractAsync( this.ProfilePath, new ZipExtractOptions( "overrides/mods", true, token, progress ) );
+						await zip.TryExtractAsync( ProfilePath, new ZipExtractOptions( "overrides/mods", true, token, progress ) );
 						progress?.ReportProgress( "Extracting client overrides (resources)..." );
-						await zip.TryExtractAsync( this.ProfilePath, new ZipExtractOptions( "overrides/resources", true, token, progress ) );
+						await zip.TryExtractAsync( ProfilePath, new ZipExtractOptions( "overrides/resources", true, token, progress ) );
 						progress?.ReportProgress( "Extracting client overrides (scripts)..." );
-						await zip.TryExtractAsync( this.ProfilePath, new ZipExtractOptions( "overrides/scripts", true, token, progress ) );
+						await zip.TryExtractAsync( ProfilePath, new ZipExtractOptions( "overrides/scripts", true, token, progress ) );
 					}
 				}
 
@@ -351,7 +351,7 @@ namespace MinecraftLauncher.Modpack
 							if ( !string.IsNullOrEmpty( mod.FileUri ) )
 							{
 								var fileName = Path.GetFileName( mod.FileUri ) ?? $"{modId}.jar";
-								var filePath = Path.Combine( this.ProfilePath, "mods", fileName );
+								var filePath = Path.Combine( ProfilePath, "mods", fileName );
 
 								downloadTask = $"{modTask}\n" +
 											   $"Downloading mod archive: {fileName}";
@@ -367,7 +367,7 @@ namespace MinecraftLauncher.Modpack
 
 						// Apply config replacements
 						progress?.ReportProgress( -1, configsTask );
-						var configDir     = Path.Combine( this.ProfilePath, "config" );
+						var configDir     = Path.Combine( ProfilePath, "config" );
 						var currentConfig = 0;
 						foreach ( var (configPath, replacements) in version.ConfigReplacements )
 						{
@@ -380,12 +380,12 @@ namespace MinecraftLauncher.Modpack
 														  $"Config file {currentConfig} of {version.ConfigReplacements.Count}: " +
 														  $"{configPath}" );
 
-								var configFileContents = File.ReadAllText( configFilePath, Encoding.UTF8 );
+								var configFileContents = File.ReadAllText( configFilePath, EncodingUtil.UTF8NoBom );
 
 								foreach ( var replacement in replacements )
 									configFileContents = Regex.Replace( configFileContents, replacement.Replace, replacement.With );
 
-								File.WriteAllText( configFilePath, configFileContents, Encoding.UTF8 );
+								File.WriteAllText( configFilePath, configFileContents, EncodingUtil.UTF8NoBom );
 							}
 						}
 					}
@@ -399,7 +399,7 @@ namespace MinecraftLauncher.Modpack
 						var currentFile = 0;
 						foreach ( var (filename, url) in version.ExtraFiles )
 						{
-							var filePath = Path.Combine( this.ProfilePath, filename );
+							var filePath = Path.Combine( ProfilePath, filename );
 
 							downloadTask = $"{extraFilesTask}\n" +
 										   $"Downloading extra file {currentFile++} of {version.ExtraFiles.Count}: {filename}";

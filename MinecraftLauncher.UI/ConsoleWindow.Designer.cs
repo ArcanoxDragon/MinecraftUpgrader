@@ -36,7 +36,7 @@
 			this.checkBoxAutoScroll = new System.Windows.Forms.CheckBox();
 			this.buttonCopyToClipboard = new System.Windows.Forms.Button();
 			this.buttonSaveToFile = new System.Windows.Forms.Button();
-			this.buttonKillMinecraft = new System.Windows.Forms.Button();
+			this.buttonKillLaunchMinecraft = new System.Windows.Forms.Button();
 			this.timerFlushBuffer = new System.Windows.Forms.Timer(this.components);
 			this.tableLayoutPanel1.SuspendLayout();
 			this.panel1.SuspendLayout();
@@ -76,7 +76,7 @@
 			this.panel1.Controls.Add(this.checkBoxAutoScroll);
 			this.panel1.Controls.Add(this.buttonCopyToClipboard);
 			this.panel1.Controls.Add(this.buttonSaveToFile);
-			this.panel1.Controls.Add(this.buttonKillMinecraft);
+			this.panel1.Controls.Add(this.buttonKillLaunchMinecraft);
 			this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.panel1.Location = new System.Drawing.Point(0, 556);
 			this.panel1.Margin = new System.Windows.Forms.Padding(0);
@@ -99,7 +99,7 @@
 			// buttonCopyToClipboard
 			// 
 			this.buttonCopyToClipboard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonCopyToClipboard.Location = new System.Drawing.Point(742, 12);
+			this.buttonCopyToClipboard.Location = new System.Drawing.Point(734, 12);
 			this.buttonCopyToClipboard.Name = "buttonCopyToClipboard";
 			this.buttonCopyToClipboard.Size = new System.Drawing.Size(100, 24);
 			this.buttonCopyToClipboard.TabIndex = 0;
@@ -110,7 +110,7 @@
 			// buttonSaveToFile
 			// 
 			this.buttonSaveToFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonSaveToFile.Location = new System.Drawing.Point(848, 12);
+			this.buttonSaveToFile.Location = new System.Drawing.Point(840, 12);
 			this.buttonSaveToFile.Name = "buttonSaveToFile";
 			this.buttonSaveToFile.Size = new System.Drawing.Size(100, 24);
 			this.buttonSaveToFile.TabIndex = 0;
@@ -118,16 +118,16 @@
 			this.buttonSaveToFile.UseVisualStyleBackColor = true;
 			this.buttonSaveToFile.Click += new System.EventHandler(this.OnButtonSaveToFile_Click);
 			// 
-			// buttonKillMinecraft
+			// buttonKillLaunchMinecraft
 			// 
-			this.buttonKillMinecraft.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonKillMinecraft.Location = new System.Drawing.Point(954, 12);
-			this.buttonKillMinecraft.Name = "buttonKillMinecraft";
-			this.buttonKillMinecraft.Size = new System.Drawing.Size(100, 24);
-			this.buttonKillMinecraft.TabIndex = 0;
-			this.buttonKillMinecraft.Text = "Kill Minecraft";
-			this.buttonKillMinecraft.UseVisualStyleBackColor = true;
-			this.buttonKillMinecraft.Click += new System.EventHandler(this.OnButtonKillMinecraft_Click);
+			this.buttonKillLaunchMinecraft.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonKillLaunchMinecraft.Location = new System.Drawing.Point(946, 12);
+			this.buttonKillLaunchMinecraft.Name = "buttonKillLaunchMinecraft";
+			this.buttonKillLaunchMinecraft.Size = new System.Drawing.Size(100, 24);
+			this.buttonKillLaunchMinecraft.TabIndex = 0;
+			this.buttonKillLaunchMinecraft.Text = "Kill Minecraft";
+			this.buttonKillLaunchMinecraft.UseVisualStyleBackColor = true;
+			this.buttonKillLaunchMinecraft.Click += new System.EventHandler(this.OnButtonKillMinecraft_Click);
 			// 
 			// timerFlushBuffer
 			// 
@@ -145,7 +145,6 @@
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "Minecraft Console";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ConsoleWindow_FormClosing);
-			this.Load += new System.EventHandler(this.ConsoleWindow_Load);
 			this.tableLayoutPanel1.ResumeLayout(false);
 			this.panel1.ResumeLayout(false);
 			this.panel1.PerformLayout();
@@ -159,7 +158,7 @@
 		private System.Windows.Forms.RichTextBox richTextBoxLog;
 		private System.Windows.Forms.Panel panel1;
 		private System.Windows.Forms.CheckBox checkBoxAutoScroll;
-		private System.Windows.Forms.Button buttonKillMinecraft;
+		private System.Windows.Forms.Button buttonKillLaunchMinecraft;
 		private System.Windows.Forms.Button buttonSaveToFile;
 		private System.Windows.Forms.Button buttonCopyToClipboard;
 		private System.Windows.Forms.Timer timerFlushBuffer;

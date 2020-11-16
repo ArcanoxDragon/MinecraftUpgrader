@@ -5,15 +5,9 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using CmlLib.Core;
-using CmlLib.Core.Auth;
-using CmlLib.Core.Version;
-using Humanizer;
-using MinecraftLauncher.Config;
-using MinecraftLauncher.DI;
 using MinecraftLauncher.Extensions;
 using MinecraftLauncher.Modpack;
-using NickStrupat;
+using MinecraftLauncher.Utility;
 using Semver;
 
 namespace MinecraftLauncher
@@ -51,7 +45,7 @@ namespace MinecraftLauncher
 
 		private async void OnFormLoad( object sender, EventArgs e )
 		{
-			var mcProfilePath = this.packBuilder.ProfilePath;
+			var mcProfilePath = PackBuilder.ProfilePath;
 
 			this.lbMinecraftPath.Text = mcProfilePath;
 			this.appToolTip.SetToolTip( this.lbMinecraftPath, mcProfilePath );
@@ -93,7 +87,7 @@ namespace MinecraftLauncher
 
 		private async Task CheckCurrentInstanceAsync()
 		{
-			var instanceMetadata = InstanceMetadataReader.ReadInstanceMetadata( this.packBuilder.ProfilePath );
+			var instanceMetadata = InstanceMetadataReader.ReadInstanceMetadata( PackBuilder.ProfilePath );
 
 			// Beeg long list of checks to see if this pack needs to be completely converted or not
 			if ( instanceMetadata == null ||
@@ -212,7 +206,7 @@ namespace MinecraftLauncher
 
 			// Don't need to do this, necessarily, but to be polite to Mojang, we should check
 			// for a valid session *before* downloading all of the Minecraft assets.
-			var session = await this.GetSessionAsync();
+			var session = await SessionUtil.GetSessionAsync( this );
 
 			if ( session == null )
 				return;
@@ -275,97 +269,22 @@ namespace MinecraftLauncher
 
 		private async Task StartMinecraftAsync()
 		{
-			if ( this.instanceMetadata == null )
+			var launcher = new McLauncher( this.packMetadata, this.instanceMetadata );
+
+			if ( !await launcher.StartMinecraftAsync( this ) )
 				return;
 
-			var session = await this.GetSessionAsync();
-
-			if ( session == null )
-				return;
-
-			var launchOptions = this.CreateLaunchOptions( session );
-
-			launchOptions.StartVersion = await this.GetVersionMetadataAsync( this.instanceMetadata.CurrentLaunchVersion );
-
-			var launch  = new MLaunch( launchOptions );
-			var process = launch.GetProcess();
-
-			process.StartInfo.UseShellExecute        = false;
-			process.StartInfo.RedirectStandardError  = true;
-			process.StartInfo.RedirectStandardOutput = true;
-			process.EnableRaisingEvents              = true;
-
-			this.Hide();
-			process.Start();
-
-			var consoleWindow = new ConsoleWindow( process );
+			var consoleWindow = new ConsoleWindow( launcher );
 
 			consoleWindow.FormClosed += ( sender, args ) => this.Show();
+
+			this.Hide();
 			consoleWindow.Show();
 		}
 
-		private async Task<MSession> GetSessionAsync()
-		{
-			var login   = new MLogin();
-			var session = login.ReadSessionCache();
-
-			bool CheckSession() => session?.CheckIsValid() == true;
-
-			if ( CheckSession() /* Try auto-login if a valid session existed in the cache */ )
-			{
-				var loginResult = await login.TryAutoLoginAsync( session );
-
-				session = loginResult.IsSuccess ? loginResult.Session : null;
-			}
-
-			if ( !CheckSession() /* Try manual login */ )
-			{
-				var loginForm   = Services.CreateInstance<LoginForm>();
-				var loginResult = loginForm.ShowDialog( this );
-
-				if ( loginResult != DialogResult.OK )
-					return null;
-
-				session = loginForm.Session;
-			}
-
-			if ( !CheckSession() /* Should never get here */ )
-			{
-				MessageBox.Show( this,
-								 "Could not start a valid Mojang user session for Minecraft.",
-								 "Session Failure",
-								 MessageBoxButtons.OK,
-								 MessageBoxIcon.Error );
-
-				return null;
-			}
-
-			return session;
-		}
-
-		private MLaunchOption CreateLaunchOptions( MSession session )
-		{
-			var computerInfo = new ComputerInfo();
-			var ramSize      = ( (long) computerInfo.TotalPhysicalMemory ).Bytes();
-			// Set JVM max memory to 2 GB less than the user's total RAM, at most 12 GB but at least 5
-			var maxRamGb = (int) Math.Max( Math.Min( ramSize.Gigabytes - 4, 12 ), 5 );
-
-			return new MLaunchOption {
-				Path             = new MinecraftPath( this.packBuilder.ProfilePath ),
-				JavaPath         = AppConfig.Get().JavaPath,
-				MinimumRamMb     = (int) 1.Gigabytes().Megabytes,
-				MaximumRamMb     = (int) maxRamGb.Gigabytes().Megabytes,
-				GameLauncherName = this.packMetadata.DisplayName,
-				Session          = session,
-			};
-		}
-
-		private async Task<MVersion> GetVersionMetadataAsync( string versionString )
-		{
-			var versionLoader = new MVersionLoader( new MinecraftPath( this.packBuilder.ProfilePath ) );
-			var versions      = await versionLoader.GetVersionMetadatasAsync();
-
-			return versions.GetVersion( versionString );
-		}
+		private async void buttonRefresh_Click( object sender, EventArgs e ) => await this.DisableWhile( async () => {
+			await this.LoadPackMetadataAsync();
+			await this.CheckCurrentInstanceAsync();
+		} );
 	}
 }

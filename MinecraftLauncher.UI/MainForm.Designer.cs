@@ -29,21 +29,79 @@
 		private void InitializeComponent()
 		{
 			this.components = new System.ComponentModel.Container();
-			System.Windows.Forms.PictureBox pictureBox1;
 			System.Windows.Forms.Label label2;
+			System.Windows.Forms.Panel panel1;
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+			System.Windows.Forms.PictureBox pictureBox1;
+			this.buttonRefresh = new System.Windows.Forms.Button();
+			this.btnGo = new System.Windows.Forms.Button();
 			this.lbInstanceStatus = new System.Windows.Forms.Label();
 			this.buttonLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
 			this.btnRebuild = new System.Windows.Forms.Button();
-			this.btnGo = new System.Windows.Forms.Button();
 			this.appToolTip = new System.Windows.Forms.ToolTip(this.components);
 			this.label1 = new System.Windows.Forms.Label();
 			this.lbMinecraftPath = new System.Windows.Forms.LinkLabel();
-			pictureBox1 = new System.Windows.Forms.PictureBox();
 			label2 = new System.Windows.Forms.Label();
+			panel1 = new System.Windows.Forms.Panel();
+			pictureBox1 = new System.Windows.Forms.PictureBox();
+			panel1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(pictureBox1)).BeginInit();
 			this.buttonLayoutPanel.SuspendLayout();
 			this.SuspendLayout();
+			// 
+			// label2
+			// 
+			label2.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			label2.Location = new System.Drawing.Point(12, 152);
+			label2.Name = "label2";
+			label2.Size = new System.Drawing.Size(412, 44);
+			label2.TabIndex = 22;
+			label2.Text = "Arcanox\'s Minecraft Server";
+			label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+			// 
+			// panel1
+			// 
+			panel1.Controls.Add(this.buttonRefresh);
+			panel1.Controls.Add(this.btnGo);
+			panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+			panel1.Location = new System.Drawing.Point(206, 0);
+			panel1.Margin = new System.Windows.Forms.Padding(0);
+			panel1.Name = "panel1";
+			panel1.Size = new System.Drawing.Size(206, 75);
+			panel1.TabIndex = 3;
+			// 
+			// buttonRefresh
+			// 
+			this.buttonRefresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonRefresh.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(90)))), ((int)(((byte)(159)))));
+			this.buttonRefresh.FlatAppearance.BorderSize = 0;
+			this.buttonRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.buttonRefresh.Image = ((System.Drawing.Image)(resources.GetObject("buttonRefresh.Image")));
+			this.buttonRefresh.Location = new System.Drawing.Point(182, 51);
+			this.buttonRefresh.Name = "buttonRefresh";
+			this.buttonRefresh.Size = new System.Drawing.Size(24, 24);
+			this.buttonRefresh.TabIndex = 3;
+			this.appToolTip.SetToolTip(this.buttonRefresh, "Refresh modpack info");
+			this.buttonRefresh.UseVisualStyleBackColor = false;
+			this.buttonRefresh.Click += new System.EventHandler(this.buttonRefresh_Click);
+			// 
+			// btnGo
+			// 
+			this.btnGo.BackColor = System.Drawing.Color.DodgerBlue;
+			this.btnGo.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.btnGo.FlatAppearance.BorderSize = 0;
+			this.btnGo.FlatAppearance.MouseDownBackColor = System.Drawing.Color.DodgerBlue;
+			this.btnGo.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(72)))), ((int)(((byte)(175)))), ((int)(((byte)(255)))));
+			this.btnGo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.btnGo.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.btnGo.ForeColor = System.Drawing.Color.White;
+			this.btnGo.Location = new System.Drawing.Point(0, 0);
+			this.btnGo.Name = "btnGo";
+			this.btnGo.Size = new System.Drawing.Size(206, 75);
+			this.btnGo.TabIndex = 2;
+			this.btnGo.Text = "Go!";
+			this.btnGo.UseVisualStyleBackColor = false;
+			this.btnGo.Click += new System.EventHandler(this.OnBtnGoClick);
 			// 
 			// pictureBox1
 			// 
@@ -55,16 +113,6 @@
 			pictureBox1.TabIndex = 21;
 			pictureBox1.TabStop = false;
 			this.appToolTip.SetToolTip(pictureBox1, "Art by Firestoem!");
-			// 
-			// label2
-			// 
-			label2.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			label2.Location = new System.Drawing.Point(12, 152);
-			label2.Name = "label2";
-			label2.Size = new System.Drawing.Size(412, 44);
-			label2.TabIndex = 22;
-			label2.Text = "Arcanox\'s Minecraft Server";
-			label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			// 
 			// lbInstanceStatus
 			// 
@@ -84,7 +132,7 @@
 			this.buttonLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
 			this.buttonLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
 			this.buttonLayoutPanel.Controls.Add(this.btnRebuild, 0, 0);
-			this.buttonLayoutPanel.Controls.Add(this.btnGo, 1, 0);
+			this.buttonLayoutPanel.Controls.Add(panel1, 1, 0);
 			this.buttonLayoutPanel.Location = new System.Drawing.Point(12, 202);
 			this.buttonLayoutPanel.Name = "buttonLayoutPanel";
 			this.buttonLayoutPanel.RowCount = 1;
@@ -111,24 +159,6 @@
 			this.btnRebuild.Text = "Repair/Reinstall";
 			this.btnRebuild.UseVisualStyleBackColor = false;
 			this.btnRebuild.Click += new System.EventHandler(this.OnBtnRebuildClick);
-			// 
-			// btnGo
-			// 
-			this.btnGo.BackColor = System.Drawing.Color.DodgerBlue;
-			this.btnGo.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.btnGo.FlatAppearance.BorderSize = 0;
-			this.btnGo.FlatAppearance.MouseDownBackColor = System.Drawing.Color.DodgerBlue;
-			this.btnGo.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(72)))), ((int)(((byte)(175)))), ((int)(((byte)(255)))));
-			this.btnGo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-			this.btnGo.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.btnGo.ForeColor = System.Drawing.Color.White;
-			this.btnGo.Location = new System.Drawing.Point(209, 3);
-			this.btnGo.Name = "btnGo";
-			this.btnGo.Size = new System.Drawing.Size(200, 69);
-			this.btnGo.TabIndex = 1;
-			this.btnGo.Text = "Go!";
-			this.btnGo.UseVisualStyleBackColor = false;
-			this.btnGo.Click += new System.EventHandler(this.OnBtnGoClick);
 			// 
 			// appToolTip
 			// 
@@ -179,6 +209,7 @@
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "Minecraft Launcher";
 			this.Load += new System.EventHandler(this.OnFormLoad);
+			panel1.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(pictureBox1)).EndInit();
 			this.buttonLayoutPanel.ResumeLayout(false);
 			this.ResumeLayout(false);
@@ -190,10 +221,11 @@
 		private System.Windows.Forms.Label lbInstanceStatus;
 		private System.Windows.Forms.TableLayoutPanel buttonLayoutPanel;
 		private System.Windows.Forms.Button btnRebuild;
-		private System.Windows.Forms.Button btnGo;
 		private System.Windows.Forms.ToolTip appToolTip;
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.LinkLabel lbMinecraftPath;
+		private System.Windows.Forms.Button buttonRefresh;
+		private System.Windows.Forms.Button btnGo;
 	}
 }
 

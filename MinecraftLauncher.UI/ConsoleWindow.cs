@@ -12,29 +12,34 @@ namespace MinecraftLauncher
 {
 	public partial class ConsoleWindow : Form
 	{
-		private static readonly Guid SaveFileGuid = Guid.Parse( "f9422b8c-b94f-41be-bef4-1104450086ce" );
+		private readonly        McLauncher launcher;
+		private static readonly Guid       SaveFileGuid = Guid.Parse( "f9422b8c-b94f-41be-bef4-1104450086ce" );
 
-		private readonly Process       process;
 		private readonly Mutex         bufferMutex;
 		private readonly StringBuilder bufferBuilder;
 
-		public ConsoleWindow( Process minecraftProcess )
+		public ConsoleWindow( McLauncher launcher )
 		{
-			this.process       = minecraftProcess;
+			this.launcher      = launcher;
 			this.bufferMutex   = new Mutex();
 			this.bufferBuilder = new StringBuilder();
 
 			this.InitializeComponent();
+
+			if ( this.launcher.CurrentProcess?.HasExited == false )
+				this.HookProcess();
+
+			this.launcher.Launched += this.LauncherLaunched;
 		}
 
-		private void ConsoleWindow_Load( object sender, EventArgs e )
+		private void HookProcess()
 		{
-			this.process.ErrorDataReceived  += this.OnErrorDataReceived;
-			this.process.OutputDataReceived += this.OnOutputDataReceived;
-			this.process.Exited             += this.OnProcessExited;
+			this.launcher.CurrentProcess.ErrorDataReceived  += this.OnErrorDataReceived;
+			this.launcher.CurrentProcess.OutputDataReceived += this.OnOutputDataReceived;
+			this.launcher.CurrentProcess.Exited             += this.OnProcessExited;
 
-			this.process.BeginErrorReadLine();
-			this.process.BeginOutputReadLine();
+			this.launcher.CurrentProcess.BeginErrorReadLine();
+			this.launcher.CurrentProcess.BeginOutputReadLine();
 		}
 
 		private void AppendTextToConsole( string text )
@@ -73,6 +78,9 @@ namespace MinecraftLauncher
 
 		private bool ConfirmKillMinecraft()
 		{
+			if ( this.launcher.CurrentProcess == null )
+				return true;
+
 			var result = MessageBox.Show( this,
 										  "Are you sure you want to kill the Minecraft process? " +
 										  "This may cause world corruption in Single Player worlds.",
@@ -82,7 +90,7 @@ namespace MinecraftLauncher
 
 			if ( result == DialogResult.Yes )
 			{
-				this.process.Kill();
+				this.launcher.CurrentProcess.Kill();
 				return true;
 			}
 
@@ -104,18 +112,28 @@ namespace MinecraftLauncher
 		} );
 
 		private void OnProcessExited( object sender, EventArgs e ) => this.TryBeginInvoke( () => {
-			this.AppendTextToBuffer( $"\r\n\r\nProcess exited with exit code {this.process.ExitCode}\r\n\r\n\r\n\r\n\r\n\r\n" );
-			this.buttonKillMinecraft.Enabled = false;
+			if ( !( sender is Process process ) ) return;
+
+			this.AppendTextToBuffer( $"\r\n\r\nProcess exited with exit code {process.ExitCode}\r\n\r\n\r\n\r\n\r\n\r\n" );
+			this.buttonKillLaunchMinecraft.Text = "Launch Minecraft";
+		} );
+
+		private void LauncherLaunched( object sender, EventArgs e ) => this.TryBeginInvoke( () => {
+			this.HookProcess();
+			this.richTextBoxLog.Clear();
+			this.buttonKillLaunchMinecraft.Text = "Kill Minecraft";
 		} );
 
 		private void ConsoleWindow_FormClosing( object sender, FormClosingEventArgs e )
 		{
-			if ( !this.process.HasExited && e.CloseReason == CloseReason.UserClosing )
+			var process = this.launcher.CurrentProcess;
+
+			if ( process?.HasExited == false && e.CloseReason == CloseReason.UserClosing )
 			{
 				if ( this.ConfirmKillMinecraft() )
 				{
-					this.process.ErrorDataReceived  -= this.OnErrorDataReceived;
-					this.process.OutputDataReceived -= this.OnOutputDataReceived;
+					process.ErrorDataReceived  -= this.OnErrorDataReceived;
+					process.OutputDataReceived -= this.OnOutputDataReceived;
 				}
 				else
 				{
@@ -150,9 +168,24 @@ namespace MinecraftLauncher
 			}
 		}
 
-		private void OnButtonKillMinecraft_Click( object sender, EventArgs e )
+		private async void OnButtonKillMinecraft_Click( object sender, EventArgs e )
 		{
-			this.ConfirmKillMinecraft();
+			if ( this.launcher.CurrentProcess == null )
+			{
+				try
+				{
+					this.Enabled = false;
+					await this.launcher.StartMinecraftAsync( this );
+				}
+				finally
+				{
+					this.Enabled = true;
+				}
+			}
+			else
+			{
+				this.ConfirmKillMinecraft();
+			}
 		}
 
 		private void OnTimerFlushBuffer_Tick( object sender, EventArgs e )
