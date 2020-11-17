@@ -64,10 +64,9 @@
 			panel1.Controls.Add(this.buttonRefresh);
 			panel1.Controls.Add(this.btnGo);
 			panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-			panel1.Location = new System.Drawing.Point(206, 0);
-			panel1.Margin = new System.Windows.Forms.Padding(0);
+			panel1.Location = new System.Drawing.Point(209, 3);
 			panel1.Name = "panel1";
-			panel1.Size = new System.Drawing.Size(206, 75);
+			panel1.Size = new System.Drawing.Size(200, 69);
 			panel1.TabIndex = 3;
 			// 
 			// buttonRefresh
@@ -77,7 +76,7 @@
 			this.buttonRefresh.FlatAppearance.BorderSize = 0;
 			this.buttonRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
 			this.buttonRefresh.Image = ((System.Drawing.Image)(resources.GetObject("buttonRefresh.Image")));
-			this.buttonRefresh.Location = new System.Drawing.Point(182, 51);
+			this.buttonRefresh.Location = new System.Drawing.Point(176, 45);
 			this.buttonRefresh.Name = "buttonRefresh";
 			this.buttonRefresh.Size = new System.Drawing.Size(24, 24);
 			this.buttonRefresh.TabIndex = 3;
@@ -97,7 +96,7 @@
 			this.btnGo.ForeColor = System.Drawing.Color.White;
 			this.btnGo.Location = new System.Drawing.Point(0, 0);
 			this.btnGo.Name = "btnGo";
-			this.btnGo.Size = new System.Drawing.Size(206, 75);
+			this.btnGo.Size = new System.Drawing.Size(200, 69);
 			this.btnGo.TabIndex = 2;
 			this.btnGo.Text = "Go!";
 			this.btnGo.UseVisualStyleBackColor = false;
