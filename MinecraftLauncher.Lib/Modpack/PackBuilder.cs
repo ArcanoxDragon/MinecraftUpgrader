@@ -324,7 +324,7 @@ namespace MinecraftLauncher.Modpack
 						{
 							bool VersionInstallsThisMod( PackVersion v )
 								// See if there are any mods in this version with the same mod ID and which download a new JAR
-								=> v.Mods.Any( pair => pair.Key == modId && !string.IsNullOrEmpty( pair.Value.FileUri ) );
+								=> v.Mods?.Any( pair => pair.Key == modId && !string.IsNullOrEmpty( pair.Value.FileUri ) ) == true;
 
 							if ( futureVersions.Any( VersionInstallsThisMod ) )
 								// Skip the mod in this version because a later version installs it
