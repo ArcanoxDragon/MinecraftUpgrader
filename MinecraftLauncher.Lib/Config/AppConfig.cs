@@ -10,6 +10,7 @@ namespace MinecraftLauncher.Config
 		string LastUsername { get; }
 	}
 
+	// TODO: Move out of Lib project?
 	public class AppConfig : IAppConfig
 	{
 		#region Static
@@ -30,7 +31,7 @@ namespace MinecraftLauncher.Config
 			File.WriteAllText( configPath, configJson );
 		}
 
-		private static AppConfig GetInternal()
+		private static AppConfig GetInternal( bool tryOld = true )
 		{
 			if ( CachedInstance != null )
 				return CachedInstance;
@@ -50,6 +51,15 @@ namespace MinecraftLauncher.Config
 			}
 			else
 			{
+				var oldConfigPath = GetOldConfigPath();
+
+				if ( tryOld && File.Exists( oldConfigPath ) )
+				{
+					File.Copy( oldConfigPath, configPath );
+
+					return GetInternal( tryOld: false );
+				}
+
 				File.WriteAllText( configPath, "{}" );
 
 				CachedInstance = new AppConfig();
@@ -58,9 +68,16 @@ namespace MinecraftLauncher.Config
 			return CachedInstance;
 		}
 
-		private static string GetConfigPath() => Path.Combine(
+		// TODO: Remove
+		private static string GetOldConfigPath() => Path.Combine(
 			Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ),
 			".mcupgrader",
+			"config.json"
+		);
+
+		private static string GetConfigPath() => Path.Combine(
+			Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ),
+			".mcarcanox",
 			"config.json"
 		);
 
