@@ -255,9 +255,12 @@ namespace MinecraftLauncher.Modpack
 						progress?.ReportProgress( "Extracting base pack contents..." );
 
 						// Individual files that might exist
-						foreach ( var filename in pack.AdditionalBasePackFiles )
+						if (pack.AdditionalBasePackFiles is not null)
 						{
-							await zip.TryExtractAsync( ProfilePath, new ZipExtractOptions( filenamePattern: Regex.Escape( filename ), overwriteExisting: false, cancellationToken: token, progressReporter: progress ) );
+							foreach (var filename in pack.AdditionalBasePackFiles)
+							{
+								await zip.TryExtractAsync(ProfilePath, new ZipExtractOptions(filenamePattern: Regex.Escape(filename), overwriteExisting: false, cancellationToken: token, progressReporter: progress));
+							}
 						}
 					}
 
