@@ -33,20 +33,27 @@
 			System.Windows.Forms.Panel panel1;
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 			System.Windows.Forms.PictureBox pictureBox1;
+			System.Windows.Forms.Panel panel2;
 			this.buttonRefresh = new System.Windows.Forms.Button();
 			this.btnGo = new System.Windows.Forms.Button();
+			this.btnVr = new System.Windows.Forms.Button();
 			this.lbInstanceStatus = new System.Windows.Forms.Label();
 			this.buttonLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
 			this.btnRebuild = new System.Windows.Forms.Button();
 			this.appToolTip = new System.Windows.Forms.ToolTip(this.components);
 			this.label1 = new System.Windows.Forms.Label();
 			this.lbMinecraftPath = new System.Windows.Forms.LinkLabel();
+			this.panelVr = new System.Windows.Forms.TableLayoutPanel();
+			this.btnNonVr = new System.Windows.Forms.Button();
 			label2 = new System.Windows.Forms.Label();
 			panel1 = new System.Windows.Forms.Panel();
 			pictureBox1 = new System.Windows.Forms.PictureBox();
+			panel2 = new System.Windows.Forms.Panel();
 			panel1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(pictureBox1)).BeginInit();
+			panel2.SuspendLayout();
 			this.buttonLayoutPanel.SuspendLayout();
+			this.panelVr.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// label2
@@ -113,11 +120,38 @@
 			pictureBox1.TabStop = false;
 			this.appToolTip.SetToolTip(pictureBox1, "Art by Firestoem!");
 			// 
+			// panel2
+			// 
+			panel2.Controls.Add(this.btnVr);
+			panel2.Dock = System.Windows.Forms.DockStyle.Fill;
+			panel2.Location = new System.Drawing.Point(209, 3);
+			panel2.Name = "panel2";
+			panel2.Size = new System.Drawing.Size(200, 39);
+			panel2.TabIndex = 3;
+			// 
+			// btnVr
+			// 
+			this.btnVr.BackColor = System.Drawing.SystemColors.Control;
+			this.btnVr.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.btnVr.FlatAppearance.BorderSize = 0;
+			this.btnVr.FlatAppearance.MouseDownBackColor = System.Drawing.Color.DodgerBlue;
+			this.btnVr.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(72)))), ((int)(((byte)(175)))), ((int)(((byte)(255)))));
+			this.btnVr.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.btnVr.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.btnVr.ForeColor = System.Drawing.SystemColors.ControlText;
+			this.btnVr.Location = new System.Drawing.Point(0, 0);
+			this.btnVr.Name = "btnVr";
+			this.btnVr.Size = new System.Drawing.Size(200, 39);
+			this.btnVr.TabIndex = 2;
+			this.btnVr.Text = "VR";
+			this.btnVr.UseVisualStyleBackColor = false;
+			this.btnVr.Click += new System.EventHandler(this.OnBtnVrClick);
+			// 
 			// lbInstanceStatus
 			// 
 			this.lbInstanceStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.lbInstanceStatus.AutoSize = true;
-			this.lbInstanceStatus.Location = new System.Drawing.Point(14, 303);
+			this.lbInstanceStatus.Location = new System.Drawing.Point(14, 357);
 			this.lbInstanceStatus.Name = "lbInstanceStatus";
 			this.lbInstanceStatus.Size = new System.Drawing.Size(81, 13);
 			this.lbInstanceStatus.TabIndex = 15;
@@ -132,7 +166,7 @@
 			this.buttonLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
 			this.buttonLayoutPanel.Controls.Add(this.btnRebuild, 0, 0);
 			this.buttonLayoutPanel.Controls.Add(panel1, 1, 0);
-			this.buttonLayoutPanel.Location = new System.Drawing.Point(12, 202);
+			this.buttonLayoutPanel.Location = new System.Drawing.Point(12, 256);
 			this.buttonLayoutPanel.Name = "buttonLayoutPanel";
 			this.buttonLayoutPanel.RowCount = 1;
 			this.buttonLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
@@ -170,7 +204,7 @@
 			// 
 			this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(14, 285);
+			this.label1.Location = new System.Drawing.Point(14, 339);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(78, 13);
 			this.label1.TabIndex = 20;
@@ -180,7 +214,7 @@
 			// 
 			this.lbMinecraftPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.lbMinecraftPath.AutoSize = true;
-			this.lbMinecraftPath.Location = new System.Drawing.Point(98, 285);
+			this.lbMinecraftPath.Location = new System.Drawing.Point(98, 339);
 			this.lbMinecraftPath.Name = "lbMinecraftPath";
 			this.lbMinecraftPath.Size = new System.Drawing.Size(33, 13);
 			this.lbMinecraftPath.TabIndex = 20;
@@ -188,14 +222,50 @@
 			this.lbMinecraftPath.Text = "None";
 			this.lbMinecraftPath.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lbMinecraftPath_LinkClicked);
 			// 
+			// panelVr
+			// 
+			this.panelVr.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.panelVr.ColumnCount = 2;
+			this.panelVr.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.panelVr.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.panelVr.Controls.Add(this.btnNonVr, 0, 0);
+			this.panelVr.Controls.Add(panel2, 1, 0);
+			this.panelVr.Location = new System.Drawing.Point(12, 205);
+			this.panelVr.Name = "panelVr";
+			this.panelVr.RowCount = 1;
+			this.panelVr.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+			this.panelVr.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 75F));
+			this.panelVr.Size = new System.Drawing.Size(412, 45);
+			this.panelVr.TabIndex = 16;
+			// 
+			// btnNonVr
+			// 
+			this.btnNonVr.BackColor = System.Drawing.Color.DodgerBlue;
+			this.btnNonVr.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.btnNonVr.FlatAppearance.BorderSize = 0;
+			this.btnNonVr.FlatAppearance.MouseDownBackColor = System.Drawing.Color.DodgerBlue;
+			this.btnNonVr.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(72)))), ((int)(((byte)(175)))), ((int)(((byte)(255)))));
+			this.btnNonVr.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.btnNonVr.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.btnNonVr.ForeColor = System.Drawing.Color.White;
+			this.btnNonVr.Location = new System.Drawing.Point(3, 3);
+			this.btnNonVr.Name = "btnNonVr";
+			this.btnNonVr.Size = new System.Drawing.Size(200, 39);
+			this.btnNonVr.TabIndex = 2;
+			this.btnNonVr.Text = "Non-VR";
+			this.btnNonVr.UseVisualStyleBackColor = false;
+			this.btnNonVr.Click += new System.EventHandler(this.OnBtnNonVrClick);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
-			this.ClientSize = new System.Drawing.Size(436, 326);
+			this.ClientSize = new System.Drawing.Size(436, 380);
 			this.Controls.Add(label2);
 			this.Controls.Add(pictureBox1);
+			this.Controls.Add(this.panelVr);
 			this.Controls.Add(this.buttonLayoutPanel);
 			this.Controls.Add(this.lbInstanceStatus);
 			this.Controls.Add(this.label1);
@@ -210,7 +280,9 @@
 			this.Load += new System.EventHandler(this.OnFormLoad);
 			panel1.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(pictureBox1)).EndInit();
+			panel2.ResumeLayout(false);
 			this.buttonLayoutPanel.ResumeLayout(false);
+			this.panelVr.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -225,6 +297,9 @@
 		private System.Windows.Forms.LinkLabel lbMinecraftPath;
 		private System.Windows.Forms.Button buttonRefresh;
 		private System.Windows.Forms.Button btnGo;
+		private System.Windows.Forms.TableLayoutPanel panelVr;
+		private System.Windows.Forms.Button btnNonVr;
+		private System.Windows.Forms.Button btnVr;
 	}
 }
 

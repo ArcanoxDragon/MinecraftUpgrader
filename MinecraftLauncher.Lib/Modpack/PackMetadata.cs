@@ -11,6 +11,13 @@ namespace MinecraftLauncher.Modpack
 		public string ClientPack               { get; set; }
 		public string CurrentVersion           { get; set; }
 		public bool   VerifyServerPackMd5      { get; set; }
+		public bool   SupportsVr               { get; set; }
+		public string OptifineUri              { get; set; }
+		public string OptifineVersion          { get; set; }
+		public string VivecraftUriVr           { get; set; }
+		public string VivecraftUriNonVr        { get; set; }
+		public string MinecriftVersionVr       { get; set; }
+		public string MinecriftVersionNonVr    { get; set; }
 
 		public List<string> ClientOverrideFolders   { get; set; }
 		public List<string> AdditionalBasePackFiles { get; set; }

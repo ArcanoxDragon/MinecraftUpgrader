@@ -11,6 +11,7 @@
 		public string CurrentForgeVersion     { get; set; }
 		public string CurrentLaunchVersion    { get; set; }
 		public int    FileVersion             { get; set; } = CurrentFileVersion;
-		public bool   VrEnabled               { get; set; }
+		public string VrLaunchVersion         { get; set; }
+		public string NonVrLaunchVersion      { get; set; }
 	}
 }

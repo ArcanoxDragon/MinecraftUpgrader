@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using CmlLib.Core;
 using CmlLib.Core.Downloader;
 using CmlLib.Core.Version;
-using Humanizer;
 using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Extensions.Options;
 using MinecraftLauncher.Async;
@@ -68,7 +67,7 @@ namespace MinecraftLauncher.Modpack
 					progressReporter.ReportProgress(args.ProgressPercentage / 100.0, "Loading mod pack info...");
 				};
 
-			using var stream = await web.OpenReadTaskAsync(this.PackMetadataUrl);
+			using var stream = await web.OpenReadTaskAsync(PackMetadataUrl);
 
 			cancellationToken.ThrowIfCancellationRequested();
 
@@ -80,10 +79,10 @@ namespace MinecraftLauncher.Modpack
 
 		private async Task<string> SetupNewProfileAsync(PackMetadata pack, CancellationToken token = default, ProgressReporter progress = default)
 		{
-			var mcVersionLoader = new MVersionLoader(new MinecraftPath(ProfilePath));
+			var mcPath = new MinecraftPath(ProfilePath);
+			var mcVersionLoader = new MVersionLoader(mcPath);
 			var mcVersions = await mcVersionLoader.GetVersionMetadatasAsync(token);
 			var mcVersion = mcVersions.GetVersion(pack.IntendedMinecraftVersion);
-			var mcPath = new MinecraftPath(ProfilePath);
 
 			// Clear out old profile files
 			progress?.ReportProgress("Cleaning up old files...");
@@ -157,6 +156,8 @@ namespace MinecraftLauncher.Modpack
 			var currentForgeVersion = default(string);
 			var currentLaunchVersion = default(string);
 			var currentBasePackMd5 = default(string);
+			var currentVrLaunchVersion = default(string);
+			var currentNonVrLaunchVersion = default(string);
 
 			// If forceRebuild is set, we don't even bother checking the current version.
 			// Just redo everything.
@@ -166,12 +167,14 @@ namespace MinecraftLauncher.Modpack
 
 				if (currentInstanceMetadata.FileVersion >= 2)
 				{
-					currentVersion          = currentInstanceMetadata.Version;
-					currentServerPack       = currentInstanceMetadata.BuiltFromServerPack;
-					currentMinecraftVersion = currentInstanceMetadata.CurrentMinecraftVersion;
-					currentForgeVersion     = currentInstanceMetadata.CurrentForgeVersion;
-					currentLaunchVersion    = currentInstanceMetadata.CurrentLaunchVersion;
-					currentBasePackMd5      = currentInstanceMetadata.BuiltFromServerPackMd5;
+					currentVersion            = currentInstanceMetadata.Version;
+					currentServerPack         = currentInstanceMetadata.BuiltFromServerPack;
+					currentMinecraftVersion   = currentInstanceMetadata.CurrentMinecraftVersion;
+					currentForgeVersion       = currentInstanceMetadata.CurrentForgeVersion;
+					currentLaunchVersion      = currentInstanceMetadata.CurrentLaunchVersion;
+					currentBasePackMd5        = currentInstanceMetadata.BuiltFromServerPackMd5;
+					currentVrLaunchVersion    = currentInstanceMetadata.VrLaunchVersion;
+					currentNonVrLaunchVersion = currentInstanceMetadata.NonVrLaunchVersion;
 				}
 			}
 
@@ -180,6 +183,8 @@ namespace MinecraftLauncher.Modpack
 				CurrentMinecraftVersion = pack.IntendedMinecraftVersion,
 				CurrentForgeVersion     = pack.RequiredForgeVersion,
 				CurrentLaunchVersion    = currentLaunchVersion,
+				VrLaunchVersion         = currentVrLaunchVersion,
+				NonVrLaunchVersion      = currentNonVrLaunchVersion,
 				Version                 = pack.CurrentVersion,
 				BuiltFromServerPack     = pack.ServerPack,
 				BuiltFromServerPackMd5  = currentBasePackMd5,
@@ -193,23 +198,9 @@ namespace MinecraftLauncher.Modpack
 
 				var downloadTask = "";
 
-				web.DownloadProgressChanged += (sender, args) => {
-					// ReSharper disable AccessToModifiedClosure
-					var dlSize = args.BytesReceived.Bytes();
-					var totalSize = args.TotalBytesToReceive.Bytes();
-
-					if (args.TotalBytesToReceive > 0)
-					{
-						// TODO: When Humanizer update is released, replace ToString calls below with interpolation shorthand
-						progress?.ReportProgress(args.BytesReceived / (double) args.TotalBytesToReceive,
-												 $"{downloadTask} ({dlSize.ToString("0.##")} / {totalSize.ToString("0.##")})");
-					}
-					else
-					{
-						// TODO: When Humanizer update is released, replace ToString calls below with interpolation shorthand
-						progress?.ReportProgress(-1, $"{downloadTask} ({dlSize.ToString("0.##")})");
-					}
-					// ReSharper restore AccessToModifiedClosure
+				web.DownloadProgressChanged += (_, args) => {
+					// ReSharper disable once AccessToModifiedClosure
+					progress.ReportDownloadProgress(downloadTask, args);
 				};
 
 				token.ThrowIfCancellationRequested();
@@ -218,7 +209,7 @@ namespace MinecraftLauncher.Modpack
 				// Set up as a new profile if necessary
 				if (forceRebuild || currentForgeVersion != pack.RequiredForgeVersion || string.IsNullOrEmpty(currentLaunchVersion))
 				{
-					instanceMetadata.CurrentLaunchVersion = await this.SetupNewProfileAsync(pack, token, progress);
+					instanceMetadata.CurrentLaunchVersion = await SetupNewProfileAsync(pack, token, progress);
 				}
 
 				// Now create the temp dir for the following tasks
@@ -505,7 +496,15 @@ namespace MinecraftLauncher.Modpack
 					}
 				}
 
-				// TODO: Add back VR stuff once ViveCraft is ready
+				// Install ViveCraft if the pack supports it
+				if (pack.SupportsVr)
+				{
+					var vivecraftInstaller = new VivecraftInstaller(ProfilePath);
+					var vivecraftResult = await vivecraftInstaller.InstallVivecraftAsync(pack, instanceMetadata.CurrentLaunchVersion, progress, token);
+
+					instanceMetadata.VrLaunchVersion    = vivecraftResult.VersionNameVr;
+					instanceMetadata.NonVrLaunchVersion = vivecraftResult.VersionNameNonVr;
+				}
 
 				// Finally write the current version to the instance version file
 				// We do this last so that if a version upgrade fails, the user

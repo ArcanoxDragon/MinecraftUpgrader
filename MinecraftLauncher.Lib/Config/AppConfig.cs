@@ -6,8 +6,10 @@ namespace MinecraftLauncher.Config
 {
 	public interface IAppConfig
 	{
-		string JavaPath     { get; }
-		string LastUsername { get; }
+		string  JavaPath     { get; }
+		string  LastUsername { get; }
+		double? MaxRamMb     { get; }
+		bool    VrEnabled    { get; }
 	}
 
 	// TODO: Move out of Lib project?
@@ -19,33 +21,33 @@ namespace MinecraftLauncher.Config
 
 		public static IAppConfig Get() => GetInternal();
 
-		public static void Update( Action<AppConfig> updateAction )
+		public static void Update(Action<AppConfig> updateAction)
 		{
 			var config = GetInternal();
 
-			updateAction( config );
+			updateAction(config);
 
 			var configPath = GetConfigPath();
-			var configJson = JsonConvert.SerializeObject( config );
+			var configJson = JsonConvert.SerializeObject(config);
 
-			File.WriteAllText( configPath, configJson );
+			File.WriteAllText(configPath, configJson);
 		}
 
-		private static AppConfig GetInternal( bool tryOld = true )
+		private static AppConfig GetInternal(bool tryOld = true)
 		{
-			if ( CachedInstance != null )
+			if (CachedInstance != null)
 				return CachedInstance;
 
-			var configPath   = GetConfigPath();
-			var configFolder = Path.GetDirectoryName( configPath );
+			var configPath = GetConfigPath();
+			var configFolder = Path.GetDirectoryName(configPath);
 
-			if ( !Directory.Exists( configFolder ) )
-				Directory.CreateDirectory( configFolder );
+			if (!Directory.Exists(configFolder))
+				Directory.CreateDirectory(configFolder);
 
-			if ( File.Exists( configPath ) )
+			if (File.Exists(configPath))
 			{
-				var configJson = File.ReadAllText( configPath );
-				var appConfig  = JsonConvert.DeserializeObject<AppConfig>( configJson );
+				var configJson = File.ReadAllText(configPath);
+				var appConfig = JsonConvert.DeserializeObject<AppConfig>(configJson);
 
 				CachedInstance = appConfig;
 			}
@@ -53,14 +55,14 @@ namespace MinecraftLauncher.Config
 			{
 				var oldConfigPath = GetOldConfigPath();
 
-				if ( tryOld && File.Exists( oldConfigPath ) )
+				if (tryOld && File.Exists(oldConfigPath))
 				{
-					File.Copy( oldConfigPath, configPath );
+					File.Copy(oldConfigPath, configPath);
 
-					return GetInternal( tryOld: false );
+					return GetInternal(tryOld: false);
 				}
 
-				File.WriteAllText( configPath, "{}" );
+				File.WriteAllText(configPath, "{}");
 
 				CachedInstance = new AppConfig();
 			}
@@ -70,20 +72,22 @@ namespace MinecraftLauncher.Config
 
 		// TODO: Remove
 		private static string GetOldConfigPath() => Path.Combine(
-			Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ),
+			Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
 			".mcupgrader",
 			"config.json"
 		);
 
 		private static string GetConfigPath() => Path.Combine(
-			Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ),
+			Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
 			".mcarcanox",
 			"config.json"
 		);
 
 		#endregion
 
-		public string JavaPath     { get; set; }
-		public string LastUsername { get; set; }
+		public string  JavaPath     { get; set; }
+		public string  LastUsername { get; set; }
+		public double? MaxRamMb     { get; set; }
+		public bool    VrEnabled    { get; set; }
 	}
 }

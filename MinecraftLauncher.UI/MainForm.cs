@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MinecraftLauncher.Config;
 using MinecraftLauncher.Extensions;
 using MinecraftLauncher.Modpack;
 using MinecraftLauncher.Utility;
@@ -26,78 +28,82 @@ namespace MinecraftLauncher
 		private PackMetadata     packMetadata;
 		private PackMode         currentPackState = PackMode.NeedsInstallation;
 		private InstanceMetadata instanceMetadata;
+		private bool             isVrEnabled;
 
 		// private bool isVrEnabled;
 
-		public MainForm( PackBuilder packBuilder )
+		public MainForm(PackBuilder packBuilder)
 		{
 			this.packBuilder = packBuilder;
 
-			this.InitializeComponent();
+			InitializeComponent();
 		}
 
 		private new void BringToFront()
 		{
-			this.WindowState = FormWindowState.Minimized;
-			this.Show();
-			this.WindowState = FormWindowState.Normal;
+			WindowState = FormWindowState.Minimized;
+			Show();
+			WindowState = FormWindowState.Normal;
 		}
 
-		private async void OnFormLoad( object sender, EventArgs e )
+		private async void OnFormLoad(object sender, EventArgs e)
 		{
 			var mcProfilePath = PackBuilder.ProfilePath;
 
 			this.lbMinecraftPath.Text = mcProfilePath;
-			this.appToolTip.SetToolTip( this.lbMinecraftPath, mcProfilePath );
+			this.appToolTip.SetToolTip(this.lbMinecraftPath, mcProfilePath);
 
-			if ( Directory.Exists( mcProfilePath ) )
-				this.lbMinecraftPath.LinkArea = new LinkArea( 0, mcProfilePath.Length );
+			if (Directory.Exists(mcProfilePath))
+				this.lbMinecraftPath.LinkArea = new LinkArea(0, mcProfilePath.Length);
 			else
-				this.lbMinecraftPath.LinkArea = new LinkArea( 0, 0 );
+				this.lbMinecraftPath.LinkArea = new LinkArea(0, 0);
 
-			await this.LoadPackMetadataAsync();
-			await this.CheckCurrentInstanceAsync();
+			this.isVrEnabled = AppConfig.Get().VrEnabled;
+
+			UpdateVrUi();
+			await LoadPackMetadataAsync();
+			await CheckCurrentInstanceAsync();
 		}
 
 		private async Task LoadPackMetadataAsync()
 		{
-			this.Enabled = false;
+			Enabled = false;
 
-			var progressDialog = new ProgressDialog( "Loading Mod Pack Info" );
+			var progressDialog = new ProgressDialog("Loading Mod Pack Info");
 
 			try
 			{
-				this.packMetadata = await this.packBuilder.LoadConfigAsync( progressReporter: progressDialog.Reporter );
+				this.packMetadata = await this.packBuilder.LoadConfigAsync(progressReporter: progressDialog.Reporter);
 			}
-			catch ( Exception ex )
+			catch (Exception ex)
 			{
-				MessageBox.Show( $"An error occurred while fetching the mod pack info:\n\n{ex.Message}",
-								 "Error Loading Mod Pack",
-								 MessageBoxButtons.OK,
-								 MessageBoxIcon.Error );
+				MessageBox.Show($"An error occurred while fetching the mod pack info:\n\n{ex.Message}",
+								"Error Loading Mod Pack",
+								MessageBoxButtons.OK,
+								MessageBoxIcon.Error);
 
-				this.Close();
+				Close();
 			}
 			finally
 			{
 				progressDialog.Close();
-				this.Enabled = true;
+				Enabled = true;
 			}
 		}
 
 		private async Task CheckCurrentInstanceAsync()
 		{
-			var instanceMetadata = InstanceMetadataReader.ReadInstanceMetadata( PackBuilder.ProfilePath );
+			var instanceMetadata = InstanceMetadataReader.ReadInstanceMetadata(PackBuilder.ProfilePath);
 
 			// Beeg long list of checks to see if this pack needs to be completely converted or not
-			if ( instanceMetadata == null ||
-				 instanceMetadata.Version == "0.0.0" ||
-				 !SemVersion.TryParse( instanceMetadata.Version, out var instanceSemVersion ) ||
-				 !SemVersion.TryParse( this.packMetadata.CurrentVersion, out var serverSemVersion ) ||
-				 instanceMetadata.CurrentLaunchVersion == null ||
-				 instanceMetadata.CurrentMinecraftVersion != this.packMetadata.IntendedMinecraftVersion ||
-				 instanceMetadata.CurrentForgeVersion != this.packMetadata.RequiredForgeVersion ||
-				 instanceMetadata.BuiltFromServerPack != this.packMetadata.ServerPack )
+			if (instanceMetadata == null ||
+				instanceMetadata.Version == "0.0.0" ||
+				!SemVersion.TryParse(instanceMetadata.Version, out var instanceSemVersion) ||
+				!SemVersion.TryParse(this.packMetadata.CurrentVersion, out var serverSemVersion) ||
+				instanceMetadata.CurrentLaunchVersion == null ||
+				instanceMetadata.CurrentMinecraftVersion != this.packMetadata.IntendedMinecraftVersion ||
+				instanceMetadata.CurrentForgeVersion != this.packMetadata.RequiredForgeVersion ||
+				instanceMetadata.BuiltFromServerPack != this.packMetadata.ServerPack)
 			{
 				// Never converted
 				this.currentPackState = PackMode.NeedsInstallation;
@@ -107,16 +113,16 @@ namespace MinecraftLauncher
 				var outOfDate = instanceSemVersion < serverSemVersion;
 
 				// Check server pack MD5 if necessary
-				if ( this.packMetadata.VerifyServerPackMd5 )
+				if (this.packMetadata.VerifyServerPackMd5)
 				{
-					using var web            = new WebClient();
-					var       basePackMd5Url = $"{this.packMetadata.ServerPack}.md5";
-					var       basePackMd5    = await web.DownloadStringTaskAsync( basePackMd5Url );
+					using var web = new WebClient();
+					var basePackMd5Url = $"{this.packMetadata.ServerPack}.md5";
+					var basePackMd5 = await web.DownloadStringTaskAsync(basePackMd5Url);
 
 					outOfDate |= basePackMd5 != instanceMetadata.BuiltFromServerPackMd5;
 				}
 
-				if ( outOfDate )
+				if (outOfDate)
 				{
 					// Out of date
 					this.currentPackState = PackMode.NeedsUpdate;
@@ -125,25 +131,42 @@ namespace MinecraftLauncher
 				{
 					// Up-to-date
 					this.currentPackState = PackMode.ReadyToPlay;
-					// this.isVrEnabled      = instanceMetadata.VrEnabled;
-					// TODO: Add back VR support once ViveCraft is ready
+
+					UpdateVrUi();
 				}
 			}
 
 			this.instanceMetadata = instanceMetadata;
-			this.UpdateLayoutFromState();
+			UpdateLayoutFromState();
 		}
 
 		private void UpdateLayoutFromState()
 		{
-			this.buttonLayoutPanel.ColumnStyles[ 0 ].Width    = 0;
-			this.buttonLayoutPanel.ColumnStyles[ 0 ].SizeType = SizeType.Absolute;
-			this.buttonLayoutPanel.ColumnStyles[ 1 ].Width    = 100;
-			this.buttonLayoutPanel.ColumnStyles[ 1 ].SizeType = SizeType.Percent;
+			if (this.packMetadata?.SupportsVr == true)
+			{
+				if (!this.panelVr.Visible)
+				{
+					this.panelVr.Visible =  true;
+					Height               += this.panelVr.Height;
+				}
+			}
+			else
+			{
+				if (this.panelVr.Visible)
+				{
+					this.panelVr.Visible =  false;
+					Height               -= this.panelVr.Height;
+				}
+			}
+
+			this.buttonLayoutPanel.ColumnStyles[0].Width    = 0;
+			this.buttonLayoutPanel.ColumnStyles[0].SizeType = SizeType.Absolute;
+			this.buttonLayoutPanel.ColumnStyles[1].Width    = 100;
+			this.buttonLayoutPanel.ColumnStyles[1].SizeType = SizeType.Percent;
 
 			this.lbInstanceStatus.Text = "";
 
-			if ( this.currentPackState == PackMode.NeedsInstallation )
+			if (this.currentPackState == PackMode.NeedsInstallation)
 			{
 				this.btnRebuild.Enabled = false;
 
@@ -152,13 +175,13 @@ namespace MinecraftLauncher
 			}
 			else
 			{
-				this.btnRebuild.Enabled                           = true;
-				this.buttonLayoutPanel.ColumnStyles[ 0 ].Width    = 50;
-				this.buttonLayoutPanel.ColumnStyles[ 0 ].SizeType = SizeType.Percent;
-				this.buttonLayoutPanel.ColumnStyles[ 1 ].Width    = 50;
-				this.buttonLayoutPanel.ColumnStyles[ 1 ].SizeType = SizeType.Percent;
+				this.btnRebuild.Enabled                         = true;
+				this.buttonLayoutPanel.ColumnStyles[0].Width    = 50;
+				this.buttonLayoutPanel.ColumnStyles[0].SizeType = SizeType.Percent;
+				this.buttonLayoutPanel.ColumnStyles[1].Width    = 50;
+				this.buttonLayoutPanel.ColumnStyles[1].SizeType = SizeType.Percent;
 
-				if ( this.currentPackState == PackMode.NeedsUpdate )
+				if (this.currentPackState == PackMode.NeedsUpdate)
 				{
 					this.btnGo.Text            = "Update!";
 					this.lbInstanceStatus.Text = "Instance is out of date and must be updated";
@@ -173,118 +196,146 @@ namespace MinecraftLauncher
 			}
 		}
 
-		private async void OnBtnRebuildClick( object sender, EventArgs e )
-			=> await this.DisableWhile( () => this.DoConfigurePack( true ) );
+		private void UpdateVrUi()
+		{
+			var unselectedButton = this.isVrEnabled ? this.btnNonVr : this.btnVr;
+			var selectedButton = this.isVrEnabled ? this.btnVr : this.btnNonVr;
 
-		private async void OnBtnGoClick( object sender, EventArgs e ) => await this.DisableWhile( async () => {
-			if ( this.currentPackState == PackMode.ReadyToPlay )
+			unselectedButton.BackColor = SystemColors.Control;
+			unselectedButton.ForeColor = SystemColors.ControlText;
+			selectedButton.BackColor   = Color.DodgerBlue;
+			selectedButton.ForeColor   = Color.White;
+		}
+
+		private void OnBtnNonVrClick(object sender, EventArgs e)
+		{
+			this.isVrEnabled = false;
+			UpdateVrUi();
+
+			AppConfig.Update(config => config.VrEnabled = this.isVrEnabled);
+		}
+
+		private void OnBtnVrClick(object sender, EventArgs e)
+		{
+			this.isVrEnabled = true;
+			UpdateVrUi();
+
+			AppConfig.Update(config => config.VrEnabled = this.isVrEnabled);
+		}
+
+		private async void OnBtnRebuildClick(object sender, EventArgs e)
+			=> await this.DisableWhile(() => DoConfigurePack(true));
+
+		private async void OnBtnGoClick(object sender, EventArgs e) => await this.DisableWhile(async () => {
+			if (this.currentPackState == PackMode.ReadyToPlay)
 			{
 				// Button says "Play"; user doesn't expect another prompt to start MC
 
-				await this.StartMinecraftAsync();
+				await StartMinecraftAsync();
 				return;
 			}
 
-			await this.DoConfigurePack( false );
-		} );
+			await DoConfigurePack(false);
+		});
 
-		private void lbMinecraftPath_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
+		private void lbMinecraftPath_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
 		{
-			if ( Directory.Exists( this.lbMinecraftPath.Text ) )
+			if (Directory.Exists(this.lbMinecraftPath.Text))
 			{
-				Process.Start( "explorer.exe", this.lbMinecraftPath.Text );
+				Process.Start("explorer.exe", this.lbMinecraftPath.Text);
 			}
 		}
 
-		private async Task DoConfigurePack( bool forceRebuild )
+		private async Task DoConfigurePack(bool forceRebuild)
 		{
-			var updating     = this.currentPackState == PackMode.NeedsUpdate;
-			var actionName   = updating ? "Updating" : forceRebuild ? "Rebuilding" : "Installing";
-			var dialog       = new ProgressDialog( $"{actionName} Mod Pack" ) { ConfirmCancel = true };
+			var updating = this.currentPackState == PackMode.NeedsUpdate;
+			var actionName = updating ? "Updating" : forceRebuild ? "Rebuilding" : "Installing";
+			var dialog = new ProgressDialog($"{actionName} Mod Pack") { ConfirmCancel = true };
 			var cancelSource = new CancellationTokenSource();
-			var successful   = false;
+			var successful = false;
 
 			// Don't need to do this, necessarily, but to be polite to Mojang, we should check
 			// for a valid session *before* downloading all of the Minecraft assets.
-			var session = await SessionUtil.GetSessionAsync( this );
+			var session = await SessionUtil.GetSessionAsync(this);
 
-			if ( session == null )
+			if (session == null)
 				return;
 
-			dialog.Cancel += ( o, args ) => {
+			dialog.Cancel += (_, _) => {
 				cancelSource.Cancel();
-				dialog.Reporter.ReportProgress( -1, "Cancelling...please wait" );
+				dialog.Reporter.ReportProgress(-1, "Cancelling...please wait");
 			};
 
-			dialog.Show( this );
+			dialog.Show(this);
 
 			try
 			{
-				await this.packBuilder.SetupPackAsync( this.packMetadata, forceRebuild || !updating, cancelSource.Token, dialog.Reporter );
+				await this.packBuilder.SetupPackAsync(this.packMetadata, forceRebuild || !updating, cancelSource.Token, dialog.Reporter);
 
 				successful = true;
 			}
-			catch ( Exception ex ) when ( ex is TaskCanceledException ||
-										  ex is OperationCanceledException ||
-										  ex is WebException we && we.Status == WebExceptionStatus.RequestCanceled )
+			catch (Exception ex)
+				when (ex is TaskCanceledException
+						  or OperationCanceledException
+						  or WebException { Status: WebExceptionStatus.RequestCanceled })
 			{
-				MessageBox.Show( dialog,
-								 "Pack setup was cancelled. The instance is most likely not in a runnable state.",
-								 "Pack Setup Cancelled",
-								 MessageBoxButtons.OK,
-								 MessageBoxIcon.Warning );
+				MessageBox.Show(dialog,
+								"Pack setup was cancelled. The instance is most likely not in a runnable state.",
+								"Pack Setup Cancelled",
+								MessageBoxButtons.OK,
+								MessageBoxIcon.Warning);
 			}
-			catch ( Exception ex )
+			catch (Exception ex)
 			{
-				MessageBox.Show( dialog,
-								 "An error occurred while setting up the pack:\n\n" +
-								 ex.Message,
-								 "Error Setting Up Pack",
-								 MessageBoxButtons.OK,
-								 MessageBoxIcon.Error );
+				MessageBox.Show(dialog,
+								"An error occurred while setting up the pack:\n\n" +
+								ex.Message,
+								"Error Setting Up Pack",
+								MessageBoxButtons.OK,
+								MessageBoxIcon.Error);
 			}
 			finally
 			{
 				dialog.Close();
-				this.BringToFront();
-				await this.CheckCurrentInstanceAsync();
+				BringToFront();
+				await CheckCurrentInstanceAsync();
 
-				if ( successful )
-					await this.OfferStartMinecraftAsync( "The mod pack was successfully configured!" );
+				if (successful)
+					await OfferStartMinecraftAsync("The mod pack was successfully configured!");
 			}
 		}
 
-		private async Task OfferStartMinecraftAsync( string initialPrompt )
+		private async Task OfferStartMinecraftAsync(string initialPrompt)
 		{
-			var choice = MessageBox.Show( this,
-										  initialPrompt +
-										  "\n\nWould you like to start Minecraft now?",
-										  "Start Minecraft?",
-										  MessageBoxButtons.YesNo,
-										  MessageBoxIcon.Question );
+			var choice = MessageBox.Show(this,
+										 initialPrompt +
+										 "\n\nWould you like to start Minecraft now?",
+										 "Start Minecraft?",
+										 MessageBoxButtons.YesNo,
+										 MessageBoxIcon.Question);
 
-			if ( choice == DialogResult.Yes )
-				await this.StartMinecraftAsync();
+			if (choice == DialogResult.Yes)
+				await StartMinecraftAsync();
 		}
 
 		private async Task StartMinecraftAsync()
 		{
-			var launcher = new McLauncher( this.packMetadata, this.instanceMetadata );
+			var launcher = new McLauncher(this.packMetadata, this.instanceMetadata, this.isVrEnabled);
 
-			if ( !await launcher.StartMinecraftAsync( this ) )
+			if (!await launcher.StartMinecraftAsync(this))
 				return;
 
-			var consoleWindow = new ConsoleWindow( launcher );
+			var consoleWindow = new ConsoleWindow(launcher);
 
-			consoleWindow.FormClosed += ( sender, args ) => this.Show();
+			consoleWindow.FormClosed += (_, _) => Show();
 
-			this.Hide();
+			Hide();
 			consoleWindow.Show();
 		}
 
-		private async void buttonRefresh_Click( object sender, EventArgs e ) => await this.DisableWhile( async () => {
-			await this.LoadPackMetadataAsync();
-			await this.CheckCurrentInstanceAsync();
-		} );
+		private async void buttonRefresh_Click(object sender, EventArgs e) => await this.DisableWhile(async () => {
+			await LoadPackMetadataAsync();
+			await CheckCurrentInstanceAsync();
+		});
 	}
 }
