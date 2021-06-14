@@ -12,6 +12,8 @@ namespace MinecraftLauncher
 {
 	public partial class ConsoleWindow : Form
 	{
+		private const int MaxLogLength = 64 * 1000 * 1000; // 64 mb
+
 		private static readonly Guid SaveFileGuid = Guid.Parse("f9422b8c-b94f-41be-bef4-1104450086ce");
 
 		private readonly McLauncher    launcher;
@@ -24,19 +26,19 @@ namespace MinecraftLauncher
 			this.bufferMutex   = new Mutex();
 			this.bufferBuilder = new StringBuilder();
 
-			this.InitializeComponent();
+			InitializeComponent();
 
 			if (this.launcher.CurrentProcess?.HasExited == false)
-				this.HookProcess();
+				HookProcess();
 
-			this.launcher.Launched += this.LauncherLaunched;
+			this.launcher.Launched += LauncherLaunched;
 		}
 
 		private void HookProcess()
 		{
-			this.launcher.CurrentProcess.ErrorDataReceived  += this.OnErrorDataReceived;
-			this.launcher.CurrentProcess.OutputDataReceived += this.OnOutputDataReceived;
-			this.launcher.CurrentProcess.Exited             += this.OnProcessExited;
+			this.launcher.CurrentProcess.ErrorDataReceived  += OnErrorDataReceived;
+			this.launcher.CurrentProcess.OutputDataReceived += OnOutputDataReceived;
+			this.launcher.CurrentProcess.Exited             += OnProcessExited;
 
 			this.launcher.CurrentProcess.BeginErrorReadLine();
 			this.launcher.CurrentProcess.BeginOutputReadLine();
@@ -46,8 +48,16 @@ namespace MinecraftLauncher
 		{
 			var (stripped, foreground, background) = AnsiUtility.ParseFirstFgAnsiColor(text);
 
+			if (this.checkBoxAutoClear.Checked)
+			{
+				var futureLength = this.richTextBoxLog.TextLength + stripped.Length;
+
+				if (futureLength > MaxLogLength)
+					this.richTextBoxLog.Clear();
+			}
+
 			this.richTextBoxLog.AppendText(stripped, foreground, background);
-			this.AutoScrollLog();
+			AutoScrollLog();
 		}
 
 		private void AppendTextToBuffer(string text)
@@ -101,25 +111,25 @@ namespace MinecraftLauncher
 			if (string.IsNullOrEmpty(e.Data))
 				return;
 
-			this.AppendTextToBuffer(e.Data + "\r\n");
+			AppendTextToBuffer(e.Data + "\r\n");
 		});
 
 		private void OnOutputDataReceived(object sender, DataReceivedEventArgs e) => this.TryBeginInvoke(() => {
 			if (string.IsNullOrEmpty(e.Data))
 				return;
 
-			this.AppendTextToBuffer(e.Data + "\r\n");
+			AppendTextToBuffer(e.Data + "\r\n");
 		});
 
 		private void OnProcessExited(object sender, EventArgs e) => this.TryBeginInvoke(() => {
-			if (!( sender is Process process )) return;
+			if (sender is not Process process) return;
 
-			this.AppendTextToBuffer($"\r\n\r\nProcess exited with exit code {process.ExitCode}\r\n\r\n\r\n\r\n\r\n\r\n");
+			AppendTextToBuffer($"\r\n\r\nProcess exited with exit code {process.ExitCode}\r\n\r\n\r\n\r\n\r\n\r\n");
 			this.buttonKillLaunchMinecraft.Text = "Launch Minecraft";
 		});
 
 		private void LauncherLaunched(object sender, EventArgs e) => this.TryBeginInvoke(() => {
-			this.HookProcess();
+			HookProcess();
 			this.richTextBoxLog.Clear();
 			this.buttonKillLaunchMinecraft.Text = "Kill Minecraft";
 		});
@@ -130,14 +140,31 @@ namespace MinecraftLauncher
 
 			if (process?.HasExited == false && e.CloseReason == CloseReason.UserClosing)
 			{
-				if (this.ConfirmKillMinecraft())
+				if (ConfirmKillMinecraft())
 				{
-					process.ErrorDataReceived  -= this.OnErrorDataReceived;
-					process.OutputDataReceived -= this.OnOutputDataReceived;
+					process.ErrorDataReceived  -= OnErrorDataReceived;
+					process.OutputDataReceived -= OnOutputDataReceived;
 				}
 				else
 				{
 					e.Cancel = true;
+				}
+			}
+		}
+
+		private void OnBtnClearConsoleClick(object sender, EventArgs e)
+		{
+			lock (this.bufferMutex)
+			{
+				try
+				{
+					this.bufferMutex.WaitOne();
+					this.bufferBuilder.Clear();
+					this.richTextBoxLog.Clear();
+				}
+				finally
+				{
+					this.bufferMutex.ReleaseMutex();
 				}
 			}
 		}
@@ -160,7 +187,7 @@ namespace MinecraftLauncher
 				CookieIdentifier             = SaveFileGuid,
 			};
 
-			var saveResult = saveFileDialog.ShowDialog(this.Handle);
+			var saveResult = saveFileDialog.ShowDialog(Handle);
 
 			if (saveResult == CommonFileDialogResult.Ok)
 			{
@@ -174,17 +201,17 @@ namespace MinecraftLauncher
 			{
 				try
 				{
-					this.Enabled = false;
+					Enabled = false;
 					await this.launcher.StartMinecraftAsync(this);
 				}
 				finally
 				{
-					this.Enabled = true;
+					Enabled = true;
 				}
 			}
 			else
 			{
-				this.ConfirmKillMinecraft();
+				ConfirmKillMinecraft();
 			}
 		}
 
@@ -198,7 +225,7 @@ namespace MinecraftLauncher
 					{
 						this.bufferMutex.WaitOne();
 
-						this.AppendTextToConsole(this.bufferBuilder.ToString());
+						AppendTextToConsole(this.bufferBuilder.ToString());
 						this.bufferBuilder.Clear();
 					}
 					finally

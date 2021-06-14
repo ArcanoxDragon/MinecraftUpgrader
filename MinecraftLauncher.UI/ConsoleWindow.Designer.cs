@@ -34,10 +34,12 @@
 			this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
 			this.panel1 = new System.Windows.Forms.Panel();
 			this.checkBoxAutoScroll = new System.Windows.Forms.CheckBox();
+			this.btnClearConsole = new System.Windows.Forms.Button();
 			this.buttonCopyToClipboard = new System.Windows.Forms.Button();
 			this.buttonSaveToFile = new System.Windows.Forms.Button();
 			this.buttonKillLaunchMinecraft = new System.Windows.Forms.Button();
 			this.timerFlushBuffer = new System.Windows.Forms.Timer(this.components);
+			this.checkBoxAutoClear = new System.Windows.Forms.CheckBox();
 			this.tableLayoutPanel1.SuspendLayout();
 			this.panel1.SuspendLayout();
 			this.SuspendLayout();
@@ -73,7 +75,9 @@
 			// 
 			// panel1
 			// 
+			this.panel1.Controls.Add(this.checkBoxAutoClear);
 			this.panel1.Controls.Add(this.checkBoxAutoScroll);
+			this.panel1.Controls.Add(this.btnClearConsole);
 			this.panel1.Controls.Add(this.buttonCopyToClipboard);
 			this.panel1.Controls.Add(this.buttonSaveToFile);
 			this.panel1.Controls.Add(this.buttonKillLaunchMinecraft);
@@ -95,6 +99,17 @@
 			this.checkBoxAutoScroll.TabIndex = 1;
 			this.checkBoxAutoScroll.Text = "Auto-scroll console";
 			this.checkBoxAutoScroll.UseVisualStyleBackColor = true;
+			// 
+			// btnClearConsole
+			// 
+			this.btnClearConsole.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.btnClearConsole.Location = new System.Drawing.Point(628, 12);
+			this.btnClearConsole.Name = "btnClearConsole";
+			this.btnClearConsole.Size = new System.Drawing.Size(100, 24);
+			this.btnClearConsole.TabIndex = 0;
+			this.btnClearConsole.Text = "Clear Console";
+			this.btnClearConsole.UseVisualStyleBackColor = true;
+			this.btnClearConsole.Click += new System.EventHandler(this.OnBtnClearConsoleClick);
 			// 
 			// buttonCopyToClipboard
 			// 
@@ -134,6 +149,18 @@
 			this.timerFlushBuffer.Enabled = true;
 			this.timerFlushBuffer.Tick += new System.EventHandler(this.OnTimerFlushBuffer_Tick);
 			// 
+			// checkBoxAutoClear
+			// 
+			this.checkBoxAutoClear.AutoSize = true;
+			this.checkBoxAutoClear.Checked = true;
+			this.checkBoxAutoClear.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.checkBoxAutoClear.Location = new System.Drawing.Point(133, 17);
+			this.checkBoxAutoClear.Name = "checkBoxAutoClear";
+			this.checkBoxAutoClear.Size = new System.Drawing.Size(114, 17);
+			this.checkBoxAutoClear.TabIndex = 1;
+			this.checkBoxAutoClear.Text = "Auto-clear console";
+			this.checkBoxAutoClear.UseVisualStyleBackColor = true;
+			// 
 			// ConsoleWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -162,5 +189,7 @@
 		private System.Windows.Forms.Button buttonSaveToFile;
 		private System.Windows.Forms.Button buttonCopyToClipboard;
 		private System.Windows.Forms.Timer timerFlushBuffer;
+		private System.Windows.Forms.Button btnClearConsole;
+		private System.Windows.Forms.CheckBox checkBoxAutoClear;
 	}
 }
