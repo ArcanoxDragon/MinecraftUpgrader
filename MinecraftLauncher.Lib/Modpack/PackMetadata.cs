@@ -10,6 +10,7 @@ namespace MinecraftLauncher.Modpack
 		public string ServerPack               { get; set; }
 		public string ClientPack               { get; set; }
 		public string CurrentVersion           { get; set; }
+		public string CanaryVersion            { get; set; }
 		public bool   VerifyServerPackMd5      { get; set; }
 		public bool   SupportsVr               { get; set; }
 		public string OptifineUri              { get; set; }

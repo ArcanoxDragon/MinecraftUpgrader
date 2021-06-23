@@ -142,7 +142,7 @@ namespace MinecraftLauncher.Modpack
 			return forgeVersionInstalled;
 		}
 
-		public async Task SetupPackAsync(PackMetadata pack, bool forceRebuild, CancellationToken token = default, ProgressReporter progress = default)
+		public async Task SetupPackAsync(PackMetadata pack, bool forceRebuild, bool useCanaryVersion = false, CancellationToken token = default, ProgressReporter progress = default)
 		{
 			var metadataFile = Path.Combine(ProfilePath, "packMeta.json");
 			var tempDir = Path.Combine(ProfilePath, "temp");
@@ -178,6 +178,9 @@ namespace MinecraftLauncher.Modpack
 				}
 			}
 
+			var currentRemoteVersion = useCanaryVersion
+										   ? pack.CanaryVersion ?? pack.CurrentVersion
+										   : pack.CurrentVersion;
 			var instanceMetadata = new InstanceMetadata {
 				FileVersion             = InstanceMetadata.CurrentFileVersion,
 				CurrentMinecraftVersion = pack.IntendedMinecraftVersion,
@@ -185,7 +188,7 @@ namespace MinecraftLauncher.Modpack
 				CurrentLaunchVersion    = currentLaunchVersion,
 				VrLaunchVersion         = currentVrLaunchVersion,
 				NonVrLaunchVersion      = currentNonVrLaunchVersion,
-				Version                 = pack.CurrentVersion,
+				Version                 = currentRemoteVersion,
 				BuiltFromServerPack     = pack.ServerPack,
 				BuiltFromServerPackMd5  = currentBasePackMd5,
 			};
@@ -369,7 +372,7 @@ namespace MinecraftLauncher.Modpack
 				}
 
 				var curSemVersion = SemVersion.Parse(currentVersion);
-				var desiredSemVersion = SemVersion.Parse(pack.CurrentVersion);
+				var desiredSemVersion = SemVersion.Parse(currentRemoteVersion);
 
 				foreach (var (versionKey, version) in pack.Versions.OrderBy(pair => SemVersion.Parse(pair.Key)))
 				{

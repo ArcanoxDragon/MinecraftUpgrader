@@ -45,6 +45,7 @@
 			this.lbMinecraftPath = new System.Windows.Forms.LinkLabel();
 			this.panelVr = new System.Windows.Forms.TableLayoutPanel();
 			this.btnNonVr = new System.Windows.Forms.Button();
+			this.chkUseCanaryVersion = new System.Windows.Forms.CheckBox();
 			label2 = new System.Windows.Forms.Label();
 			panel1 = new System.Windows.Forms.Panel();
 			pictureBox1 = new System.Windows.Forms.PictureBox();
@@ -89,7 +90,7 @@
 			this.buttonRefresh.TabIndex = 3;
 			this.appToolTip.SetToolTip(this.buttonRefresh, "Refresh modpack info");
 			this.buttonRefresh.UseVisualStyleBackColor = false;
-			this.buttonRefresh.Click += new System.EventHandler(this.buttonRefresh_Click);
+			this.buttonRefresh.Click += new System.EventHandler(this.OnButtonRefreshClick);
 			// 
 			// btnGo
 			// 
@@ -220,7 +221,7 @@
 			this.lbMinecraftPath.TabIndex = 20;
 			this.lbMinecraftPath.TabStop = true;
 			this.lbMinecraftPath.Text = "None";
-			this.lbMinecraftPath.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lbMinecraftPath_LinkClicked);
+			this.lbMinecraftPath.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.OnLbMinecraftPathLinkClicked);
 			// 
 			// panelVr
 			// 
@@ -257,12 +258,25 @@
 			this.btnNonVr.UseVisualStyleBackColor = false;
 			this.btnNonVr.Click += new System.EventHandler(this.OnBtnNonVrClick);
 			// 
+			// chkUseCanaryVersion
+			// 
+			this.chkUseCanaryVersion.AutoSize = true;
+			this.chkUseCanaryVersion.Location = new System.Drawing.Point(12, 13);
+			this.chkUseCanaryVersion.Name = "chkUseCanaryVersion";
+			this.chkUseCanaryVersion.Size = new System.Drawing.Size(119, 17);
+			this.chkUseCanaryVersion.TabIndex = 23;
+			this.chkUseCanaryVersion.Text = "Use Canary Version";
+			this.chkUseCanaryVersion.UseVisualStyleBackColor = true;
+			this.chkUseCanaryVersion.Visible = false;
+			this.chkUseCanaryVersion.CheckedChanged += new System.EventHandler(this.OnUseCanaryVersionCheckChanged);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
 			this.ClientSize = new System.Drawing.Size(436, 380);
+			this.Controls.Add(this.chkUseCanaryVersion);
 			this.Controls.Add(label2);
 			this.Controls.Add(pictureBox1);
 			this.Controls.Add(this.panelVr);
@@ -300,6 +314,7 @@
 		private System.Windows.Forms.TableLayoutPanel panelVr;
 		private System.Windows.Forms.Button btnNonVr;
 		private System.Windows.Forms.Button btnVr;
+		private System.Windows.Forms.CheckBox chkUseCanaryVersion;
 	}
 }
 

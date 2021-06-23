@@ -63,6 +63,10 @@ namespace MinecraftLauncher
 			UpdateVrUi();
 			await LoadPackMetadataAsync();
 			await CheckCurrentInstanceAsync();
+
+#if DEBUG
+			this.chkUseCanaryVersion.Visible = true;
+#endif
 		}
 
 		private async Task LoadPackMetadataAsync()
@@ -96,12 +100,16 @@ namespace MinecraftLauncher
 			try
 			{
 				var instanceMetadata = InstanceMetadataReader.ReadInstanceMetadata(PackBuilder.ProfilePath);
+				var useCanaryVersion = this.chkUseCanaryVersion.Checked;
+				var currentRemoteVersion = useCanaryVersion
+											   ? this.packMetadata.CanaryVersion ?? this.packMetadata.CurrentVersion
+											   : this.packMetadata.CurrentVersion;
 
 				// Beeg long list of checks to see if this pack needs to be completely converted or not
 				if (instanceMetadata == null ||
 					instanceMetadata.Version == "0.0.0" ||
 					!SemVersion.TryParse(instanceMetadata.Version, out var instanceSemVersion) ||
-					!SemVersion.TryParse(this.packMetadata.CurrentVersion, out var serverSemVersion) ||
+					!SemVersion.TryParse(currentRemoteVersion, out var serverSemVersion) ||
 					instanceMetadata.CurrentLaunchVersion == null ||
 					instanceMetadata.CurrentMinecraftVersion != this.packMetadata.IntendedMinecraftVersion ||
 					instanceMetadata.CurrentForgeVersion != this.packMetadata.RequiredForgeVersion ||
@@ -251,7 +259,17 @@ namespace MinecraftLauncher
 			await DoConfigurePack(false);
 		});
 
-		private void lbMinecraftPath_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+		private async void OnButtonRefreshClick(object sender, EventArgs e) => await this.DisableWhile(async () => {
+			await LoadPackMetadataAsync();
+			await CheckCurrentInstanceAsync();
+		});
+
+		private async void OnUseCanaryVersionCheckChanged(object sender, EventArgs e)
+		{
+			await CheckCurrentInstanceAsync();
+		}
+
+		private void OnLbMinecraftPathLinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
 		{
 			if (Directory.Exists(this.lbMinecraftPath.Text))
 			{
@@ -283,7 +301,9 @@ namespace MinecraftLauncher
 
 			try
 			{
-				await this.packBuilder.SetupPackAsync(this.packMetadata, forceRebuild || !updating, cancelSource.Token, dialog.Reporter);
+				var useCanaryVersion = this.chkUseCanaryVersion.Checked;
+
+				await this.packBuilder.SetupPackAsync(this.packMetadata, forceRebuild || !updating, useCanaryVersion, cancelSource.Token, dialog.Reporter);
 
 				successful = true;
 			}
@@ -345,10 +365,5 @@ namespace MinecraftLauncher
 			Hide();
 			consoleWindow.Show();
 		}
-
-		private async void buttonRefresh_Click(object sender, EventArgs e) => await this.DisableWhile(async () => {
-			await LoadPackMetadataAsync();
-			await CheckCurrentInstanceAsync();
-		});
 	}
 }
