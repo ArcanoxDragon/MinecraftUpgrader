@@ -93,51 +93,64 @@ namespace MinecraftLauncher
 
 		private async Task CheckCurrentInstanceAsync()
 		{
-			var instanceMetadata = InstanceMetadataReader.ReadInstanceMetadata(PackBuilder.ProfilePath);
-
-			// Beeg long list of checks to see if this pack needs to be completely converted or not
-			if (instanceMetadata == null ||
-				instanceMetadata.Version == "0.0.0" ||
-				!SemVersion.TryParse(instanceMetadata.Version, out var instanceSemVersion) ||
-				!SemVersion.TryParse(this.packMetadata.CurrentVersion, out var serverSemVersion) ||
-				instanceMetadata.CurrentLaunchVersion == null ||
-				instanceMetadata.CurrentMinecraftVersion != this.packMetadata.IntendedMinecraftVersion ||
-				instanceMetadata.CurrentForgeVersion != this.packMetadata.RequiredForgeVersion ||
-				instanceMetadata.BuiltFromServerPack != this.packMetadata.ServerPack)
+			try
 			{
-				// Never converted
-				this.currentPackState = PackMode.NeedsInstallation;
-			}
-			else
-			{
-				var outOfDate = instanceSemVersion < serverSemVersion;
+				var instanceMetadata = InstanceMetadataReader.ReadInstanceMetadata(PackBuilder.ProfilePath);
 
-				// Check server pack MD5 if necessary
-				if (this.packMetadata.VerifyServerPackMd5)
+				// Beeg long list of checks to see if this pack needs to be completely converted or not
+				if (instanceMetadata == null ||
+					instanceMetadata.Version == "0.0.0" ||
+					!SemVersion.TryParse(instanceMetadata.Version, out var instanceSemVersion) ||
+					!SemVersion.TryParse(this.packMetadata.CurrentVersion, out var serverSemVersion) ||
+					instanceMetadata.CurrentLaunchVersion == null ||
+					instanceMetadata.CurrentMinecraftVersion != this.packMetadata.IntendedMinecraftVersion ||
+					instanceMetadata.CurrentForgeVersion != this.packMetadata.RequiredForgeVersion ||
+					instanceMetadata.BuiltFromServerPack != this.packMetadata.ServerPack)
 				{
-					using var web = new WebClient();
-					var basePackMd5Url = $"{this.packMetadata.ServerPack}.md5";
-					var basePackMd5 = await web.DownloadStringTaskAsync(basePackMd5Url);
-
-					outOfDate |= basePackMd5 != instanceMetadata.BuiltFromServerPackMd5;
-				}
-
-				if (outOfDate)
-				{
-					// Out of date
-					this.currentPackState = PackMode.NeedsUpdate;
+					// Never converted
+					this.currentPackState = PackMode.NeedsInstallation;
 				}
 				else
 				{
-					// Up-to-date
-					this.currentPackState = PackMode.ReadyToPlay;
+					var outOfDate = instanceSemVersion < serverSemVersion;
 
-					UpdateVrUi();
+					// Check server pack MD5 if necessary
+					if (this.packMetadata.VerifyServerPackMd5)
+					{
+						using var web = new WebClient();
+						var basePackMd5Url = $"{this.packMetadata.ServerPack}.md5";
+						var basePackMd5 = await web.DownloadStringTaskAsync(basePackMd5Url);
+
+						outOfDate |= basePackMd5 != instanceMetadata.BuiltFromServerPackMd5;
+					}
+
+					if (outOfDate)
+					{
+						// Out of date
+						this.currentPackState = PackMode.NeedsUpdate;
+					}
+					else
+					{
+						// Up-to-date
+						this.currentPackState = PackMode.ReadyToPlay;
+
+						UpdateVrUi();
+					}
 				}
-			}
 
-			this.instanceMetadata = instanceMetadata;
-			UpdateLayoutFromState();
+				this.instanceMetadata = instanceMetadata;
+				UpdateLayoutFromState();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(
+					this,
+					$"An error occurred while checking if the instance was up-to-date:\n\n{ex}",
+					"Unexpected Error",
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Error
+				);
+			}
 		}
 
 		private void UpdateLayoutFromState()
