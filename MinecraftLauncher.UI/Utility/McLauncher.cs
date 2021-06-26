@@ -40,12 +40,15 @@ namespace MinecraftLauncher.Utility
 				return false;
 
 			var launchOptions = CreateLaunchOptions(session);
-			var launchVersion = this.packMetadata.SupportsVr
-									? this.isVrEnabled switch {
-										true  => this.instanceMetadata.VrLaunchVersion,
-										false => this.instanceMetadata.NonVrLaunchVersion,
-									}
-									: this.instanceMetadata.CurrentLaunchVersion;
+			var launchVersion = this.instanceMetadata.CurrentLaunchVersion;
+
+			if (this.packMetadata.SupportsVr)
+			{
+				if (this.isVrEnabled)
+					launchVersion = this.instanceMetadata.VrLaunchVersion;
+				else if (this.packMetadata.EnableVivecraftForNonVrPlayers != false)
+					launchVersion = this.instanceMetadata.NonVrLaunchVersion;
+			}
 
 			launchOptions.StartVersion = await GetVersionMetadataAsync(launchVersion);
 
