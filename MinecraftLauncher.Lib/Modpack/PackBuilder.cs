@@ -264,7 +264,7 @@ namespace MinecraftLauncher.Modpack
 					// Download server pack contents
 					downloadTask = "Downloading base pack contents...";
 					var serverPackFileName = Path.Combine(tempDir, "server.zip");
-					await web.DownloadFileTaskAsync(pack.ServerPack, serverPackFileName);
+					await web.DownloadFileWrappedAsync(pack.ServerPack, serverPackFileName);
 
 					instanceMetadata.BuiltFromServerPackMd5 = CryptoUtility.CalculateFileMd5(serverPackFileName);
 
@@ -303,7 +303,7 @@ namespace MinecraftLauncher.Modpack
 						// Download client pack overrides
 						downloadTask = "Downloading client overrides...";
 						var clientPackFileName = Path.Combine(tempDir, "client.zip");
-						await web.DownloadFileTaskAsync(pack.ClientPack, clientPackFileName);
+						await web.DownloadFileWrappedAsync(pack.ClientPack, clientPackFileName);
 
 						token.ThrowIfCancellationRequested();
 						progress?.ReportProgress(0, "Extracting client overrides...");
@@ -355,7 +355,7 @@ namespace MinecraftLauncher.Modpack
 									var fullFilePath = Path.Combine(destinationFolder, fileInfo.FileNameOnDisk);
 
 									if (!File.Exists(fullFilePath))
-										await web.DownloadFileTaskAsync(fileInfo.DownloadURL, fullFilePath);
+										await web.DownloadFileWrappedAsync(fileInfo.DownloadURL, fullFilePath);
 
 									currentFile++;
 								}
@@ -436,7 +436,7 @@ namespace MinecraftLauncher.Modpack
 								downloadTask = $"{modTask}\n" +
 											   $"Downloading mod archive: {fileName}";
 
-								await web.DownloadFileTaskAsync(mod.FileUri, filePath);
+								await web.DownloadFileWrappedAsync(mod.FileUri, filePath);
 							}
 						}
 					}
@@ -480,6 +480,9 @@ namespace MinecraftLauncher.Modpack
 						foreach (var (filename, url) in version.ExtraFiles)
 						{
 							var filePath = Path.Combine(ProfilePath, filename);
+							var fileDirectory = Path.GetDirectoryName(filePath);
+
+							Directory.CreateDirectory(fileDirectory);
 
 							downloadTask = $"{extraFilesTask}\n" +
 										   $"Downloading extra file {currentFile++} of {version.ExtraFiles.Count}: {filename}";
@@ -489,7 +492,7 @@ namespace MinecraftLauncher.Modpack
 								if (File.Exists(filePath))
 									File.Delete(filePath);
 
-								await web.DownloadFileTaskAsync(url, filePath);
+								await web.DownloadFileWrappedAsync(url, filePath);
 							}
 							catch
 							{

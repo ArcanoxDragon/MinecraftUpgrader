@@ -84,7 +84,7 @@ namespace MinecraftLauncher.Modpack
 
 			Directory.CreateDirectory(optifinePath);
 
-			await web.DownloadFileTaskAsync(optifineDownloadUrl, optifineFilename);
+			await web.DownloadFileWrappedAsync(optifineDownloadUrl, optifineFilename);
 			cancellationToken.ThrowIfCancellationRequested();
 
 			async Task<string> SetupVersionAsync(bool vrEnabled, string versionSuffix)
@@ -99,7 +99,7 @@ namespace MinecraftLauncher.Modpack
 				downloadTask = $"{vrTask}\nDownloading Vivecraft installer...";
 
 				// ReSharper disable once AccessToDisposedClosure
-				await web.DownloadFileTaskAsync(vivecraftInstallerUri, vivecraftInstallerFilename);
+				await web.DownloadFileWrappedAsync(vivecraftInstallerUri, vivecraftInstallerFilename);
 
 				cancellationToken.ThrowIfCancellationRequested();
 				progress?.ReportProgress(-1, $"{vrTask}\nExtracting Vivecraft installer...");
