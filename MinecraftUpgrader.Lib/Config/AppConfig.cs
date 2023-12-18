@@ -21,39 +21,39 @@ namespace MinecraftUpgrader.Config
 
 		public static IAppConfig Get() => GetInternal();
 
-		public static void Update( Action<AppConfig> updateAction )
+		public static void Update(Action<AppConfig> updateAction)
 		{
 			var config = GetInternal();
 
-			updateAction( config );
+			updateAction(config);
 
 			var configPath = GetConfigPath();
-			var configJson = JsonConvert.SerializeObject( config );
+			var configJson = JsonConvert.SerializeObject(config);
 
-			File.WriteAllText( configPath, configJson );
+			File.WriteAllText(configPath, configJson);
 		}
 
 		private static AppConfig GetInternal()
 		{
-			if ( CachedInstance != null )
+			if (CachedInstance != null)
 				return CachedInstance;
 
-			var configPath   = GetConfigPath();
-			var configFolder = Path.GetDirectoryName( configPath );
+			var configPath = GetConfigPath();
+			var configFolder = Path.GetDirectoryName(configPath);
 
-			if ( !Directory.Exists( configFolder ) )
-				Directory.CreateDirectory( configFolder );
+			if (!Directory.Exists(configFolder))
+				Directory.CreateDirectory(configFolder);
 
-			if ( File.Exists( configPath ) )
+			if (File.Exists(configPath))
 			{
-				var configJson = File.ReadAllText( configPath );
-				var appConfig  = JsonConvert.DeserializeObject<AppConfig>( configJson );
+				var configJson = File.ReadAllText(configPath);
+				var appConfig = JsonConvert.DeserializeObject<AppConfig>(configJson);
 
 				CachedInstance = appConfig;
 			}
 			else
 			{
-				File.WriteAllText( configPath, "{}" );
+				File.WriteAllText(configPath, "{}");
 
 				CachedInstance = new AppConfig();
 			}
@@ -62,7 +62,7 @@ namespace MinecraftUpgrader.Config
 		}
 
 		private static string GetConfigPath() => Path.Combine(
-			Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ),
+			Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
 			".mcarcanox",
 			"config.json"
 		);

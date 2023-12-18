@@ -22,9 +22,9 @@
 
 			public const string VivecraftJvmArgs = "-XX:+UseParallelGC -XX:ParallelGCThreads=3 -XX:MaxGCPauseMillis=3 -Xmn256M -Dfml.ignoreInvalidMinecraftCertificates=true -Dfml.ignorePatchDiscrepancies=true";
 
-			public static string GetVivecraftInstallerUri( bool vrEnabled )
+			public static string GetVivecraftInstallerUri(bool vrEnabled)
 			{
-				var vivecraftVersion  = vrEnabled ? VivecraftVersionVr : VivecraftVersionNonVr;
+				var vivecraftVersion = vrEnabled ? VivecraftVersionVr : VivecraftVersionNonVr;
 				var vivecraftRevision = vrEnabled ? VivecraftRevisionVr : VivecraftRevisionNonVr;
 
 				return $"https://github.com/jrbudda/Vivecraft_112/releases/download/{VivecraftVersionVr}/vivecraft-{vivecraftVersion}-{vivecraftRevision}-installer.exe";

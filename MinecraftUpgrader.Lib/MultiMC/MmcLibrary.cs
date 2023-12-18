@@ -4,13 +4,13 @@ namespace MinecraftUpgrader.MultiMC
 {
 	public class MmcLibrary
 	{
-		[ JsonProperty( "name" ) ]
+		[JsonProperty("name")]
 		public string Name { get; set; }
 
-		[ JsonProperty( "url" ) ]
+		[JsonProperty("url")]
 		public string Url { get; set; }
 
-		[ JsonProperty( "MMC-hint" ) ]
+		[JsonProperty("MMC-hint")]
 		public string MmcHint { get; set; }
 	}
 }

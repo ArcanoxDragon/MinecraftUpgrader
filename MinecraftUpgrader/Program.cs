@@ -11,16 +11,16 @@ namespace MinecraftUpgrader
 		private static readonly string LF      = Environment.NewLine;
 		private static readonly object LogLock = new object();
 
-		[ STAThread ]
+		[STAThread]
 		private static void Main()
 		{
-			AppDomain.CurrentDomain.FirstChanceException += ( sender, args ) => {
+			AppDomain.CurrentDomain.FirstChanceException += (sender, args) => {
 				try
 				{
-					lock ( LogLock )
+					lock (LogLock)
 					{
-						File.AppendAllText( GetLogPath(), $"=== Exception occurred at {DateTime.Now:yyyy-MM-dd hh:mm:ss tt} ==={LF}" );
-						File.AppendAllText( GetLogPath(), $"{args.Exception}{LF}{LF}" );
+						File.AppendAllText(GetLogPath(), $"=== Exception occurred at {DateTime.Now:yyyy-MM-dd hh:mm:ss tt} ==={LF}");
+						File.AppendAllText(GetLogPath(), $"{args.Exception}{LF}{LF}");
 					}
 				}
 				catch
@@ -29,24 +29,24 @@ namespace MinecraftUpgrader
 				}
 			};
 
-			AppDomain.CurrentDomain.UnhandledException += ( sender, args ) => {
-				MessageBox.Show( $"Error: {( args.ExceptionObject as Exception )?.Message ?? "Unknown"}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error );
+			AppDomain.CurrentDomain.UnhandledException += (sender, args) => {
+				MessageBox.Show($"Error: {( args.ExceptionObject as Exception )?.Message ?? "Unknown"}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			};
 
 			// Configure dependency injection
-			Services.Configure( upgradeUrl: "https://mc.arcanox.me" );
+			Services.Configure(upgradeUrl: "https://mc.arcanox.me");
 
 			// Configure web clients
 			ServicePointManager.Expect100Continue = true;
-			ServicePointManager.SecurityProtocol  = SecurityProtocolType.Tls12;
+			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
 			Application.EnableVisualStyles();
-			Application.SetCompatibleTextRenderingDefault( false );
-			Application.Run( Services.CreateInstance<UpdateForm>() );
+			Application.SetCompatibleTextRenderingDefault(false);
+			Application.Run(Services.CreateInstance<UpdateForm>());
 		}
 
 		private static string GetLogPath() => Path.Combine(
-			Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ),
+			Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
 			".mcupgrader",
 			"log.txt"
 		);

@@ -6,28 +6,28 @@ namespace MinecraftUpgrader.MultiMC
 {
 	public class MmcPatchesFile
 	{
-		[ JsonProperty( "uid" ) ]
+		[JsonProperty("uid")]
 		public string Uid { get; set; }
 
-		[ JsonProperty( "releaseTime" ) ]
+		[JsonProperty("releaseTime")]
 		public DateTime ReleaseTime { get; set; }
 
-		[ JsonProperty( "time" ) ]
+		[JsonProperty("time")]
 		public DateTime Time { get; set; }
 
-		[ JsonProperty( "mainClass" ) ]
+		[JsonProperty("mainClass")]
 		public string MainClass { get; set; }
 
-		[ JsonProperty( "libraries" ) ]
+		[JsonProperty("libraries")]
 		public List<MmcLibrary> Libraries { get; set; }
 
-		[ JsonProperty( "name" ) ]
+		[JsonProperty("name")]
 		public string Name { get; set; }
 
-		[ JsonProperty( "version" ) ]
+		[JsonProperty("version")]
 		public string Version { get; set; }
 
-		[ JsonProperty( "+tweakers" ) ]
+		[JsonProperty("+tweakers")]
 		public List<string> Tweakers { get; set; }
 	}
 }

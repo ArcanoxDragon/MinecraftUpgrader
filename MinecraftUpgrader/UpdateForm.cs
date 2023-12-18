@@ -19,15 +19,15 @@ namespace MinecraftUpgrader
 		private readonly string remoteFileUrl;
 		private readonly string remoteMd5Url;
 
-		public UpdateForm( IOptions<PackBuilderOptions> options )
+		public UpdateForm(IOptions<PackBuilderOptions> options)
 		{
 			this.remoteFileUrl = $"{options.Value.ModPackUrl}/MinecraftInstaller.exe";
-			this.remoteMd5Url  = $"{options.Value.ModPackUrl}/installercheck.php";
+			this.remoteMd5Url = $"{options.Value.ModPackUrl}/installercheck.php";
 
 			this.InitializeComponent();
 		}
 
-		private async void UpdateForm_Load( object sender, EventArgs args )
+		private async void UpdateForm_Load(object sender, EventArgs args)
 		{
 #if DEBUG
 			const bool SkipUpdate = true;
@@ -35,41 +35,41 @@ namespace MinecraftUpgrader
 			const bool SkipUpdate = false;
 #endif
 
-			var curProcess         = Process.GetCurrentProcess();
-			var processFilePath    = curProcess.MainModule?.FileName;
+			var curProcess = Process.GetCurrentProcess();
+			var processFilePath = curProcess.MainModule?.FileName;
 			var processFileOldPath = $"{processFilePath}.old";
 
-			if ( string.IsNullOrEmpty( processFilePath ) )
+			if (string.IsNullOrEmpty(processFilePath))
 			{
-				MessageBox.Show( this,
-								 "Fatal error...could not locate the running program on the file system.",
-								 "Update Failed",
-								 MessageBoxButtons.OK,
-								 MessageBoxIcon.Error );
+				MessageBox.Show(this,
+								"Fatal error...could not locate the running program on the file system.",
+								"Update Failed",
+								MessageBoxButtons.OK,
+								MessageBoxIcon.Error);
 
 				return;
 			}
 
-			var otherProcesses = Process.GetProcessesByName( curProcess.ProcessName )
-										.Where( p => p.Id != curProcess.Id );
+			var otherProcesses = Process.GetProcessesByName(curProcess.ProcessName)
+				.Where(p => p.Id != curProcess.Id);
 
-			foreach ( var process in otherProcesses )
+			foreach (var process in otherProcesses)
 			{
-				process.WaitForExit( 3000 );
+				process.WaitForExit(3000);
 				process.Kill();
 			}
 
-			if ( File.Exists( processFileOldPath ) )
-				File.Delete( processFileOldPath );
+			if (File.Exists(processFileOldPath))
+				File.Delete(processFileOldPath);
 
 			using var web = new WebClient();
 
-			var localHash  = CryptoUtility.CalculateFileMd5( processFilePath );
-			var remoteHash = await web.DownloadStringTaskAsync( this.remoteMd5Url );
+			var localHash = CryptoUtility.CalculateFileMd5(processFilePath);
+			var remoteHash = await web.DownloadStringTaskAsync(this.remoteMd5Url);
 
 			// ReSharper disable once RedundantLogicalConditionalExpressionOperand
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-			if ( SkipUpdate || localHash == remoteHash )
+			if (SkipUpdate || localHash == remoteHash)
 			{
 				this.Hide();
 				new CheckJavaForm().ShowDialog();
@@ -77,42 +77,42 @@ namespace MinecraftUpgrader
 				return;
 			}
 
-			this.lbStatus.Text    = "Updating program...";
+			this.lbStatus.Text = "Updating program...";
 			this.pbDownload.Style = ProgressBarStyle.Continuous;
 
-			web.DownloadProgressChanged += ( o, e ) => this.Invoke( new Action( () => {
-				var dlSize    = e.BytesReceived.Bytes();
+			web.DownloadProgressChanged += (o, e) => this.Invoke(new Action(() => {
+				var dlSize = e.BytesReceived.Bytes();
 				var totalSize = e.TotalBytesToReceive.Bytes();
 
-				this.lbProgress.Text  = $"Downloading updates... {dlSize.ToString( "0.##" )} / {totalSize.ToString( "0.##" )} ({e.ProgressPercentage}%)";
+				this.lbProgress.Text = $"Downloading updates... {dlSize.ToString("0.##")} / {totalSize.ToString("0.##")} ({e.ProgressPercentage}%)";
 				this.pbDownload.Value = e.ProgressPercentage;
-			} ) );
+			}));
 
-			var updateFilePath = Path.Combine( Path.GetTempPath(), "MinecraftInstaller.exe" );
+			var updateFilePath = Path.Combine(Path.GetTempPath(), "MinecraftInstaller.exe");
 
-			if ( File.Exists( updateFilePath ) )
-				File.Delete( updateFilePath );
+			if (File.Exists(updateFilePath))
+				File.Delete(updateFilePath);
 
-			await web.DownloadFileTaskAsync( this.remoteFileUrl, updateFilePath );
+			await web.DownloadFileTaskAsync(this.remoteFileUrl, updateFilePath);
 
-			this.lbStatus.Text    = "Installing updates...";
+			this.lbStatus.Text = "Installing updates...";
 			this.pbDownload.Style = ProgressBarStyle.Marquee;
 
-			File.Move( processFilePath, processFileOldPath );
-			File.Move( updateFilePath, processFilePath );
+			File.Move(processFilePath, processFileOldPath);
+			File.Move(updateFilePath, processFilePath);
 
-			var newLocalHash = CryptoUtility.CalculateFileMd5( processFilePath );
+			var newLocalHash = CryptoUtility.CalculateFileMd5(processFilePath);
 
-			if ( newLocalHash != remoteHash )
+			if (newLocalHash != remoteHash)
 			{
-				MessageBox.Show( this,
-								 "Checksum mismatch! The update file is invalid. Update failed.",
-								 "Update Failed",
-								 MessageBoxButtons.OK,
-								 MessageBoxIcon.Error );
+				MessageBox.Show(this,
+								"Checksum mismatch! The update file is invalid. Update failed.",
+								"Update Failed",
+								MessageBoxButtons.OK,
+								MessageBoxIcon.Error);
 
-				File.Delete( processFilePath );
-				File.Move( processFileOldPath, processFilePath );
+				File.Delete(processFilePath);
+				File.Move(processFileOldPath, processFilePath);
 
 				this.Hide();
 				new CheckJavaForm().ShowDialog();
@@ -120,16 +120,16 @@ namespace MinecraftUpgrader
 				return;
 			}
 
-			MessageBox.Show( this,
-							 "Update complete! Click OK to restart the program and apply the update.",
-							 "Update Complete",
-							 MessageBoxButtons.OK,
-							 MessageBoxIcon.Information );
+			MessageBox.Show(this,
+							"Update complete! Click OK to restart the program and apply the update.",
+							"Update Complete",
+							MessageBoxButtons.OK,
+							MessageBoxIcon.Information);
 
-			Process.Start( new ProcessStartInfo {
-				FileName        = processFilePath,
+			Process.Start(new ProcessStartInfo {
+				FileName = processFilePath,
 				UseShellExecute = true
-			} );
+			});
 			Application.Exit();
 		}
 	}

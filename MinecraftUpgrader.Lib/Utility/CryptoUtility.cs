@@ -6,13 +6,13 @@ namespace MinecraftUpgrader.Utility
 {
 	public static class CryptoUtility
 	{
-		public static string CalculateFileMd5( string filePath )
+		public static string CalculateFileMd5(string filePath)
 		{
-			var       md5       = MD5.Create();
-			using var fs        = new FileStream( filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite );
-			var       localHash = md5.ComputeHash( fs );
+			var md5 = MD5.Create();
+			using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+			var localHash = md5.ComputeHash(fs);
 
-			return string.Join( "", localHash.Select( b => b.ToString( "x2" ) ) );
+			return string.Join("", localHash.Select(b => b.ToString("x2")));
 		}
 	}
 }
