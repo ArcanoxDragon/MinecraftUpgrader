@@ -5,6 +5,6 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="$(TargetFramework.Contains('netcoreapp'))">
-		<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	</PropertyGroup>
 </Project>
