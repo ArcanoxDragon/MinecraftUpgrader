@@ -21,7 +21,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Semver;
 
-namespace MinecraftUpgrader.Upgrade
+namespace MinecraftUpgrader.Modpack
 {
 	public class Upgrader
 	{

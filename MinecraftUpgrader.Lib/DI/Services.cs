@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
+using MinecraftUpgrader.Modpack;
 using MinecraftUpgrader.Options;
-using MinecraftUpgrader.Upgrade;
 
 namespace MinecraftUpgrader.DI
 {

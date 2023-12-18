@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Humanizer;
 using MinecraftUpgrader.Config;
+using MinecraftUpgrader.Modpack;
 using MinecraftUpgrader.MultiMC;
-using MinecraftUpgrader.Upgrade;
 using NickStrupat;
 using Semver;
 

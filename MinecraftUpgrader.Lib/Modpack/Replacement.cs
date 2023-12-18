@@ -1,4 +1,4 @@
-﻿namespace MinecraftUpgrader.Upgrade
+﻿namespace MinecraftUpgrader.Modpack
 {
 	public class Replacement
 	{

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MinecraftUpgrader.Upgrade
+namespace MinecraftUpgrader.Modpack
 {
 	public class PackUpgrade
 	{
