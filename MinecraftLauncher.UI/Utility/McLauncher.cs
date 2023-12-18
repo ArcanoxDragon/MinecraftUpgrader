@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using CmlLib.Core;
 using CmlLib.Core.Auth;
 using CmlLib.Core.Version;
+using CmlLib.Core.VersionLoader;
 using Humanizer;
 using MinecraftLauncher.Config;
 using MinecraftLauncher.Modpack;
@@ -98,10 +99,10 @@ namespace MinecraftLauncher.Utility
 
 		private async Task<MVersion> GetVersionMetadataAsync(string versionString)
 		{
-			var versionLoader = new MVersionLoader(new MinecraftPath(PackBuilder.ProfilePath));
+			var versionLoader = new MojangVersionLoader();
 			var versions = await versionLoader.GetVersionMetadatasAsync();
 
-			return versions.GetVersion(versionString);
+			return await versions.GetVersionAsync(versionString);
 		}
 	}
 }

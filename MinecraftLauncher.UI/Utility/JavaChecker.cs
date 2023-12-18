@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using CmlLib.Core.Downloader;
+using CmlLib.Core.Installer;
 using Humanizer;
 using MinecraftLauncher.Async;
 using MinecraftLauncher.Config;
@@ -77,11 +78,11 @@ namespace MinecraftLauncher.Utility
 		{
 			var java = new MJava();
 
-			java.ProgressChanged += ( sender, args ) => {
+			java.ProgressChanged += ( _, args ) => {
 				progressDialogReporter?.ReportProgress( args.ProgressPercentage / 100.0, "Installing Java..." );
 			};
 
-			var javaPath = await java.CheckJavaAsync(cancellationToken);
+			var javaPath = await java.CheckJavaAsync();
 
 			cancellationToken.ThrowIfCancellationRequested();
 

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CmlLib.Core;
 using CmlLib.Core.Downloader;
 using CmlLib.Core.Version;
+using CmlLib.Core.VersionLoader;
 using ICSharpCode.SharpZipLib.Zip;
 using MinecraftLauncher.Async;
 using MinecraftLauncher.Extensions;
@@ -184,15 +185,15 @@ namespace MinecraftLauncher.Modpack
 
 				// Download the required libraries
 				var mcPath = new MinecraftPath(ProfilePath);
-				var mcVersionLoader = new MVersionLoader(mcPath);
-				var mcVersions = await mcVersionLoader.GetVersionMetadatasAsync(cancellationToken);
-				var mcVersion = mcVersions.GetVersion(newVersionName);
-				var downloader = new MDownloader(mcPath, mcVersion);
+				var mcVersionLoader = new MojangVersionLoader();
+				var mcVersions = await mcVersionLoader.GetVersionMetadatasAsync();
+				var mcVersion = await mcVersions.GetVersionAsync(newVersionName);
+				var launcher = new CMLauncher(mcPath);
 
-				downloader.ChangeFile += args => progress?.ReportProgress(args.ProgressedFileCount / (double) args.TotalFileCount,
+				launcher.FileChanged += args => progress?.ReportProgress(args.ProgressedFileCount / (double) args.TotalFileCount,
 																		  $"Downloading Minecraft assets...\nDownloading file {args.FileName} (file {args.ProgressedFileCount} / {args.TotalFileCount})");
 
-				await downloader.DownloadAllAsync(cancellationToken: cancellationToken);
+				await launcher.CheckAndDownloadAsync(mcVersion);
 
 				// Return the version name
 				return newVersionName;
