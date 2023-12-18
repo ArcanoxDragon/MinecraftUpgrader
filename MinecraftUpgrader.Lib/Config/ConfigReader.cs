@@ -11,10 +11,9 @@ namespace MinecraftUpgrader.Config
 	{
 		private static async Task<Dictionary<string, string>> ReadConfigValues(TextReader reader)
 		{
-			string line;
 			var values = new Dictionary<string, string>();
 
-			while (( line = await reader.ReadLineAsync() ) != null)
+			while (await reader.ReadLineAsync() is { } line)
 			{
 				var match = Regex.Match(line, @"([\w\d_]+)=([^\r\n]+)");
 
@@ -97,22 +96,21 @@ namespace MinecraftUpgrader.Config
 
 		public static async Task UpdateConfig<T>(T updatedConfig, Stream configStream)
 		{
-			using (var sr = new StreamReader(configStream))
-			using (var sw = new StreamWriter(configStream))
-			{
-				// Seek to the beginning
-				configStream.Seek(0, SeekOrigin.Begin);
+			using var reader = new StreamReader(configStream);
+			await using var writer = new StreamWriter(configStream);
 
-				var propValues = await ReadConfigValues(sr);
+			// Seek to the beginning
+			configStream.Seek(0, SeekOrigin.Begin);
 
-				SetProperties(updatedConfig, propValues);
+			var propValues = await ReadConfigValues(reader);
 
-				// Seek to the beginning and clear the stream
-				configStream.Seek(0, SeekOrigin.Begin);
-				configStream.SetLength(0);
+			SetProperties(updatedConfig, propValues);
 
-				await WriteConfigValues(propValues, sw);
-			}
+			// Seek to the beginning and clear the stream
+			configStream.Seek(0, SeekOrigin.Begin);
+			configStream.SetLength(0);
+
+			await WriteConfigValues(propValues, writer);
 		}
 	}
 }

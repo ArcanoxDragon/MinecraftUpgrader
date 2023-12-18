@@ -80,13 +80,13 @@ namespace MinecraftUpgrader
 			this.lbStatus.Text = "Updating program...";
 			this.pbDownload.Style = ProgressBarStyle.Continuous;
 
-			web.DownloadProgressChanged += (o, e) => Invoke(new Action(() => {
+			web.DownloadProgressChanged += (_, e) => Invoke(() => {
 				var dlSize = e.BytesReceived.Bytes();
 				var totalSize = e.TotalBytesToReceive.Bytes();
 
 				this.lbProgress.Text = $"Downloading updates... {dlSize.ToString("0.##")} / {totalSize.ToString("0.##")} ({e.ProgressPercentage}%)";
 				this.pbDownload.Value = e.ProgressPercentage;
-			}));
+			});
 
 			var updateFilePath = Path.Combine(Path.GetTempPath(), "MinecraftInstaller.exe");
 
@@ -128,7 +128,7 @@ namespace MinecraftUpgrader
 
 			Process.Start(new ProcessStartInfo {
 				FileName = processFilePath,
-				UseShellExecute = true
+				UseShellExecute = true,
 			});
 			Application.Exit();
 		}

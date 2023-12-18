@@ -2,13 +2,8 @@
 
 namespace MinecraftUpgrader.Config
 {
-	public class ConfigPropertyAttribute : Attribute
+	public class ConfigPropertyAttribute(string propertyName = null) : Attribute
 	{
-		public ConfigPropertyAttribute(string propertyName = null)
-		{
-			PropertyName = propertyName;
-		}
-
-		public string PropertyName { get; }
+		public string PropertyName { get; } = propertyName;
 	}
 }

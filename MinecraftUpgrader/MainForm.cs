@@ -25,7 +25,7 @@ namespace MinecraftUpgrader
 			New,
 			NeedsConversion,
 			NeedsUpdate,
-			ReadyToPlay
+			ReadyToPlay,
 		}
 
 		private readonly PackBuilder packBuilder;
@@ -447,7 +447,7 @@ namespace MinecraftUpgrader
 			var instanceName = newInstance ? this.txtNewInstanceName.Text : this.instances[this.cmbInstance.SelectedIndex].name;
 			var successful = false;
 
-			dialog.Cancel += (o, args) => {
+			dialog.Cancel += (_, _) => {
 				cancelSource.Cancel();
 				dialog.Reporter.ReportProgress(-1, "Cancelling...please wait");
 			};
@@ -491,9 +491,9 @@ namespace MinecraftUpgrader
 
 				successful = true;
 			}
-			catch (Exception ex) when (ex is TaskCanceledException ||
-									   ex is OperationCanceledException ||
-									   ex is WebException we && we.Status == WebExceptionStatus.RequestCanceled)
+			catch (Exception ex) when (ex is TaskCanceledException
+										or OperationCanceledException
+										or WebException { Status: WebExceptionStatus.RequestCanceled })
 			{
 				MessageBox.Show(dialog,
 								"Pack setup was cancelled. The instance is most likely not in a runnable state.",
@@ -518,7 +518,7 @@ namespace MinecraftUpgrader
 
 				if (successful)
 					OfferStartMinecraft(instanceName,
-											 "The mod pack was successfully configured!");
+										"The mod pack was successfully configured!");
 			}
 		}
 
@@ -545,7 +545,7 @@ namespace MinecraftUpgrader
 			var startInfo = new ProcessStartInfo {
 				UseShellExecute = true,
 				FileName = Path.Combine(this.txtMmcPath.Text, "MultiMC.exe"),
-				WorkingDirectory = this.txtMmcPath.Text
+				WorkingDirectory = this.txtMmcPath.Text,
 			};
 
 			Process.Start(startInfo);
@@ -557,7 +557,7 @@ namespace MinecraftUpgrader
 				UseShellExecute = true,
 				FileName = Path.Combine(this.txtMmcPath.Text, "MultiMC.exe"),
 				Arguments = $"-l \"{instanceName}\"",
-				WorkingDirectory = this.txtMmcPath.Text
+				WorkingDirectory = this.txtMmcPath.Text,
 			};
 
 			Process.Start(startInfo);

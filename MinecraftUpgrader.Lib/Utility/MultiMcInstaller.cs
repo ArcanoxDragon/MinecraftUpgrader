@@ -23,7 +23,7 @@ namespace MinecraftUpgrader.Utility
 			{
 				cancellationToken.Register(web.CancelAsync);
 
-				web.DownloadProgressChanged += (sender, args) => {
+				web.DownloadProgressChanged += (_, args) => {
 					var dlSize = args.BytesReceived.Bytes();
 					var totalSize = args.TotalBytesToReceive.Bytes();
 
@@ -39,7 +39,7 @@ namespace MinecraftUpgrader.Utility
 			if (!Directory.Exists(mmcInstallPath))
 				Directory.CreateDirectory(mmcInstallPath);
 
-			using (var fs = File.Open(tempFile, FileMode.Open, FileAccess.Read, FileShare.Read))
+			await using (var fs = File.Open(tempFile, FileMode.Open, FileAccess.Read, FileShare.Read))
 			{
 				using var zip = new ZipFile(fs);
 
@@ -51,7 +51,7 @@ namespace MinecraftUpgrader.Utility
 										   RecreateFolderStructure = false,
 										   OverwriteExisting = true,
 										   CancellationToken = cancellationToken,
-										   ProgressReporter = progress
+										   ProgressReporter = progress,
 									   });
 			}
 

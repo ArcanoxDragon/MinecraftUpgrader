@@ -28,7 +28,7 @@ namespace MinecraftUpgrader
 		{
 			var dialog = new CommonOpenFileDialog {
 				IsFolderPicker = true,
-				CookieIdentifier = OpenFolderCookie
+				CookieIdentifier = OpenFolderCookie,
 			};
 			var result = dialog.ShowDialog(Handle);
 
@@ -71,7 +71,7 @@ namespace MinecraftUpgrader
 			{
 				var cancelSource = new CancellationTokenSource();
 
-				dialog.Cancel += (o, args) => {
+				dialog.Cancel += (_, _) => {
 					dialog.Reporter.ReportProgress(-1, "Cancelling...please wait");
 					cancelSource.Cancel();
 				};

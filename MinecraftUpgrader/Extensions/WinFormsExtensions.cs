@@ -10,16 +10,16 @@ namespace MinecraftUpgrader.Extensions
 		#region Invoke Extensions
 
 		public static void Invoke(this Control control, Action action)
-			=> control.Invoke(new Action(action));
+			=> control.Invoke(action);
 
 		public static void BeginInvoke(this Control control, Action action)
-			=> control.BeginInvoke(new Action(action));
+			=> control.BeginInvoke(action);
 
 		public static void TryInvoke(this Control control, Action action)
 		{
 			try
 			{
-				control.Invoke(new Action(action));
+				control.Invoke(action);
 			}
 			catch
 			{
@@ -31,7 +31,7 @@ namespace MinecraftUpgrader.Extensions
 		{
 			try
 			{
-				control.BeginInvoke(new Action(action));
+				control.BeginInvoke(action);
 			}
 			catch
 			{

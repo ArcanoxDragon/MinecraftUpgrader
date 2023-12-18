@@ -21,7 +21,7 @@ using Semver;
 
 namespace MinecraftUpgrader.Modpack
 {
-	public class PackBuilder
+	public class PackBuilder(IOptions<PackBuilderOptions> options)
 	{
 		private static readonly JsonSerializer JsonSerializer = new() {
 			ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -48,12 +48,7 @@ namespace MinecraftUpgrader.Modpack
 			@"(?:resourcepacks|saves|schematics|screenshots|shaderpacks|texturepacks)[/\\].*$",
 		};
 
-		private readonly PackBuilderOptions options;
-
-		public PackBuilder(IOptions<PackBuilderOptions> options)
-		{
-			this.options = options.Value;
-		}
+		private readonly PackBuilderOptions options = options.Value;
 
 		public string PackMetadataUrl => $"{this.options.ModPackUrl}/{ConfigPath}";
 
@@ -64,11 +59,11 @@ namespace MinecraftUpgrader.Modpack
 			cancellationToken.Register(web.CancelAsync);
 
 			if (progressReporter != null)
-				web.DownloadProgressChanged += (sender, args) => {
+				web.DownloadProgressChanged += (_, args) => {
 					progressReporter.ReportProgress(args.ProgressPercentage / 100.0, "Loading mod pack info...");
 				};
 
-			using var stream = await web.OpenReadTaskAsync(PackMetadataUrl);
+			await using var stream = await web.OpenReadTaskAsync(PackMetadataUrl);
 
 			cancellationToken.ThrowIfCancellationRequested();
 
@@ -90,7 +85,7 @@ namespace MinecraftUpgrader.Modpack
 
 			progress?.ReportProgress("Updating instance configuration...");
 
-			using (var fs = File.Open(cfgFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+			await using (var fs = File.Open(cfgFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
 			{
 				using var sr = new StreamReader(fs);
 				var cfg = await ConfigReader.ReadConfig<MmcInstance>(sr);
@@ -113,7 +108,8 @@ namespace MinecraftUpgrader.Modpack
 			// Just redo everything.
 			if (!forceRebuild && File.Exists(metadataFile))
 			{
-				var currentInstanceMetadata = JsonConvert.DeserializeObject<InstanceMetadata>(File.ReadAllText(metadataFile));
+				var instanceMetadataJson = await File.ReadAllTextAsync(metadataFile, token).ConfigureAwait(false);
+				var currentInstanceMetadata = JsonConvert.DeserializeObject<InstanceMetadata>(instanceMetadataJson);
 
 				if (currentInstanceMetadata.FileVersion >= 2)
 				{
@@ -140,7 +136,7 @@ namespace MinecraftUpgrader.Modpack
 
 				var downloadTask = "";
 
-				web.DownloadProgressChanged += (sender, args) => {
+				web.DownloadProgressChanged += (_, args) => {
 					// ReSharper disable AccessToModifiedClosure
 					var dlSize = args.BytesReceived.Bytes();
 					var totalSize = args.TotalBytesToReceive.Bytes();
@@ -257,7 +253,7 @@ namespace MinecraftUpgrader.Modpack
 					progress?.ReportProgress(0, "Extracting base pack contents...");
 
 					// Extract server pack contents
-					using (var fs = File.Open(serverPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+					await using (var fs = File.Open(serverPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
 					{
 						using var zip = new ZipFile(fs);
 
@@ -294,7 +290,7 @@ namespace MinecraftUpgrader.Modpack
 						progress?.ReportProgress(0, "Extracting client overrides...");
 
 						// Extract client pack contents
-						using var fs = File.Open(clientPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+						await using var fs = File.Open(clientPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
 						using var zip = new ZipFile(fs);
 
 						async Task ExtractOptionalOverrideFolder(ZipFile zipFile, string folder)
@@ -312,7 +308,7 @@ namespace MinecraftUpgrader.Modpack
 						if (await zip.TryExtractAsync(tempDir, new ZipExtractOptions(filenamePattern: Regex.Escape("manifest.json"), overwriteExisting: true)))
 						{
 							var clientManifestFile = Path.Combine(tempDir, "manifest.json");
-							var clientManifestJson = File.ReadAllText(clientManifestFile);
+							var clientManifestJson = await File.ReadAllTextAsync(clientManifestFile, token).ConfigureAwait(false);
 							var clientManifest = JsonConvert.DeserializeObject<CursePackManifest>(clientManifestJson);
 
 							if (clientManifest.Files?.Count > 0)
@@ -445,12 +441,12 @@ namespace MinecraftUpgrader.Modpack
 														 $"Config file {currentConfig} of {version.ConfigReplacements.Count}: " +
 														 $"{configPath}");
 
-								var configFileContents = File.ReadAllText(configFilePath, Encoding.UTF8);
+								var configFileContents = await File.ReadAllTextAsync(configFilePath, Encoding.UTF8, token).ConfigureAwait(false);
 
 								foreach (var replacement in replacements)
 									configFileContents = Regex.Replace(configFileContents, replacement.Replace, replacement.With);
 
-								File.WriteAllText(configFilePath, configFileContents, Encoding.UTF8);
+								await File.WriteAllTextAsync(configFilePath, configFileContents, Encoding.UTF8, token).ConfigureAwait(false);
 							}
 						}
 					}
@@ -521,7 +517,7 @@ namespace MinecraftUpgrader.Modpack
 
 					progress?.ReportProgress(-1, $"{vrTask}\nExtracting Vivecraft installer...");
 
-					using (var fs = File.Open(vivecraftInstallerFilename, FileMode.Open, FileAccess.Read))
+					await using (var fs = File.Open(vivecraftInstallerFilename, FileMode.Open, FileAccess.Read))
 					{
 						using var zip = new ZipFile(fs);
 						var versionJarEntry = zip.GetEntry("version.jar");
@@ -531,10 +527,10 @@ namespace MinecraftUpgrader.Modpack
 
 						var minecriftFilename = $"minecrift-{vivecraftVersion}-{vivecraftRevision}.jar";
 
-						using var entryStream = zip.GetInputStream(versionJarEntry);
-						using var destStream = File.Open(Path.Combine(librariesDir, minecriftFilename), FileMode.Create, FileAccess.Write);
+						await using var entryStream = zip.GetInputStream(versionJarEntry);
+						await using var destStream = File.Open(Path.Combine(librariesDir, minecriftFilename), FileMode.Create, FileAccess.Write);
 
-						await entryStream.CopyToAsync(destStream);
+						await entryStream.CopyToAsync(destStream, token);
 						await destStream.FlushAsync(token);
 					}
 
@@ -569,7 +565,7 @@ namespace MinecraftUpgrader.Modpack
 						}
 					);
 
-					File.WriteAllText(Path.Combine(patchesDir, "vivecraft.json"), patchFileJson);
+					await File.WriteAllTextAsync(Path.Combine(patchesDir, "vivecraft.json"), patchFileJson, token).ConfigureAwait(false);
 
 					// Clean up temporary installation files
 					progress?.ReportProgress(-1, "Cleaning up temporary files...");
@@ -589,8 +585,8 @@ namespace MinecraftUpgrader.Modpack
 				// Finally write the current version to the instance version file
 				// We do this last so that if a version upgrade fails, the user
 				// can resume at the last fully completed version
-				using var packMetaFileStream = File.Open(metadataFile, FileMode.Create, FileAccess.Write, FileShare.None);
-				using var packMetaWriter = new StreamWriter(packMetaFileStream);
+				await using var packMetaFileStream = File.Open(metadataFile, FileMode.Create, FileAccess.Write, FileShare.None);
+				await using var packMetaWriter = new StreamWriter(packMetaFileStream);
 
 				JsonSerializer.Serialize(packMetaWriter, instanceMetadata);
 				await packMetaWriter.FlushAsync();
@@ -636,9 +632,9 @@ namespace MinecraftUpgrader.Modpack
 			token.ThrowIfCancellationRequested();
 			progress?.ReportProgress("Creating new instance config file...");
 
-			using (var fs = File.Open(newInstCfg, FileMode.Create, FileAccess.Write, FileShare.None))
+			await using (var fs = File.Open(newInstCfg, FileMode.Create, FileAccess.Write, FileShare.None))
 			{
-				using var sw = new StreamWriter(fs);
+				await using var sw = new StreamWriter(fs);
 
 				await ConfigReader.WriteConfig(instance, sw);
 			}
@@ -660,7 +656,7 @@ namespace MinecraftUpgrader.Modpack
 			var pack = await LoadConfigAsync(token);
 			MmcInstance instance;
 
-			using (var fs = File.Open(instCfg, FileMode.Open, FileAccess.Read, FileShare.Read))
+			await using (var fs = File.Open(instCfg, FileMode.Open, FileAccess.Read, FileShare.Read))
 			{
 				using var sr = new StreamReader(fs);
 
@@ -680,9 +676,9 @@ namespace MinecraftUpgrader.Modpack
 			instance.JvmArgs = Constants.Vivecraft.VivecraftJvmArgs;
 			instance.Icon = IconName;
 
-			using (var fs = File.Open(instCfg, FileMode.Open, FileAccess.Write, FileShare.Read))
+			await using (var fs = File.Open(instCfg, FileMode.Open, FileAccess.Write, FileShare.Read))
 			{
-				using var sr = new StreamWriter(fs);
+				await using var sr = new StreamWriter(fs);
 
 				await ConfigReader.WriteConfig(instance, sr);
 			}

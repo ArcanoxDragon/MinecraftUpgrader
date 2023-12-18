@@ -9,27 +9,23 @@ using MinecraftUpgrader.Async;
 
 namespace MinecraftUpgrader.Zip
 {
-	public class ZipExtractOptions
+	public class ZipExtractOptions(
+		string directoryName = null,
+		bool overwriteExisting = false,
+		CancellationToken? cancellationToken = null,
+		ProgressReporter progressReporter = null,
+		string filenamePattern = null)
 	{
-		public ZipExtractOptions(string directoryName = null, bool overwriteExisting = false, CancellationToken? cancellationToken = null, ProgressReporter progressReporter = null, string filenamePattern = null)
-		{
-			DirectoryName = directoryName;
-			OverwriteExisting = overwriteExisting;
-			CancellationToken = cancellationToken;
-			ProgressReporter = progressReporter;
-			FilenamePattern = filenamePattern;
-		}
-
 		/// <summary>
 		/// The name of the directory in the ZIP file to extract (optional)
 		/// </summary>
-		public string DirectoryName { get; set; }
+		public string DirectoryName { get; set; } = directoryName;
 
 		public bool               RecreateFolderStructure { get; set; } = true;
-		public bool               OverwriteExisting       { get; set; }
-		public CancellationToken? CancellationToken       { get; set; }
-		public ProgressReporter   ProgressReporter        { get; set; }
-		public string             FilenamePattern         { get; set; }
+		public bool               OverwriteExisting       { get; set; } = overwriteExisting;
+		public CancellationToken? CancellationToken       { get; set; } = cancellationToken;
+		public ProgressReporter   ProgressReporter        { get; set; } = progressReporter;
+		public string             FilenamePattern         { get; set; } = filenamePattern;
 	}
 
 	public static class ZipExtensions
@@ -90,8 +86,8 @@ namespace MinecraftUpgrader.Zip
 				// Entry name can be a folder name; in this case, fileName will be an empty string and we should skip it
 				if (!string.IsNullOrEmpty(fileName) && ( overwriteExisting || !File.Exists(destinationName) ))
 				{
-					using var fs = File.Open(destinationName, FileMode.Create, FileAccess.Write, FileShare.None);
-					using var es = zip.GetInputStream(entry);
+					await using var fs = File.Open(destinationName, FileMode.Create, FileAccess.Write, FileShare.None);
+					await using var es = zip.GetInputStream(entry);
 
 					await es.CopyToAsync(fs, BufferSize, cancellationToken);
 				}

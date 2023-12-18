@@ -16,7 +16,7 @@ namespace MinecraftUpgrader.MultiMC
 			if (!File.Exists(configPath))
 				throw new FileNotFoundException($"MultiMC config file not found at {configPath}.\n\nMake sure you have run MultiMC at least once to set it up.");
 
-			using var fs = File.Open(configPath, FileMode.Open, FileAccess.Read);
+			await using var fs = File.Open(configPath, FileMode.Open, FileAccess.Read);
 			using var sr = new StreamReader(fs);
 			var config = await ConfigReader.ReadConfig<MmcConfig>(sr);
 
@@ -38,7 +38,7 @@ namespace MinecraftUpgrader.MultiMC
 			config.InstancesFolder = config.InstancesFolder.Replace("\\", "/");
 			config.JavaPath = config.JavaPath.Replace("\\", "/");
 
-			using var fs = File.Open(configPath, FileMode.Open, FileAccess.ReadWrite);
+			await using var fs = File.Open(configPath, FileMode.Open, FileAccess.ReadWrite);
 
 			await ConfigReader.UpdateConfig(config, fs);
 		}
@@ -53,15 +53,13 @@ namespace MinecraftUpgrader.MultiMC
 				// TODO: Uncomment the following line if a development MultiMC version is required
 				// UpdateChannel   = "develop",
 				MinMemAlloc = 512,
-				MaxMemAlloc = 1024
+				MaxMemAlloc = 1024,
 			};
 
-			using (var fs = File.Open(Path.Combine(mmcPath, "multimc.cfg"), FileMode.Create, FileAccess.Write))
-			{
-				using var sw = new StreamWriter(fs);
+			await using var stream = File.Open(Path.Combine(mmcPath, "multimc.cfg"), FileMode.Create, FileAccess.Write);
+			await using var writer = new StreamWriter(stream);
 
-				await ConfigReader.WriteConfig(defaults, sw);
-			}
+			await ConfigReader.WriteConfig(defaults, writer);
 
 			return defaults;
 		}
@@ -82,7 +80,7 @@ namespace MinecraftUpgrader.MultiMC
 
 				try
 				{
-					using var fs = File.Open(instanceCfgPath, FileMode.Open, FileAccess.Read);
+					await using var fs = File.Open(instanceCfgPath, FileMode.Open, FileAccess.Read);
 					using var sr = new StreamReader(fs);
 					var instanceCfg = await ConfigReader.ReadConfig<MmcInstance>(sr);
 

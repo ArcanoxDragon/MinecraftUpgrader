@@ -19,7 +19,7 @@ namespace MinecraftUpgrader
 
 		private void ReporterOnProgress(double? progress, string status)
 		{
-			Invoke(new Action(() => {
+			Invoke(() => {
 				if (progress != null)
 				{
 					this.pbProgress.Style = progress >= 0 ? ProgressBarStyle.Continuous : ProgressBarStyle.Marquee;
@@ -30,7 +30,7 @@ namespace MinecraftUpgrader
 
 				if (!string.IsNullOrEmpty(status))
 					this.lbStatus.Text = status;
-			}));
+			});
 		}
 
 		public ProgressReporter Reporter { get; }
@@ -44,7 +44,7 @@ namespace MinecraftUpgrader
 
 			if (result == DialogResult.Yes)
 			{
-				Cancel?.Invoke(this, new EventArgs());
+				Cancel?.Invoke(this, EventArgs.Empty);
 				this.btnCancel.Enabled = false;
 			}
 		}

@@ -14,7 +14,7 @@ namespace MinecraftUpgrader
 		[STAThread]
 		private static void Main()
 		{
-			AppDomain.CurrentDomain.FirstChanceException += (sender, args) => {
+			AppDomain.CurrentDomain.FirstChanceException += (_, args) => {
 				try
 				{
 					lock (LogLock)
@@ -29,7 +29,7 @@ namespace MinecraftUpgrader
 				}
 			};
 
-			AppDomain.CurrentDomain.UnhandledException += (sender, args) => {
+			AppDomain.CurrentDomain.UnhandledException += (_, args) => {
 				MessageBox.Show($"Error: {( args.ExceptionObject as Exception )?.Message ?? "Unknown"}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			};
 
