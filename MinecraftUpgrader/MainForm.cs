@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Humanizer;
 using MinecraftUpgrader.Config;
+using MinecraftUpgrader.Extensions;
 using MinecraftUpgrader.Modpack;
 using MinecraftUpgrader.MultiMC;
 using NickStrupat;
@@ -375,22 +376,22 @@ namespace MinecraftUpgrader
 		}
 
 		private async void OnBtnRebuildClick( object sender, EventArgs e )
-			=> await this.DoConfigurePack( true );
+			=> await this.DisableWhile( () => this.DoConfigurePack( true ) );
 
-		private async void OnBtnGoClick( object sender, EventArgs e )
-		{
-			if ( this.currentPackState == PackMode.ReadyToPlay )
-			{
-				// Button says "Play"; user doesn't expect another prompt to start MC
+		private async void OnBtnGoClick(object sender, EventArgs e)
+			=> await this.DisableWhile( async () => {
+				if (this.currentPackState == PackMode.ReadyToPlay)
+				{
+					// Button says "Play"; user doesn't expect another prompt to start MC
 
-				var selectedInstance = this.instances[ this.cmbInstance.SelectedIndex ];
+					var selectedInstance = this.instances[this.cmbInstance.SelectedIndex];
 
-				this.StartMinecraft( selectedInstance.name );
-				return;
-			}
+					this.StartMinecraft(selectedInstance.name);
+					return;
+				}
 
-			await this.DoConfigurePack( false );
-		}
+				await this.DoConfigurePack(false);
+			} );
 
 		private void OnOpenMultiMCClick( object sender, EventArgs e )
 		{
@@ -411,7 +412,6 @@ namespace MinecraftUpgrader
 			var instanceName = newInstance ? this.txtNewInstanceName.Text : this.instances[ this.cmbInstance.SelectedIndex ].name;
 			var successful   = false;
 
-			this.Enabled = false;
 			dialog.Cancel += ( o, args ) => {
 				cancelSource.Cancel();
 				dialog.Reporter.ReportProgress( -1, "Cancelling...please wait" );
@@ -478,7 +478,6 @@ namespace MinecraftUpgrader
 			finally
 			{
 				dialog.Close();
-				this.Enabled = true;
 				this.BringToFront();
 				await this.UpdatePackMetadata();
 
