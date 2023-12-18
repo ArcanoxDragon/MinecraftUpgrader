@@ -12,6 +12,7 @@ namespace MinecraftUpgrader.Config
 		string LastInstance { get; }
 	}
 
+	// TODO: Move out of Lib project?
 	public class AppConfig : IAppConfig
 	{
 		#region Static
@@ -62,7 +63,7 @@ namespace MinecraftUpgrader.Config
 
 		private static string GetConfigPath() => Path.Combine(
 			Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ),
-			".mcupgrader",
+			".mcarcanox",
 			"config.json"
 		);
 
