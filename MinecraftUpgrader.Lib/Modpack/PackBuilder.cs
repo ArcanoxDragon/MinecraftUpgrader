@@ -274,13 +274,19 @@ namespace MinecraftUpgrader.Modpack
 						throw new InvalidOperationException( $"Invalid version number in mod pack definition: {versionKey}" );
 				}
 
+				var curSemVersion     = SemVersion.Parse( currentVersion );
+				var desiredSemVersion = SemVersion.Parse( pack.CurrentVersion );
+
 				foreach ( var (versionKey, version) in pack.Versions.OrderBy( pair => SemVersion.Parse( pair.Key ) ) )
 				{
-					var curSemVersion  = SemVersion.Parse( currentVersion );
 					var thisSemVersion = SemVersion.Parse( versionKey );
 
 					if ( thisSemVersion <= curSemVersion )
 						// This version is already installed; don't bother
+						continue;
+
+					if ( thisSemVersion > desiredSemVersion )
+						// We aren't supposed to install this version yet; it's newer than the "intended" pack version
 						continue;
 
 					var versionTask = $"Processing version {versionKey}...";
@@ -288,7 +294,7 @@ namespace MinecraftUpgrader.Modpack
 					progress?.ReportProgress( versionTask );
 
 					var futureVersions = pack.Versions.Keys
-						.Where( vk => SemVersion.Parse( vk ) > thisSemVersion )
+						.Where( vk => SemVersion.TryParse( vk, out var parsed ) && parsed > thisSemVersion && parsed <= desiredSemVersion )
 						.Select( vk => pack.Versions[ vk ] )
 						.ToList();
 
