@@ -21,10 +21,10 @@ namespace MinecraftUpgrader
 		private readonly string remoteFileUrl;
 		private readonly string remoteMd5Url;
 
-		public UpdateForm( IOptions<UpgraderOptions> options )
+		public UpdateForm( IOptions<PackBuilderOptions> options )
 		{
-			this.remoteFileUrl = $"{options.Value.UpgradeUrl}/MinecraftInstaller.exe";
-			this.remoteMd5Url  = $"{options.Value.UpgradeUrl}/installercheck.php";
+			this.remoteFileUrl = $"{options.Value.ModPackUrl}/MinecraftInstaller.exe";
+			this.remoteMd5Url  = $"{options.Value.ModPackUrl}/installercheck.php";
 
 			this.InitializeComponent();
 		}

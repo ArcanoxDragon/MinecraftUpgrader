@@ -27,18 +27,18 @@ namespace MinecraftUpgrader
 			ReadyToPlay
 		}
 
-		private readonly Upgrader upgrader;
+		private readonly PackBuilder packBuilder;
 
 		private MmcConfig                         config;
 		private IList<(string name, string path)> instances;
 		private PackMode                          currentPackState = PackMode.New;
-		private PackUpgrade                       packUpgrade;
+		private PackMetadata                       packMetadata;
 		private InstanceMetadata                  currentPackMetadata;
 		private bool                              isVrEnabled;
 
-		public MainForm( Upgrader upgrader )
+		public MainForm( PackBuilder packBuilder )
 		{
-			this.upgrader = upgrader;
+			this.packBuilder = packBuilder;
 
 			this.InitializeComponent();
 		}
@@ -202,7 +202,7 @@ namespace MinecraftUpgrader
 
 		private void UpdateLayoutFromState()
 		{
-			if ( this.packUpgrade.SupportsVR )
+			if ( this.packMetadata.SupportsVR )
 			{
 				if ( !this.panelVR.Visible )
 				{
@@ -272,7 +272,7 @@ namespace MinecraftUpgrader
 
 		private async Task UpdatePackMetadata()
 		{
-			this.packUpgrade = await this.upgrader.LoadConfig();
+			this.packMetadata = await this.packBuilder.LoadConfigAsync();
 
 			if ( this.rbInstanceNew.Checked )
 			{
@@ -298,7 +298,7 @@ namespace MinecraftUpgrader
 				if ( instanceMetadata == null
 					 || instanceMetadata.Version == "0.0.0"
 					 || !SemVersion.TryParse( instanceMetadata.Version, out var instanceSemVersion )
-					 || !SemVersion.TryParse( this.packUpgrade.CurrentVersion, out var serverSemVersion ) )
+					 || !SemVersion.TryParse( this.packMetadata.CurrentVersion, out var serverSemVersion ) )
 				{
 					// Never converted
 					this.currentPackState = PackMode.NeedsConversion;
@@ -306,7 +306,7 @@ namespace MinecraftUpgrader
 				else
 				{
 					if ( instanceSemVersion < serverSemVersion
-						 || instanceMetadata.BuiltFromServerPack != this.packUpgrade.ServerPack )
+						 || instanceMetadata.BuiltFromServerPack != this.packMetadata.ServerPack )
 					{
 						// Out of date
 						this.currentPackState = PackMode.NeedsUpdate;
@@ -442,11 +442,11 @@ namespace MinecraftUpgrader
 
 				if ( newInstance )
 				{
-					await this.upgrader.NewInstance( this.config, this.txtNewInstanceName.Text, this.isVrEnabled, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
+					await this.packBuilder.NewInstanceAsync( this.config, this.txtNewInstanceName.Text, this.isVrEnabled, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
 				}
 				else // Convert instance
 				{
-					await this.upgrader.ConvertInstance( this.config, this.instances[ this.cmbInstance.SelectedIndex ].path, forceRebuild, this.isVrEnabled, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
+					await this.packBuilder.ConvertInstance( this.config, this.instances[ this.cmbInstance.SelectedIndex ].path, forceRebuild, this.isVrEnabled, cancelSource.Token, dialog.Reporter, maxRamMb: maxRamGb * 1024 );
 				}
 
 				AppConfig.Update( appConfig => {

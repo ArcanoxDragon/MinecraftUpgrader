@@ -15,8 +15,8 @@ namespace MinecraftUpgrader.DI
 		{
 			var services = new ServiceCollection();
 
-			services.Configure<UpgraderOptions>( opts => opts.UpgradeUrl = upgradeUrl );
-			services.AddTransient<Upgrader>();
+			services.Configure<PackBuilderOptions>( opts => opts.ModPackUrl = upgradeUrl );
+			services.AddTransient<PackBuilder>();
 
 			instance = services.BuildServiceProvider();
 		}

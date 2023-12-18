@@ -2,7 +2,7 @@
 
 namespace MinecraftUpgrader.Modpack
 {
-	public class PackUpgrade
+	public class PackMetadata
 	{
 		public string InstanceType             { get; set; }
 		public string IntendedMinecraftVersion { get; set; }

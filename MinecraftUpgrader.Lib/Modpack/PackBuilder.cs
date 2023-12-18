@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -23,32 +22,47 @@ using Semver;
 
 namespace MinecraftUpgrader.Modpack
 {
-	public class Upgrader
+	public class PackBuilder
 	{
-		private const string ConfigPath = "modpack/pack-upgrade.json";
+		private static readonly JsonSerializer JsonSerializer = new JsonSerializer {
+			ContractResolver = new CamelCasePropertyNamesContractResolver(),
+		};
+
+		private const string ConfigPath = "modpack/pack-info.json";
 		private const string IconPath   = "modpack/icon.png";
 		private const string IconName   = "arcanox";
 
-		private readonly UpgraderOptions options;
+		private readonly PackBuilderOptions options;
 
-		public Upgrader( IOptions<UpgraderOptions> options )
+		public PackBuilder( IOptions<PackBuilderOptions> options )
 		{
 			this.options = options.Value;
 		}
 
-		public async Task<PackUpgrade> LoadConfig()
+		public string PackMetadataUrl => $"{this.options.ModPackUrl}/{ConfigPath}";
+
+		public async Task<PackMetadata> LoadConfigAsync( CancellationToken cancellationToken = default, ProgressReporter progressReporter = default )
 		{
-			using var http = new HttpClient();
-			using var str  = await http.GetStreamAsync( $"{this.options.UpgradeUrl}/{ConfigPath}" );
-			using var sr   = new StreamReader( str );
-			using var jr   = new JsonTextReader( sr );
+			using var web = new WebClient();
 
-			var json = new JsonSerializer { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+			cancellationToken.Register( web.CancelAsync );
 
-			return json.Deserialize<PackUpgrade>( jr );
+			if ( progressReporter != null )
+				web.DownloadProgressChanged += ( sender, args ) => {
+					progressReporter.ReportProgress( args.ProgressPercentage / 100.0, "Loading mod pack info..." );
+				};
+
+			using var stream = await web.OpenReadTaskAsync( this.PackMetadataUrl );
+
+			cancellationToken.ThrowIfCancellationRequested();
+
+			using var streamReader   = new StreamReader( stream );
+			using var jsonTextReader = new JsonTextReader( streamReader );
+
+			return JsonSerializer.Deserialize<PackMetadata>( jsonTextReader );
 		}
 
-		private async Task SetupPack( MmcConfig mmcConfig, PackUpgrade pack, string destinationFolder, bool forceRebuild, bool vrEnabled, CancellationToken token, ProgressReporter progress, int? maxRamMb = null )
+		private async Task SetupPackAsync( MmcConfig mmcConfig, PackMetadata pack, string destinationFolder, bool forceRebuild, bool vrEnabled, CancellationToken token, ProgressReporter progress, int? maxRamMb = null )
 		{
 			var metadataFile = Path.Combine( destinationFolder, "packMeta.json" );
 			var cfgFile      = Path.Combine( destinationFolder, "instance.cfg" );
@@ -141,7 +155,7 @@ namespace MinecraftUpgrader.Modpack
 
 				downloadTask = "Downloading pack icon...";
 				var iconFileName = Path.Combine( mmcConfig.IconsFolder, "arcanox.png" );
-				await web.DownloadFileTaskAsync( $"{this.options.UpgradeUrl}/{IconPath}", iconFileName );
+				await web.DownloadFileTaskAsync( $"{this.options.ModPackUrl}/{IconPath}", iconFileName );
 
 				// Only download base pack and client overrides if the version is 0 (not installed or old file version),
 				// or if the forceRebuild flag is set
@@ -399,7 +413,7 @@ namespace MinecraftUpgrader.Modpack
 						using var destStream  = File.Open( Path.Combine( librariesDir, minecriftFilename ), FileMode.Create, FileAccess.Write );
 
 						await entryStream.CopyToAsync( destStream );
-						await destStream.FlushAsync();
+						await destStream.FlushAsync(token);
 					}
 
 					// Download Optifine
@@ -453,7 +467,11 @@ namespace MinecraftUpgrader.Modpack
 				// Finally write the current version to the instance version file
 				// We do this last so that if a version upgrade fails, the user
 				// can resume at the last fully completed version
-				File.WriteAllText( metadataFile, JsonConvert.SerializeObject( instanceMetadata ) );
+				using var packMetaFileStream = File.Open( metadataFile, FileMode.Create, FileAccess.Write, FileShare.None );
+				using var packMetaWriter     = new StreamWriter( packMetaFileStream );
+
+				JsonSerializer.Serialize( packMetaWriter, instanceMetadata );
+				await packMetaWriter.FlushAsync();
 			}
 			finally
 			{
@@ -461,7 +479,7 @@ namespace MinecraftUpgrader.Modpack
 			}
 		}
 
-		public async Task NewInstance( MmcConfig mmcConfig, string instName, bool vrEnabled, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null )
+		public async Task NewInstanceAsync( MmcConfig mmcConfig, string instName, bool vrEnabled, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null )
 		{
 			var newInstDir = Path.Combine( mmcConfig.InstancesFolder, instName );
 			var newInstCfg = Path.Combine( newInstDir, "instance.cfg" );
@@ -475,7 +493,7 @@ namespace MinecraftUpgrader.Modpack
 
 			progress?.ReportProgress( "Loading pack metadata from server..." );
 
-			var pack = await this.LoadConfig();
+			var pack = await this.LoadConfigAsync(token);
 			var instance = new MmcInstance {
 				Name             = instName,
 				Icon             = IconName,
@@ -496,7 +514,7 @@ namespace MinecraftUpgrader.Modpack
 				await ConfigReader.WriteConfig( instance, sw );
 			}
 
-			await this.SetupPack( mmcConfig, pack, newInstDir, true, vrEnabled, token, progress, maxRamMb );
+			await this.SetupPackAsync( mmcConfig, pack, newInstDir, true, vrEnabled, token, progress, maxRamMb );
 		}
 
 		public async Task ConvertInstance( MmcConfig mmcConfig, string instPath, bool forceRebuild, bool vrEnabled, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null )
@@ -510,7 +528,7 @@ namespace MinecraftUpgrader.Modpack
 													 "Please use the \"New Instance\" option to create a new MultiMC instance." );
 
 			var         instCfg = Path.Combine( instPath, "instance.cfg" );
-			var         pack    = await this.LoadConfig();
+			var         pack    = await this.LoadConfigAsync(token);
 			MmcInstance instance;
 
 			using ( var fs = File.Open( instCfg, FileMode.Open, FileAccess.Read, FileShare.Read ) )
@@ -540,7 +558,7 @@ namespace MinecraftUpgrader.Modpack
 				await ConfigReader.WriteConfig( instance, sr );
 			}
 
-			await this.SetupPack( mmcConfig, pack, instPath, forceRebuild, vrEnabled, token, progress, maxRamMb );
+			await this.SetupPackAsync( mmcConfig, pack, instPath, forceRebuild, vrEnabled, token, progress, maxRamMb );
 		}
 	}
 }
