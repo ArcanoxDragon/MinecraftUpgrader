@@ -30,7 +30,7 @@ namespace MinecraftUpgrader
 		{
 			this.cancel = new CancellationTokenSource();
 
-			this.InitializeComponent();
+			InitializeComponent();
 		}
 
 		private void CheckJavaForm_Load(object sender, EventArgs e)
@@ -60,7 +60,7 @@ namespace MinecraftUpgrader
 								MessageBoxIcon.Warning);
 			}
 
-			Task.Run(this.CheckJavaVersions).ContinueWith(this.OnCheckFinished);
+			Task.Run(CheckJavaVersions).ContinueWith(OnCheckFinished);
 		}
 
 		private void OnCheckFinished(Task task)
@@ -103,24 +103,24 @@ namespace MinecraftUpgrader
 				return;
 			}
 
-			this.Invoke(new Action(() => {
-				this.Hide();
+			Invoke(new Action(() => {
+				Hide();
 				Services.CreateInstance<MainForm>().ShowDialog();
-				this.Close();
+				Close();
 			}));
 		}
 
 		private async Task CheckJavaVersions()
 		{
-			var javaVersions = this.FindJavaPaths();
+			var javaVersions = FindJavaPaths();
 			var results = new Dictionary<string, JavaCheckResult>();
 
 			foreach (var version in javaVersions)
-				results.Add(version, await this.CheckJava(version));
+				results.Add(version, await CheckJava(version));
 
 			if (!results.Values.Any(r => r.Valid))
 			{
-				this.Invoke(new Action(() => {
+				Invoke(new Action(() => {
 					var result = MessageBox.Show("You do not have any compatible Java versions installed; " +
 												 "modded Minecraft requires at least Java 8 64-bit.\n\n" +
 												 "You can download Java from the official website. Would you " +

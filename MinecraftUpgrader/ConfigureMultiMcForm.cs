@@ -11,11 +11,11 @@ namespace MinecraftUpgrader
 {
 	public partial class ConfigureMultiMcForm : Form
 	{
-		private static readonly Guid OpenFolderCookie = new Guid("76309a12-c3b3-4954-80ac-242685715563");
+		private static readonly Guid OpenFolderCookie = new("76309a12-c3b3-4954-80ac-242685715563");
 
 		public ConfigureMultiMcForm()
 		{
-			this.InitializeComponent();
+			InitializeComponent();
 		}
 
 		public string ExitText
@@ -30,7 +30,7 @@ namespace MinecraftUpgrader
 				IsFolderPicker = true,
 				CookieIdentifier = OpenFolderCookie
 			};
-			var result = dialog.ShowDialog(this.Handle);
+			var result = dialog.ShowDialog(Handle);
 
 			if (result == CommonFileDialogResult.Ok)
 			{
@@ -40,7 +40,7 @@ namespace MinecraftUpgrader
 				{
 					await MmcConfigReader.ReadFromMmcFolder(mmcPath);
 					AppConfig.Update(appConfig => appConfig.LastMmcPath = mmcPath);
-					this.DialogResult = DialogResult.OK;
+					DialogResult = DialogResult.OK;
 				}
 				catch
 				{
@@ -55,12 +55,12 @@ namespace MinecraftUpgrader
 
 		private async void btnDownload_Click(object sender, EventArgs e)
 		{
-			this.Enabled = false;
+			Enabled = false;
 
-			if (await this.InstallMultiMc())
-				this.DialogResult = DialogResult.OK;
+			if (await InstallMultiMc())
+				DialogResult = DialogResult.OK;
 			else
-				this.DialogResult = DialogResult.Cancel;
+				DialogResult = DialogResult.Cancel;
 		}
 
 		private async Task<bool> InstallMultiMc()

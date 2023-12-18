@@ -41,14 +41,14 @@ namespace MinecraftUpgrader
 		{
 			this.packBuilder = packBuilder;
 
-			this.InitializeComponent();
+			InitializeComponent();
 		}
 
 		private new void BringToFront()
 		{
-			this.WindowState = FormWindowState.Minimized;
-			this.Show();
-			this.WindowState = FormWindowState.Normal;
+			WindowState = FormWindowState.Minimized;
+			Show();
+			WindowState = FormWindowState.Normal;
 		}
 
 		private async void OnFormLoad(object sender, EventArgs e)
@@ -59,19 +59,19 @@ namespace MinecraftUpgrader
 
 			if (string.IsNullOrEmpty(mmcPath))
 			{
-				if (!this.ShowConfigureMultiMC(out mmcPath))
+				if (!ShowConfigureMultiMC(out mmcPath))
 				{
-					this.Close();
+					Close();
 				}
 			}
 
-			await this.LoadMultiMCInstances(mmcPath);
+			await LoadMultiMCInstances(mmcPath);
 		}
 
 		private async Task LoadMultiMCInstances(string multiMcPath)
 		{
 			this.txtMmcPath.Text = multiMcPath;
-			await this.RefreshMmcConfig(multiMcPath);
+			await RefreshMmcConfig(multiMcPath);
 
 			var lastInstanceName = AppConfig.Get().LastInstance;
 
@@ -85,14 +85,14 @@ namespace MinecraftUpgrader
 					this.rbInstanceExisting.Checked = true;
 					this.cmbInstance.Enabled = true;
 					this.cmbInstance.SelectedIndex = this.instances.IndexOf(lastInstance);
-					await this.UpdatePackMetadata();
+					await UpdatePackMetadata();
 				}
 			}
 		}
 
 		private bool ShowConfigureMultiMC(out string lastMmcPath, string exitText = null)
 		{
-			this.Hide();
+			Hide();
 
 			var form = new ConfigureMultiMcForm();
 
@@ -101,7 +101,7 @@ namespace MinecraftUpgrader
 
 			var formResult = form.ShowDialog(this);
 
-			this.Show();
+			Show();
 
 			if (formResult == DialogResult.OK)
 			{
@@ -178,9 +178,9 @@ namespace MinecraftUpgrader
 
 		private async void OnBtnBrowseMmcClick(object sender, EventArgs e)
 		{
-			if (this.ShowConfigureMultiMC(out var mmcPath))
+			if (ShowConfigureMultiMC(out var mmcPath))
 			{
-				await this.LoadMultiMCInstances(mmcPath);
+				await LoadMultiMCInstances(mmcPath);
 			}
 		}
 
@@ -188,17 +188,17 @@ namespace MinecraftUpgrader
 		{
 			this.txtNewInstanceName.Enabled = this.rbInstanceNew.Checked;
 			this.cmbInstance.Enabled = this.rbInstanceExisting.Checked;
-			await this.UpdatePackMetadata();
+			await UpdatePackMetadata();
 		}
 
 		private async void OnTxtNewInstanceNameChanged(object sender, EventArgs e)
 		{
-			await this.UpdatePackMetadata();
+			await UpdatePackMetadata();
 		}
 
 		private async void OnCbInstanceChanged(object sender, EventArgs e)
 		{
-			await this.UpdatePackMetadata();
+			await UpdatePackMetadata();
 		}
 
 		private void UpdateLayoutFromState()
@@ -208,7 +208,7 @@ namespace MinecraftUpgrader
 				if (!this.panelVR.Visible)
 				{
 					this.panelVR.Visible = true;
-					this.Height += this.panelVR.Height;
+					Height += this.panelVR.Height;
 				}
 			}
 			else
@@ -216,7 +216,7 @@ namespace MinecraftUpgrader
 				if (this.panelVR.Visible)
 				{
 					this.panelVR.Visible = false;
-					this.Height -= this.panelVR.Height;
+					Height -= this.panelVR.Height;
 				}
 			}
 
@@ -281,10 +281,10 @@ namespace MinecraftUpgrader
 			}
 			else
 			{
-				await this.CheckCurrentInstanceAsync();
+				await CheckCurrentInstanceAsync();
 			}
 
-			this.UpdateLayoutFromState();
+			UpdateLayoutFromState();
 		}
 
 		private Task LoadPackMetadataAsync()
@@ -302,7 +302,7 @@ namespace MinecraftUpgrader
 									MessageBoxButtons.OK,
 									MessageBoxIcon.Error);
 
-					this.Close();
+					Close();
 				}
 				finally
 				{
@@ -353,7 +353,7 @@ namespace MinecraftUpgrader
 						this.currentPackState = PackMode.ReadyToPlay;
 						this.isVrEnabled = instanceMetadata.VrEnabled;
 
-						this.RefreshVRButtons();
+						RefreshVRButtons();
 					}
 				}
 
@@ -364,17 +364,17 @@ namespace MinecraftUpgrader
 		private async void OnBtnNonVRClick(object sender, EventArgs e)
 		{
 			this.isVrEnabled = false;
-			this.RefreshVRButtons();
+			RefreshVRButtons();
 
-			await this.CheckVRState();
+			await CheckVRState();
 		}
 
 		private async void OnBtnVRClick(object sender, EventArgs e)
 		{
 			this.isVrEnabled = true;
-			this.RefreshVRButtons();
+			RefreshVRButtons();
 
-			await this.CheckVRState();
+			await CheckVRState();
 		}
 
 		private async Task CheckVRState()
@@ -384,12 +384,12 @@ namespace MinecraftUpgrader
 				if (this.currentPackState == PackMode.ReadyToPlay && this.currentPackMetadata.VrEnabled != this.isVrEnabled)
 				{
 					this.currentPackState = PackMode.NeedsUpdate;
-					this.UpdateLayoutFromState();
+					UpdateLayoutFromState();
 				}
 
 				if (this.currentPackState != PackMode.ReadyToPlay && this.currentPackMetadata.VrEnabled == this.isVrEnabled)
 				{
-					await this.UpdatePackMetadata();
+					await UpdatePackMetadata();
 				}
 			}
 		}
@@ -411,7 +411,7 @@ namespace MinecraftUpgrader
 		}
 
 		private async void OnBtnRebuildClick(object sender, EventArgs e)
-			=> await this.DisableWhile(() => this.DoConfigurePack(true));
+			=> await this.DisableWhile(() => DoConfigurePack(true));
 
 		private async void OnBtnGoClick(object sender, EventArgs e)
 			=> await this.DisableWhile(async () => {
@@ -421,16 +421,16 @@ namespace MinecraftUpgrader
 
 					var selectedInstance = this.instances[this.cmbInstance.SelectedIndex];
 
-					this.StartMinecraft(selectedInstance.name);
+					StartMinecraft(selectedInstance.name);
 					return;
 				}
 
-				await this.DoConfigurePack(false);
+				await DoConfigurePack(false);
 			});
 
 		private void OnOpenMultiMCClick(object sender, EventArgs e)
 		{
-			this.StartMultiMC();
+			StartMultiMC();
 		}
 
 		private async Task DoConfigurePack(bool forceRebuild)
@@ -513,11 +513,11 @@ namespace MinecraftUpgrader
 			finally
 			{
 				dialog.Close();
-				this.BringToFront();
-				await this.UpdatePackMetadata();
+				BringToFront();
+				await UpdatePackMetadata();
 
 				if (successful)
-					this.OfferStartMinecraft(instanceName,
+					OfferStartMinecraft(instanceName,
 											 "The mod pack was successfully configured!");
 			}
 		}
@@ -536,7 +536,7 @@ namespace MinecraftUpgrader
 
 			if (choice == DialogResult.Yes)
 			{
-				this.StartMinecraft(instanceName);
+				StartMinecraft(instanceName);
 			}
 		}
 

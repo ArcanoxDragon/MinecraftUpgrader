@@ -10,16 +10,16 @@ namespace MinecraftUpgrader
 
 		public ProgressDialog(string taskName)
 		{
-			this.Reporter = new ProgressReporter();
-			this.Reporter.OnProgress += this.ReporterOnProgress;
-			this.Text = taskName;
+			Reporter = new ProgressReporter();
+			Reporter.OnProgress += ReporterOnProgress;
+			Text = taskName;
 
-			this.InitializeComponent();
+			InitializeComponent();
 		}
 
 		private void ReporterOnProgress(double? progress, string status)
 		{
-			this.Invoke(new Action(() => {
+			Invoke(new Action(() => {
 				if (progress != null)
 				{
 					this.pbProgress.Style = progress >= 0 ? ProgressBarStyle.Continuous : ProgressBarStyle.Marquee;
@@ -44,7 +44,7 @@ namespace MinecraftUpgrader
 
 			if (result == DialogResult.Yes)
 			{
-				this.Cancel?.Invoke(this, new EventArgs());
+				Cancel?.Invoke(this, new EventArgs());
 				this.btnCancel.Enabled = false;
 			}
 		}

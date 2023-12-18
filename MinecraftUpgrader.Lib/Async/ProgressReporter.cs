@@ -11,21 +11,21 @@
 
 		public void ReportProgress(double progress, string status)
 		{
-			this.Progress = progress;
-			this.Status = status;
-			this.OnProgress?.Invoke(progress, status);
+			Progress = progress;
+			Status = status;
+			OnProgress?.Invoke(progress, status);
 		}
 
 		public void ReportProgress(double progress)
 		{
-			this.Progress = progress;
-			this.OnProgress?.Invoke(progress, null);
+			Progress = progress;
+			OnProgress?.Invoke(progress, null);
 		}
 
 		public void ReportProgress(string status)
 		{
-			this.Status = status;
-			this.OnProgress?.Invoke(null, status);
+			Status = status;
+			OnProgress?.Invoke(null, status);
 		}
 	}
 }

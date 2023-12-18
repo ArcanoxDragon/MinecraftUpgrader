@@ -23,7 +23,7 @@ namespace MinecraftUpgrader.Modpack
 {
 	public class PackBuilder
 	{
-		private static readonly JsonSerializer JsonSerializer = new JsonSerializer {
+		private static readonly JsonSerializer JsonSerializer = new() {
 			ContractResolver = new CamelCasePropertyNamesContractResolver(),
 		};
 
@@ -68,7 +68,7 @@ namespace MinecraftUpgrader.Modpack
 					progressReporter.ReportProgress(args.ProgressPercentage / 100.0, "Loading mod pack info...");
 				};
 
-			using var stream = await web.OpenReadTaskAsync(this.PackMetadataUrl);
+			using var stream = await web.OpenReadTaskAsync(PackMetadataUrl);
 
 			cancellationToken.ThrowIfCancellationRequested();
 
@@ -622,7 +622,7 @@ namespace MinecraftUpgrader.Modpack
 
 			progress?.ReportProgress("Loading pack metadata from server...");
 
-			var pack = await this.LoadConfigAsync(token);
+			var pack = await LoadConfigAsync(token);
 			var instance = new MmcInstance {
 				Name = instName,
 				Icon = IconName,
@@ -643,7 +643,7 @@ namespace MinecraftUpgrader.Modpack
 				await ConfigReader.WriteConfig(instance, sw);
 			}
 
-			await this.SetupPackAsync(mmcConfig, pack, newInstDir, true, vrEnabled, token, progress, maxRamMb);
+			await SetupPackAsync(mmcConfig, pack, newInstDir, true, vrEnabled, token, progress, maxRamMb);
 		}
 
 		public async Task ConvertInstance(MmcConfig mmcConfig, string instPath, bool forceRebuild, bool vrEnabled, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null)
@@ -657,7 +657,7 @@ namespace MinecraftUpgrader.Modpack
 													"Please use the \"New Instance\" option to create a new MultiMC instance.");
 
 			var instCfg = Path.Combine(instPath, "instance.cfg");
-			var pack = await this.LoadConfigAsync(token);
+			var pack = await LoadConfigAsync(token);
 			MmcInstance instance;
 
 			using (var fs = File.Open(instCfg, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -687,7 +687,7 @@ namespace MinecraftUpgrader.Modpack
 				await ConfigReader.WriteConfig(instance, sr);
 			}
 
-			await this.SetupPackAsync(mmcConfig, pack, instPath, forceRebuild, vrEnabled, token, progress, maxRamMb);
+			await SetupPackAsync(mmcConfig, pack, instPath, forceRebuild, vrEnabled, token, progress, maxRamMb);
 		}
 	}
 }

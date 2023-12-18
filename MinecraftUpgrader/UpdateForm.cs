@@ -24,7 +24,7 @@ namespace MinecraftUpgrader
 			this.remoteFileUrl = $"{options.Value.ModPackUrl}/MinecraftInstaller.exe";
 			this.remoteMd5Url = $"{options.Value.ModPackUrl}/installercheck.php";
 
-			this.InitializeComponent();
+			InitializeComponent();
 		}
 
 		private async void UpdateForm_Load(object sender, EventArgs args)
@@ -71,16 +71,16 @@ namespace MinecraftUpgrader
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 			if (SkipUpdate || localHash == remoteHash)
 			{
-				this.Hide();
+				Hide();
 				new CheckJavaForm().ShowDialog();
-				this.Close();
+				Close();
 				return;
 			}
 
 			this.lbStatus.Text = "Updating program...";
 			this.pbDownload.Style = ProgressBarStyle.Continuous;
 
-			web.DownloadProgressChanged += (o, e) => this.Invoke(new Action(() => {
+			web.DownloadProgressChanged += (o, e) => Invoke(new Action(() => {
 				var dlSize = e.BytesReceived.Bytes();
 				var totalSize = e.TotalBytesToReceive.Bytes();
 
@@ -114,9 +114,9 @@ namespace MinecraftUpgrader
 				File.Delete(processFilePath);
 				File.Move(processFileOldPath, processFilePath);
 
-				this.Hide();
+				Hide();
 				new CheckJavaForm().ShowDialog();
-				this.Close();
+				Close();
 				return;
 			}
 

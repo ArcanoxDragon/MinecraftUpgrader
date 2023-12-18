@@ -6,7 +6,7 @@ namespace MinecraftUpgrader.MultiMC
 {
 	public class MmcPatchDefinitions
 	{
-		public static readonly MmcPatchesFile VivecraftPatchVr = new MmcPatchesFile {
+		public static readonly MmcPatchesFile VivecraftPatchVr = new() {
 			Uid = "vivecraft",
 			Name = "Vivecraft",
 			ReleaseTime = DateTime.Now,
@@ -14,26 +14,26 @@ namespace MinecraftUpgrader.MultiMC
 			MainClass = "net.minecraft.launchwrapper.Launch",
 			Version = "4",
 			Libraries = new List<MmcLibrary> {
-				new MmcLibrary {
+				new() {
 					Name = $"com.mtbs3d:minecrift:{VivecraftVersionVr}-{VivecraftRevisionVr}",
 					MmcHint = "local",
 				},
-				new MmcLibrary {
+				new() {
 					Name = "org.json:json:20140107",
 					Url = "http://vivecraft.org/jar/",
 				},
-				new MmcLibrary {
+				new() {
 					Name = "com.sun:jna:4.2.1",
 					Url = "http://vivecraft.org/jar/",
 				},
-				new MmcLibrary {
+				new() {
 					Name = "org.ow2.asm:asm-all:5.2",
 					Url = "http://files.minecraftforge.net/maven/",
 				},
-				new MmcLibrary {
+				new() {
 					Name = "net.minecraft:launchwrapper:1.12",
 				},
-				new MmcLibrary {
+				new() {
 					Name = $"optifine:OptiFine:{OptifineVersion}",
 					MmcHint = "local",
 				},
@@ -45,7 +45,7 @@ namespace MinecraftUpgrader.MultiMC
 			},
 		};
 
-		public static readonly MmcPatchesFile VivecraftPatchNonVr = new MmcPatchesFile {
+		public static readonly MmcPatchesFile VivecraftPatchNonVr = new() {
 			Uid = "vivecraft",
 			Name = "Vivecraft",
 			ReleaseTime = DateTime.Now,
@@ -53,26 +53,26 @@ namespace MinecraftUpgrader.MultiMC
 			MainClass = "net.minecraft.launchwrapper.Launch",
 			Version = "4",
 			Libraries = new List<MmcLibrary> {
-				new MmcLibrary {
+				new() {
 					Name = $"com.mtbs3d:minecrift:{VivecraftVersionNonVr}-{VivecraftRevisionNonVr}",
 					MmcHint = "local",
 				},
-				new MmcLibrary {
+				new() {
 					Name = "org.json:json:20140107",
 					Url = "http://vivecraft.org/jar/",
 				},
-				new MmcLibrary {
+				new() {
 					Name = "org.ow2.asm:asm-all:5.2",
 					Url = "http://files.minecraftforge.net/maven/",
 				},
-				new MmcLibrary {
+				new() {
 					Name = "net.minecraft:launchwrapper:1.12",
 				},
-				new MmcLibrary {
+				new() {
 					Name = $"optifine:OptiFine:{OptifineVersion}",
 					MmcHint = "local",
 				},
-				new MmcLibrary {
+				new() {
 					Name = "de.fruitfly.ovr:JRift:0.8.0.0.1",
 					Url = "http://vivecraft.org/jar/",
 				},

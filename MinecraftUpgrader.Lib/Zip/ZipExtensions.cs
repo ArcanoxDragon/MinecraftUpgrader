@@ -13,11 +13,11 @@ namespace MinecraftUpgrader.Zip
 	{
 		public ZipExtractOptions(string directoryName = null, bool overwriteExisting = false, CancellationToken? cancellationToken = null, ProgressReporter progressReporter = null, string filenamePattern = null)
 		{
-			this.DirectoryName = directoryName;
-			this.OverwriteExisting = overwriteExisting;
-			this.CancellationToken = cancellationToken;
-			this.ProgressReporter = progressReporter;
-			this.FilenamePattern = filenamePattern;
+			DirectoryName = directoryName;
+			OverwriteExisting = overwriteExisting;
+			CancellationToken = cancellationToken;
+			ProgressReporter = progressReporter;
+			FilenamePattern = filenamePattern;
 		}
 
 		/// <summary>

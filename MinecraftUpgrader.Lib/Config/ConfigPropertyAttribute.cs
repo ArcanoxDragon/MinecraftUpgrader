@@ -6,7 +6,7 @@ namespace MinecraftUpgrader.Config
 	{
 		public ConfigPropertyAttribute(string propertyName = null)
 		{
-			this.PropertyName = propertyName;
+			PropertyName = propertyName;
 		}
 
 		public string PropertyName { get; }

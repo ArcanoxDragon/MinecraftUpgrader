@@ -9,7 +9,7 @@ namespace MinecraftUpgrader
 	static class Program
 	{
 		private static readonly string LF      = Environment.NewLine;
-		private static readonly object LogLock = new object();
+		private static readonly object LogLock = new();
 
 		[STAThread]
 		private static void Main()
