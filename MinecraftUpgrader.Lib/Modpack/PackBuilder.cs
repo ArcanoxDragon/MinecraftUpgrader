@@ -90,6 +90,7 @@ namespace MinecraftUpgrader.Modpack
 			var currentVersion          = "0.0.0";
 			var currentServerPack       = default(string);
 			var currentMinecraftVersion = default(string);
+			var currentBasePackMd5      = default(string);
 
 			// If forceRebuild is set, we don't even bother checking the current version.
 			// Just redo everything.
@@ -102,14 +103,16 @@ namespace MinecraftUpgrader.Modpack
 					currentVersion          = currentInstanceMetadata.Version;
 					currentServerPack       = currentInstanceMetadata.BuiltFromServerPack;
 					currentMinecraftVersion = currentInstanceMetadata.IntendedMinecraftVersion;
+					currentBasePackMd5      = currentInstanceMetadata.BuiltFromServerPackMd5;
 				}
 			}
 
 			var instanceMetadata = new InstanceMetadata {
-				FileVersion         = InstanceMetadata.CurrentFileVersion,
-				Version             = pack.CurrentVersion,
-				BuiltFromServerPack = pack.ServerPack,
-				VrEnabled           = vrEnabled,
+				FileVersion             = InstanceMetadata.CurrentFileVersion,
+				Version                 = pack.CurrentVersion,
+				BuiltFromServerPack     = pack.ServerPack,
+				BuiltFromServerPackMd5  = currentBasePackMd5,
+				VrEnabled               = vrEnabled,
 			};
 
 			Directory.CreateDirectory( minecraftDir );
@@ -156,9 +159,26 @@ namespace MinecraftUpgrader.Modpack
 				var iconFileName = Path.Combine( mmcConfig.IconsFolder, "arcanox.png" );
 				await web.DownloadFileTaskAsync( $"{this.options.ModPackUrl}/{IconPath}", iconFileName );
 
+				var rebuildBasePack = forceRebuild ||
+									  currentVersion == "0.0.0" ||
+									  currentServerPack != pack.ServerPack ||
+									  currentMinecraftVersion != pack.IntendedMinecraftVersion;
+
+				// Check server pack MD5 against local built-from to see if the base pack may have changed at all
+				if ( pack.VerifyServerPackMd5 )
+				{
+					var basePackMd5Url = $"{pack.ServerPack}.md5";
+					var basePackMd5    = await web.DownloadStringTaskAsync( basePackMd5Url );
+
+					if ( !string.IsNullOrEmpty( basePackMd5 ) )
+					{
+						rebuildBasePack |= basePackMd5 != currentBasePackMd5;
+					}
+				}
+
 				// Only download base pack and client overrides if the version is 0 (not installed or old file version),
 				// or if the forceRebuild flag is set
-				if ( currentVersion == "0.0.0" || currentServerPack != pack.ServerPack || currentMinecraftVersion != pack.IntendedMinecraftVersion )
+				if ( rebuildBasePack )
 				{
 					// Set this again in case we got here from "currentServerPack" not matching
 					// This forces all versions to install later on in this method even if the
@@ -190,6 +210,8 @@ namespace MinecraftUpgrader.Modpack
 					downloadTask = "Downloading base pack contents...";
 					var serverPackFileName = Path.Combine( tempDir, "server.zip" );
 					await web.DownloadFileTaskAsync( pack.ServerPack, serverPackFileName );
+
+					instanceMetadata.BuiltFromServerPackMd5 = CryptoUtility.CalculateFileMd5( serverPackFileName );
 
 					token.ThrowIfCancellationRequested();
 					progress?.ReportProgress( 0, "Extracting base pack contents..." );
@@ -292,7 +314,7 @@ namespace MinecraftUpgrader.Modpack
 							// Install new version if necessary
 							if ( !string.IsNullOrEmpty( mod.FileUri ) )
 							{
-								var fileName = $"{modId}.jar";
+								var fileName = Path.GetFileName( mod.FileUri ) ?? $"{modId}.jar";
 								var filePath = Path.Combine( minecraftDir, "mods", fileName );
 
 								downloadTask = $"{modTask}\n" +

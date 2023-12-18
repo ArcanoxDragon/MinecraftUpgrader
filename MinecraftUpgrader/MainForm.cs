@@ -273,7 +273,7 @@ namespace MinecraftUpgrader
 
 		private async Task UpdatePackMetadata()
 		{
-			this.packMetadata = await this.packBuilder.LoadConfigAsync();
+			await LoadPackMetadataAsync();
 
 			if ( this.rbInstanceNew.Checked )
 			{
@@ -281,13 +281,36 @@ namespace MinecraftUpgrader
 			}
 			else
 			{
-				this.CheckCurrentInstance();
+				await this.CheckCurrentInstanceAsync();
 			}
 
 			this.UpdateLayoutFromState();
 		}
 
-		private void CheckCurrentInstance()
+		private Task LoadPackMetadataAsync()
+			=> this.DisableWhile( async () => {
+				var progressDialog = new ProgressDialog("Loading Mod Pack Info");
+
+				try
+				{
+					this.packMetadata = await this.packBuilder.LoadConfigAsync(progressReporter: progressDialog.Reporter);
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show($"An error occurred while fetching the mod pack info:\n\n{ex.Message}",
+									"Error Loading Mod Pack",
+									MessageBoxButtons.OK,
+									MessageBoxIcon.Error);
+
+					this.Close();
+				}
+				finally
+				{
+					progressDialog.Close();
+				}
+			} );
+
+		private async Task CheckCurrentInstanceAsync()
 		{
 			var instanceSelected = this.cmbInstance.SelectedItem != null;
 
@@ -306,8 +329,20 @@ namespace MinecraftUpgrader
 				}
 				else
 				{
-					if ( instanceSemVersion < serverSemVersion
-						 || instanceMetadata.BuiltFromServerPack != this.packMetadata.ServerPack )
+					var outOfDate = instanceSemVersion < serverSemVersion ||
+									instanceMetadata.BuiltFromServerPack != this.packMetadata.ServerPack;
+
+					// Check server pack MD5 if necessary
+					if ( this.packMetadata.VerifyServerPackMd5 )
+					{
+						using var web            = new WebClient();
+						var       basePackMd5Url = $"{this.packMetadata.ServerPack}.md5";
+						var       basePackMd5    = await web.DownloadStringTaskAsync( basePackMd5Url );
+
+						outOfDate |= basePackMd5 != instanceMetadata.BuiltFromServerPackMd5;
+					}
+
+					if ( outOfDate )
 					{
 						// Out of date
 						this.currentPackState = PackMode.NeedsUpdate;

@@ -10,6 +10,7 @@ namespace MinecraftUpgrader.Modpack
 		public string ClientPack               { get; set; }
 		public string MultiMcPack              { get; set; }
 		public string CurrentVersion           { get; set; }
+		public bool   VerifyServerPackMd5      { get; set; }
 		public bool   SupportsVR               { get; set; }
 
 		public List<string> AdditionalBasePackFiles { get; set; }
