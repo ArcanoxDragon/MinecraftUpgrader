@@ -31,6 +31,23 @@ namespace MinecraftUpgrader.Modpack
 		private const string IconPath   = "modpack/icon.png";
 		private const string IconName   = "arcanox";
 
+		private static readonly string[] DefaultClientOverrideFolders = {
+			"animation",
+			"configs",
+			"defaultconfigs",
+			"mods",
+			"paintings",
+			"resources",
+			"scripts",
+		};
+
+		private static readonly string[] ProfileFilePatternsToPreserve = {
+			@"options\.txt$",
+			@"servers\.dat$",
+			@"assets[/\\].*$",
+			@"(?:resourcepacks|saves|schematics|screenshots|shaderpacks|texturepacks)[/\\].*$",
+		};
+
 		private readonly PackBuilderOptions options;
 
 		public PackBuilder( IOptions<PackBuilderOptions> options )
@@ -116,7 +133,6 @@ namespace MinecraftUpgrader.Modpack
 			};
 
 			Directory.CreateDirectory( minecraftDir );
-			Directory.CreateDirectory( tempDir );
 
 			try
 			{
@@ -176,10 +192,34 @@ namespace MinecraftUpgrader.Modpack
 					}
 				}
 
+				// Now create the temp dir for the following tasks
+				Directory.CreateDirectory( tempDir );
+
 				// Only download base pack and client overrides if the version is 0 (not installed or old file version),
 				// or if the forceRebuild flag is set
 				if ( rebuildBasePack )
 				{
+					// Clear out old profile files
+					progress?.ReportProgress("Cleaning up old files...");
+
+					foreach (var file in Directory.EnumerateFiles(minecraftDir, "*", SearchOption.AllDirectories))
+					{
+						if (ProfileFilePatternsToPreserve.Any(toPreserve => Regex.IsMatch(file, toPreserve)))
+							continue;
+
+						File.Delete(file);
+					}
+
+					// Clear out old profile directories
+					foreach (var directory in Directory.EnumerateDirectories(minecraftDir))
+					{
+						var directoryContents = Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories).ToList();
+						var isEmpty = directoryContents.Count == 0;
+
+						if (isEmpty)
+							Directory.Delete(directory, true);
+					}
+
 					// Set this again in case we got here from "currentServerPack" not matching
 					// This forces all versions to install later on in this method even if the
 					// version strings line up, as a different server pack means a different
@@ -254,19 +294,58 @@ namespace MinecraftUpgrader.Modpack
 						progress?.ReportProgress( 0, "Extracting client overrides..." );
 
 						// Extract client pack contents
-						using var fs  = File.Open( clientPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read );
-						using var zip = new ZipFile( fs );
+						using var fs = File.Open(clientPackFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+						using var zip = new ZipFile(fs);
 
-						progress?.ReportProgress( "Extracting client overrides (configs)..." );
-						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/animation", true, token, progress ) );
-						progress?.ReportProgress( "Extracting client overrides (configs)..." );
-						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/config", true, token, progress ) );
-						progress?.ReportProgress( "Extracting client overrides (mods)..." );
-						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/mods", true, token, progress ) );
-						progress?.ReportProgress( "Extracting client overrides (resources)..." );
-						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/resources", true, token, progress ) );
-						progress?.ReportProgress( "Extracting client overrides (scripts)..." );
-						await zip.TryExtractAsync( minecraftDir, new ZipExtractOptions( "overrides/scripts", true, token, progress ) );
+						async Task ExtractOptionalOverrideFolder(ZipFile zipFile, string folder)
+						{
+							progress?.ReportProgress($"Extracting client overrides ({folder})...");
+							await zipFile.TryExtractAsync(minecraftDir, new ZipExtractOptions($"overrides/{folder}", true, token, progress));
+						}
+
+						foreach (var folder in pack.ClientOverrideFolders ?? DefaultClientOverrideFolders.ToList())
+						{
+							await ExtractOptionalOverrideFolder(zip, folder);
+						}
+
+						// Fulfuill the client pack manifest if present
+						if (await zip.TryExtractAsync(tempDir, new ZipExtractOptions(filenamePattern: Regex.Escape("manifest.json"), overwriteExisting: true)))
+						{
+							var clientManifestFile = Path.Combine(tempDir, "manifest.json");
+							var clientManifestJson = File.ReadAllText(clientManifestFile);
+							var clientManifest = JsonConvert.DeserializeObject<CursePackManifest>(clientManifestJson);
+
+							if (clientManifest.Files?.Count > 0)
+							{
+								progress?.ReportProgress(0, "Downloading client-only mods...");
+
+								var currentFile = 0;
+
+								foreach (var file in clientManifest.Files)
+								{
+									var currentProgress = currentFile / (double) clientManifest.Files.Count;
+
+									progress?.ReportProgress(currentProgress);
+
+									var fileInfo = await CurseUtility.GetFileInfoAsync(file.ProjectID, file.FileID, token);
+
+									downloadTask = $"Downloading client-only mods...\n{fileInfo.DisplayName}";
+									progress?.ReportProgress(currentProgress, downloadTask);
+
+									var fileDestinationFolder = Path.Combine(minecraftDir, fileInfo.Project.Path);
+
+									if (!Directory.Exists(fileDestinationFolder))
+										Directory.CreateDirectory(fileDestinationFolder);
+
+									var fullFilePath = Path.Combine(fileDestinationFolder, fileInfo.FileNameOnDisk);
+
+									if (!File.Exists(fullFilePath))
+										await web.DownloadFileTaskAsync(fileInfo.DownloadURL, fullFilePath);
+
+									currentFile++;
+								}
+							}
+						}
 					}
 				}
 
@@ -518,7 +597,14 @@ namespace MinecraftUpgrader.Modpack
 			}
 			finally
 			{
-				Directory.Delete( tempDir, true );
+				try
+				{
+					Directory.Delete(tempDir, true);
+				}
+				catch
+				{
+					// Ignored
+				}
 			}
 		}
 
