@@ -8,10 +8,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Humanizer;
-using Microsoft.VisualBasic.Devices;
 using MinecraftUpgrader.Config;
 using MinecraftUpgrader.DI;
-using MinecraftUpgrader.Extensions;
+using NickStrupat;
 using Semver;
 
 namespace MinecraftUpgrader

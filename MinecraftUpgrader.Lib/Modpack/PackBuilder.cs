@@ -11,7 +11,6 @@ using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Extensions.Options;
 using MinecraftUpgrader.Async;
 using MinecraftUpgrader.Config;
-using MinecraftUpgrader.Extensions;
 using MinecraftUpgrader.MultiMC;
 using MinecraftUpgrader.Options;
 using MinecraftUpgrader.Utility;

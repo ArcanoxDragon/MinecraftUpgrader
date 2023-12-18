@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29503.13
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinecraftUpgrader", "MinecraftUpgrader\MinecraftUpgrader.csproj", "{DAF876BA-52EC-4D36-BAFE-409039818598}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinecraftUpgrader", "MinecraftUpgrader\MinecraftUpgrader.csproj", "{DAF876BA-52EC-4D36-BAFE-409039818598}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinecraftUpgrader.Lib", "MinecraftUpgrader.Lib\MinecraftUpgrader.Lib.csproj", "{FFA3FABF-C51E-46FD-BAE1-FFF9CDD84F2B}"
 EndProject
@@ -21,11 +21,11 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{DAF876BA-52EC-4D36-BAFE-409039818598}.macOS|x64.ActiveCfg = Release|x64
-		{DAF876BA-52EC-4D36-BAFE-409039818598}.macOSDebug|x64.ActiveCfg = Debug|x64
+		{DAF876BA-52EC-4D36-BAFE-409039818598}.macOSDebug|x64.ActiveCfg = WindowsDebug|x64
 		{DAF876BA-52EC-4D36-BAFE-409039818598}.Windows|x64.ActiveCfg = Release|x64
 		{DAF876BA-52EC-4D36-BAFE-409039818598}.Windows|x64.Build.0 = Release|x64
-		{DAF876BA-52EC-4D36-BAFE-409039818598}.WindowsDebug|x64.ActiveCfg = Debug|x64
-		{DAF876BA-52EC-4D36-BAFE-409039818598}.WindowsDebug|x64.Build.0 = Debug|x64
+		{DAF876BA-52EC-4D36-BAFE-409039818598}.WindowsDebug|x64.ActiveCfg = WindowsDebug|x64
+		{DAF876BA-52EC-4D36-BAFE-409039818598}.WindowsDebug|x64.Build.0 = WindowsDebug|x64
 		{FFA3FABF-C51E-46FD-BAE1-FFF9CDD84F2B}.macOS|x64.ActiveCfg = macOS|x64
 		{FFA3FABF-C51E-46FD-BAE1-FFF9CDD84F2B}.macOS|x64.Build.0 = macOS|x64
 		{FFA3FABF-C51E-46FD-BAE1-FFF9CDD84F2B}.macOSDebug|x64.ActiveCfg = macOSDebug|x64
