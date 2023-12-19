@@ -6,10 +6,10 @@ namespace MinecraftUpgrader.Config
 {
 	public interface IAppConfig
 	{
-		string JavaPath     { get; }
-		string JavaVersion  { get; }
-		string LastMmcPath  { get; }
-		string LastInstance { get; }
+		string JavaPath      { get; }
+		string JavaVersion   { get; }
+		string LastPrismPath { get; }
+		string LastInstance  { get; }
 	}
 
 	// TODO: Move out of Lib project?
@@ -69,9 +69,9 @@ namespace MinecraftUpgrader.Config
 
 		#endregion
 
-		public string JavaPath     { get; set; }
-		public string JavaVersion  { get; set; }
-		public string LastMmcPath  { get; set; }
-		public string LastInstance { get; set; }
+		public string JavaPath      { get; set; }
+		public string JavaVersion   { get; set; }
+		public string LastPrismPath { get; set; }
+		public string LastInstance  { get; set; }
 	}
 }

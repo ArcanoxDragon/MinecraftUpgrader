@@ -5,33 +5,35 @@ using System.Linq;
 using System.Threading.Tasks;
 using MinecraftUpgrader.Config;
 
-namespace MinecraftUpgrader.MultiMC
+namespace MinecraftUpgrader.Prism
 {
-	public static class MmcConfigReader
+	public static class PrismConfigReader
 	{
-		public static async Task<MmcConfig> ReadFromMmcFolder(string mmcPath)
+		private const string ConfigFileName = "prismlauncher.cfg";
+
+		public static async Task<PrismConfig> ReadFromPrismFolder(string prismPath)
 		{
-			var configPath = Path.Combine(mmcPath, "multimc.cfg");
+			var configPath = Path.Combine(prismPath, ConfigFileName);
 
 			if (!File.Exists(configPath))
-				throw new FileNotFoundException($"MultiMC config file not found at {configPath}.\n\nMake sure you have run MultiMC at least once to set it up.");
+				throw new FileNotFoundException($"Prism Launcher config file not found at {configPath}.\n\nMake sure you have run Prism Launcher at least once to set it up.");
 
-			await using var fs = File.Open(configPath, FileMode.Open, FileAccess.Read);
-			using var sr = new StreamReader(fs);
-			var config = await ConfigReader.ReadConfig<MmcConfig>(sr);
+			await using var fileStream = File.Open(configPath, FileMode.Open, FileAccess.Read);
+			using var reader = new StreamReader(fileStream);
+			var config = await ConfigReader.ReadConfig<PrismConfig>(reader);
 
 			if (string.IsNullOrWhiteSpace(config.InstancesFolder) || !Path.IsPathRooted(config.InstancesFolder))
-				config.InstancesFolder = Path.Combine(mmcPath, config.InstancesFolder ?? "instances");
+				config.InstancesFolder = Path.Combine(prismPath, config.InstancesFolder ?? "instances");
 
 			if (string.IsNullOrWhiteSpace(config.IconsFolder) || !Path.IsPathRooted(config.IconsFolder))
-				config.IconsFolder = Path.Combine(mmcPath, config.IconsFolder ?? "icons");
+				config.IconsFolder = Path.Combine(prismPath, config.IconsFolder ?? "icons");
 
 			return config;
 		}
 
-		public static async Task UpdateConfig(string mmcPath, MmcConfig config)
+		public static async Task UpdateConfig(string prismPath, PrismConfig config)
 		{
-			var configPath = Path.Combine(mmcPath, "multimc.cfg");
+			var configPath = Path.Combine(prismPath, ConfigFileName);
 
 			// Normalize slashes
 			config.IconsFolder = config.IconsFolder.Replace("\\", "/");
@@ -43,20 +45,17 @@ namespace MinecraftUpgrader.MultiMC
 			await ConfigReader.UpdateConfig(config, fs);
 		}
 
-		public static async Task<MmcConfig> CreateConfig(string mmcPath)
+		public static async Task<PrismConfig> CreateConfig(string prismPath)
 		{
-			var defaults = new MmcConfig {
-				AutoUpdate = false,
+			var defaults = new PrismConfig {
 				InstancesFolder = "instances",
 				IconsFolder = "icons",
-				Language = "en",
-				// TODO: Uncomment the following line if a development MultiMC version is required
-				// UpdateChannel   = "develop",
+				Language = "en_US",
 				MinMemAlloc = 512,
-				MaxMemAlloc = 1024,
+				MaxMemAlloc = 2048,
 			};
 
-			await using var stream = File.Open(Path.Combine(mmcPath, "multimc.cfg"), FileMode.Create, FileAccess.Write);
+			await using var stream = File.Open(Path.Combine(prismPath, ConfigFileName), FileMode.Create, FileAccess.Write);
 			await using var writer = new StreamWriter(stream);
 
 			await ConfigReader.WriteConfig(defaults, writer);
@@ -64,7 +63,7 @@ namespace MinecraftUpgrader.MultiMC
 			return defaults;
 		}
 
-		public static async Task<IList<(string name, string path)>> GetInstances(this MmcConfig config)
+		public static async Task<IList<(string name, string path)>> GetInstances(this PrismConfig config)
 		{
 			if (!Directory.Exists(config.InstancesFolder))
 				return Enumerable.Empty<(string, string)>().ToList();
@@ -80,9 +79,9 @@ namespace MinecraftUpgrader.MultiMC
 
 				try
 				{
-					await using var fs = File.Open(instanceCfgPath, FileMode.Open, FileAccess.Read);
-					using var sr = new StreamReader(fs);
-					var instanceCfg = await ConfigReader.ReadConfig<MmcInstance>(sr);
+					await using var fileStream = File.Open(instanceCfgPath, FileMode.Open, FileAccess.Read);
+					using var reader = new StreamReader(fileStream);
+					var instanceCfg = await ConfigReader.ReadConfig<PrismInstance>(reader);
 
 					instances.Add(( instanceCfg.Name, directory ));
 				}

@@ -4,7 +4,7 @@
 	{
 		public static class Paths
 		{
-			public const string MultiMcDownload = "https://files.multimc.org/downloads/mmc-develop-win32.zip";
+			public const string PrismDownload = "https://github.com/PrismLauncher/PrismLauncher/releases/download/8.0/PrismLauncher-Windows-MSVC-Portable-8.0.zip";
 		}
 
 		public static class Vivecraft

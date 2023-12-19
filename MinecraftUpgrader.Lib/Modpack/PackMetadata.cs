@@ -8,7 +8,7 @@ namespace MinecraftUpgrader.Modpack
 		public string IntendedMinecraftVersion { get; set; }
 		public string ServerPack               { get; set; }
 		public string ClientPack               { get; set; }
-		public string MultiMcPack              { get; set; }
+		public string PrismPack                { get; set; }
 		public string CurrentVersion           { get; set; }
 		public bool   VerifyServerPackMd5      { get; set; }
 		public bool   SupportsVR               { get; set; }

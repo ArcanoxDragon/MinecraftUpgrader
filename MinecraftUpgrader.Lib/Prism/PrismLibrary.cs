@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace MinecraftUpgrader.MultiMC
+namespace MinecraftUpgrader.Prism
 {
-	public class MmcLibrary
+	public class PrismLibrary
 	{
 		[JsonProperty("name")]
 		public string Name { get; set; }

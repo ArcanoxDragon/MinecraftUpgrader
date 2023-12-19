@@ -12,7 +12,7 @@ using Humanizer;
 using MinecraftUpgrader.Config;
 using MinecraftUpgrader.Extensions;
 using MinecraftUpgrader.Modpack;
-using MinecraftUpgrader.MultiMC;
+using MinecraftUpgrader.Prism;
 using NickStrupat;
 using Semver;
 
@@ -30,7 +30,7 @@ namespace MinecraftUpgrader
 
 		private readonly PackBuilder packBuilder;
 
-		private MmcConfig                         config;
+		private PrismConfig                       config;
 		private IList<(string name, string path)> instances;
 		private PackMode                          currentPackState = PackMode.New;
 		private PackMetadata                      packMetadata;
@@ -55,23 +55,23 @@ namespace MinecraftUpgrader
 		{
 			this.lbInstanceStatus.Text = "";
 
-			var mmcPath = AppConfig.Get().LastMmcPath;
+			var prismPath = AppConfig.Get().LastPrismPath;
 
-			if (string.IsNullOrEmpty(mmcPath))
+			if (string.IsNullOrEmpty(prismPath))
 			{
-				if (!ShowConfigureMultiMC(out mmcPath))
+				if (!ShowConfigurePrism(out prismPath))
 				{
 					Close();
 				}
 			}
 
-			await LoadMultiMCInstances(mmcPath);
+			await LoadPrismInstances(prismPath);
 		}
 
-		private async Task LoadMultiMCInstances(string multiMcPath)
+		private async Task LoadPrismInstances(string prismPath)
 		{
-			this.txtMmcPath.Text = multiMcPath;
-			await RefreshMmcConfig(multiMcPath);
+			this.txtPrismPath.Text = prismPath;
+			await RefreshPrismConfig(prismPath);
 
 			var lastInstanceName = AppConfig.Get().LastInstance;
 
@@ -90,11 +90,11 @@ namespace MinecraftUpgrader
 			}
 		}
 
-		private bool ShowConfigureMultiMC(out string lastMmcPath, string exitText = null)
+		private bool ShowConfigurePrism(out string lastPrismPath, string exitText = null)
 		{
 			Hide();
 
-			var form = new ConfigureMultiMcForm();
+			var form = new ConfigurePrismForm();
 
 			if (!string.IsNullOrEmpty(exitText))
 				form.ExitText = exitText;
@@ -105,19 +105,19 @@ namespace MinecraftUpgrader
 
 			if (formResult == DialogResult.OK)
 			{
-				lastMmcPath = AppConfig.Get().LastMmcPath;
+				lastPrismPath = AppConfig.Get().LastPrismPath;
 
 				return true;
 			}
 			else
 			{
-				lastMmcPath = null;
+				lastPrismPath = null;
 
 				return false;
 			}
 		}
 
-		private async Task RefreshMmcConfig(string path)
+		private async Task RefreshPrismConfig(string path)
 		{
 			try
 			{
@@ -127,7 +127,7 @@ namespace MinecraftUpgrader
 				this.txtNewInstanceName.Enabled = false;
 				this.txtNewInstanceName.Text = "";
 				this.cmbInstance.Enabled = false;
-				this.config = await MmcConfigReader.ReadFromMmcFolder(path);
+				this.config = await PrismConfigReader.ReadFromPrismFolder(path);
 				this.lbInstancesFolder.Text = this.config.InstancesFolder;
 
 				try
@@ -142,12 +142,12 @@ namespace MinecraftUpgrader
 						this.cmbInstance.SelectedIndex = 0;
 					}
 
-					AppConfig.Update(appConfig => appConfig.LastMmcPath = path);
+					AppConfig.Update(appConfig => appConfig.LastPrismPath = path);
 				}
 				catch (Exception)
 				{
 					MessageBox.Show(this,
-									"An error occurred loading the instance list for the specified MultiMC instance.",
+									"An error occurred loading the instance list for the specified Prism Laucher installation.",
 									"Error Loading Instances",
 									MessageBoxButtons.OK,
 									MessageBoxIcon.Error);
@@ -156,17 +156,17 @@ namespace MinecraftUpgrader
 			catch (FileNotFoundException)
 			{
 				MessageBox.Show(this,
-								"Could not find MultiMC configuration file.\n\n" +
-								"Make sure you selected the folder in which MultiMC.exe is located, " +
-								"and that you have run MultiMC at least once.\n\n" +
+								"Could not find Prism Launcher configuration file.\n\n" +
+								"Make sure you selected the folder in which PrismLauncher.exe is located, " +
+								"and that you have run Prism Launcher at least once.\n\n" +
 								"You can try re-launching the installer to automatically download a new " +
-								"version of MultiMC.",
+								"version of Prism Launcher.",
 								"Config Not Found",
 								MessageBoxButtons.OK,
 								MessageBoxIcon.Error);
 
 				AppConfig.Update(appConfig => {
-					appConfig.LastMmcPath = null;
+					appConfig.LastPrismPath = null;
 					appConfig.LastInstance = null;
 				});
 			}
@@ -176,11 +176,11 @@ namespace MinecraftUpgrader
 			}
 		}
 
-		private async void OnBtnBrowseMmcClick(object sender, EventArgs e)
+		private async void OnBtnBrowsePrismClick(object sender, EventArgs e)
 		{
-			if (ShowConfigureMultiMC(out var mmcPath))
+			if (ShowConfigurePrism(out var prismPath))
 			{
-				await LoadMultiMCInstances(mmcPath);
+				await LoadPrismInstances(prismPath);
 			}
 		}
 
@@ -428,9 +428,9 @@ namespace MinecraftUpgrader
 				await DoConfigurePack(false);
 			});
 
-		private void OnOpenMultiMCClick(object sender, EventArgs e)
+		private void OnOpenPrismClick(object sender, EventArgs e)
 		{
-			StartMultiMC();
+			StartPrism();
 		}
 
 		private async Task DoConfigurePack(bool forceRebuild)
@@ -455,25 +455,22 @@ namespace MinecraftUpgrader
 
 			try
 			{
-				var multiMcInstances = Process.GetProcessesByName("multimc");
+				var prismInstances = Process.GetProcessesByName("prismlauncher");
 
-				if (multiMcInstances.Any())
+				if (prismInstances.Any())
 				{
 					MessageBox.Show(dialog,
-									"The installer has detected that there are instances of MultiMC still open.\n\n" +
-									"MultiMC must be closed to install a new pack. Click OK to close MultiMC automatically.",
-									"MultiMC Running",
+									"The installer has detected that there are instances of Prism Launcher still open.\n\n" +
+									"Prism Launcher must be closed to install a new pack. Click OK to close Prism Launcher automatically.",
+									"Prism Launcher Running",
 									MessageBoxButtons.OK,
 									MessageBoxIcon.Warning);
 
-					foreach (var process in multiMcInstances)
+					foreach (var process in prismInstances)
 						process.Kill();
 				}
 
-				// TODO: Uncomment the following line if a development branch of MultiMC is required
-				// this.config.UpdateChannel = "develop";
-
-				await MmcConfigReader.UpdateConfig(this.txtMmcPath.Text, this.config);
+				await PrismConfigReader.UpdateConfig(this.txtPrismPath.Text, this.config);
 
 				if (newInstance)
 				{
@@ -485,7 +482,7 @@ namespace MinecraftUpgrader
 				}
 
 				AppConfig.Update(appConfig => {
-					appConfig.LastMmcPath = this.txtMmcPath.Text;
+					appConfig.LastPrismPath = this.txtPrismPath.Text;
 					appConfig.LastInstance = instanceName;
 				});
 
@@ -526,10 +523,10 @@ namespace MinecraftUpgrader
 			var choice = MessageBox.Show(this,
 										 initialPrompt +
 										 "\n\nWould you like to start Minecraft now?\n\n" +
-										 "Note: If you haven't set up a Minecraft account in MultiMC yet, " +
-										 "you will have to run either this app or MultiMC again after setting " +
+										 "Note: If you haven't set up a Minecraft account in Prism Launcher yet, " +
+										 "you will have to run either this app or Prism Launcher again after setting " +
 										 "up your account to actually start Minecraft.",
-										 "Start MultiMC?",
+										 "Start Prism Launcher?",
 										 MessageBoxButtons.YesNo,
 										 MessageBoxIcon.Question);
 
@@ -539,12 +536,12 @@ namespace MinecraftUpgrader
 			}
 		}
 
-		private void StartMultiMC()
+		private void StartPrism()
 		{
 			var startInfo = new ProcessStartInfo {
 				UseShellExecute = true,
-				FileName = Path.Combine(this.txtMmcPath.Text, "MultiMC.exe"),
-				WorkingDirectory = this.txtMmcPath.Text,
+				FileName = Path.Combine(this.txtPrismPath.Text, "prismlauncher.exe"),
+				WorkingDirectory = this.txtPrismPath.Text,
 			};
 
 			Process.Start(startInfo);
@@ -554,9 +551,9 @@ namespace MinecraftUpgrader
 		{
 			var startInfo = new ProcessStartInfo {
 				UseShellExecute = true,
-				FileName = Path.Combine(this.txtMmcPath.Text, "MultiMC.exe"),
+				FileName = Path.Combine(this.txtPrismPath.Text, "prismlauncher.exe"),
 				Arguments = $"-l \"{instanceName}\"",
-				WorkingDirectory = this.txtMmcPath.Text,
+				WorkingDirectory = this.txtPrismPath.Text,
 			};
 
 			Process.Start(startInfo);

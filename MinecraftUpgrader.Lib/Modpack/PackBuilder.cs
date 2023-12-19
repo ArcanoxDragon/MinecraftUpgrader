@@ -11,8 +11,8 @@ using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Extensions.Options;
 using MinecraftUpgrader.Async;
 using MinecraftUpgrader.Config;
-using MinecraftUpgrader.MultiMC;
 using MinecraftUpgrader.Options;
+using MinecraftUpgrader.Prism;
 using MinecraftUpgrader.Utility;
 using MinecraftUpgrader.Zip;
 using Newtonsoft.Json;
@@ -74,7 +74,7 @@ namespace MinecraftUpgrader.Modpack
 			return JsonSerializer.Deserialize<PackMetadata>(jsonTextReader);
 		}
 
-		private async Task SetupPackAsync(MmcConfig mmcConfig, PackMetadata pack, string destinationFolder, bool forceRebuild, bool vrEnabled, CancellationToken token, ProgressReporter progress, int? maxRamMb = null)
+		private async Task SetupPackAsync(PrismConfig prismConfig, PackMetadata pack, string destinationFolder, bool forceRebuild, bool vrEnabled, CancellationToken token, ProgressReporter progress, int? maxRamMb = null)
 		{
 			var metadataFile = Path.Combine(destinationFolder, "packMeta.json");
 			var cfgFile = Path.Combine(destinationFolder, "instance.cfg");
@@ -89,7 +89,7 @@ namespace MinecraftUpgrader.Modpack
 			await using (var fs = File.Open(cfgFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
 			{
 				using var sr = new StreamReader(fs);
-				var cfg = await ConfigReader.ReadConfig<MmcInstance>(sr);
+				var cfg = await ConfigReader.ReadConfig<PrismInstance>(sr);
 
 				cfg.OverrideMemory = true;
 				cfg.MinMemAlloc = 1024;
@@ -159,17 +159,17 @@ namespace MinecraftUpgrader.Modpack
 
 				token.ThrowIfCancellationRequested();
 
-				// Download MultiMC pack descriptor
-				downloadTask = "Downloading MultiMC pack descriptor...";
+				// Download Prism pack descriptor
+				downloadTask = "Downloading Prism pack descriptor...";
 				var packConfigFileName = Path.Combine(destinationFolder, "mmc-pack.json");
-				await downloader.DownloadFileAsync(pack.MultiMcPack, packConfigFileName, token);
+				await downloader.DownloadFileAsync(pack.PrismPack, packConfigFileName, token);
 
 				// Download icon
-				if (!Directory.Exists(mmcConfig.IconsFolder))
-					Directory.CreateDirectory(mmcConfig.IconsFolder);
+				if (!Directory.Exists(prismConfig.IconsFolder))
+					Directory.CreateDirectory(prismConfig.IconsFolder);
 
 				downloadTask = "Downloading pack icon...";
-				var iconFileName = Path.Combine(mmcConfig.IconsFolder, "arcanox.png");
+				var iconFileName = Path.Combine(prismConfig.IconsFolder, "arcanox.png");
 				await downloader.DownloadFileAsync($"{this.options.ModPackUrl}/{IconPath}", iconFileName, token);
 
 				var rebuildBasePack = forceRebuild ||
@@ -559,7 +559,7 @@ namespace MinecraftUpgrader.Modpack
 					progress?.ReportProgress(-1, "Writing Vivecraft patch file...");
 
 					var patchFileJson = JsonConvert.SerializeObject(
-						vrEnabled ? MmcPatchDefinitions.VivecraftPatchVr : MmcPatchDefinitions.VivecraftPatchNonVr,
+						vrEnabled ? PrismPatchDefinitions.VivecraftPatchVr : PrismPatchDefinitions.VivecraftPatchNonVr,
 						new JsonSerializerSettings {
 							NullValueHandling = NullValueHandling.Ignore,
 						}
@@ -604,9 +604,9 @@ namespace MinecraftUpgrader.Modpack
 			}
 		}
 
-		public async Task NewInstanceAsync(MmcConfig mmcConfig, string instName, bool vrEnabled, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null)
+		public async Task NewInstanceAsync(PrismConfig prismConfig, string instName, bool vrEnabled, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null)
 		{
-			var newInstDir = Path.Combine(mmcConfig.InstancesFolder, instName);
+			var newInstDir = Path.Combine(prismConfig.InstancesFolder, instName);
 			var newInstCfg = Path.Combine(newInstDir, "instance.cfg");
 
 			if (Directory.Exists(newInstDir))
@@ -619,12 +619,10 @@ namespace MinecraftUpgrader.Modpack
 			progress?.ReportProgress("Loading pack metadata from server...");
 
 			var pack = await LoadConfigAsync(token);
-			var instance = new MmcInstance {
+			var instance = new PrismInstance {
 				Name = instName,
 				Icon = IconName,
 				InstanceType = pack.InstanceType,
-				IntendedVersion = pack.IntendedMinecraftVersion,
-				MCLaunchMethod = "LauncherPart",
 				OverrideJavaArgs = true,
 				JvmArgs = Constants.Vivecraft.VivecraftJvmArgs,
 			};
@@ -639,37 +637,40 @@ namespace MinecraftUpgrader.Modpack
 				await ConfigReader.WriteConfig(instance, sw);
 			}
 
-			await SetupPackAsync(mmcConfig, pack, newInstDir, true, vrEnabled, token, progress, maxRamMb);
+			await SetupPackAsync(prismConfig, pack, newInstDir, true, vrEnabled, token, progress, maxRamMb);
 		}
 
-		public async Task ConvertInstance(MmcConfig mmcConfig, string instPath, bool forceRebuild, bool vrEnabled, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null)
+		public async Task ConvertInstance(PrismConfig prismConfig, string instPath, bool forceRebuild, bool vrEnabled, CancellationToken token, ProgressReporter progress = null, int? maxRamMb = null)
 		{
 			if (!Directory.Exists(instPath))
 				throw new InvalidOperationException("The specified instance folder was not found");
 
 			if (Directory.Exists(Path.Combine(instPath, "minecraft")) || !Directory.Exists(Path.Combine(instPath, ".minecraft")))
 				throw new InvalidOperationException("The existing instance is using the old MultiMC pack format. " +
-													"This installer cannot upgrade an instance to the new MultiMC pack format.\n\n" +
-													"Please use the \"New Instance\" option to create a new MultiMC instance.");
+													"This installer cannot upgrade an instance to the new Prism Launcher pack format.\n\n" +
+													"Please use the \"New Instance\" option to create a new Prism Launcher instance.");
 
 			var instCfg = Path.Combine(instPath, "instance.cfg");
 			var pack = await LoadConfigAsync(token);
-			MmcInstance instance;
+			PrismInstance instance;
 
 			await using (var fs = File.Open(instCfg, FileMode.Open, FileAccess.Read, FileShare.Read))
 			{
 				using var sr = new StreamReader(fs);
 
-				instance = await ConfigReader.ReadConfig<MmcInstance>(sr);
+				instance = await ConfigReader.ReadConfig<PrismInstance>(sr);
 			}
 
 			token.ThrowIfCancellationRequested();
-			if (instance.InstanceType != pack.InstanceType || ( instance.IntendedVersion != null && instance.IntendedVersion != pack.IntendedMinecraftVersion ))
+
+			if (instance.InstanceType != pack.InstanceType)
+			{
 				throw new InvalidOperationException("The existing instance is set up for a different version of Minecraft " +
 													"than the target instance. The upgrader cannot convert an existing instance " +
 													"to a different Minecraft version.\n\n" +
 													"Please create a new instance, or manually upgrade the existing instance to " +
 													$"Minecraft {pack.IntendedMinecraftVersion}");
+			}
 
 			// Apply Vivecraft JVM arguments
 			instance.OverrideJavaArgs = true;
@@ -683,7 +684,7 @@ namespace MinecraftUpgrader.Modpack
 				await ConfigReader.WriteConfig(instance, sr);
 			}
 
-			await SetupPackAsync(mmcConfig, pack, instPath, forceRebuild, vrEnabled, token, progress, maxRamMb);
+			await SetupPackAsync(prismConfig, pack, instPath, forceRebuild, vrEnabled, token, progress, maxRamMb);
 		}
 	}
 }

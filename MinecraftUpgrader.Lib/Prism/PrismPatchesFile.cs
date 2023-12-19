@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace MinecraftUpgrader.MultiMC
+namespace MinecraftUpgrader.Prism
 {
-	public class MmcPatchesFile
+	public class PrismPatchesFile
 	{
 		[JsonProperty("uid")]
 		public string Uid { get; set; }
@@ -19,7 +19,7 @@ namespace MinecraftUpgrader.MultiMC
 		public string MainClass { get; set; }
 
 		[JsonProperty("libraries")]
-		public List<MmcLibrary> Libraries { get; set; }
+		public List<PrismLibrary> Libraries { get; set; }
 
 		[JsonProperty("name")]
 		public string Name { get; set; }

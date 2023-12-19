@@ -1,11 +1,11 @@
 ﻿using System;
 using static MinecraftUpgrader.Utility.Constants.Vivecraft;
 
-namespace MinecraftUpgrader.MultiMC
+namespace MinecraftUpgrader.Prism
 {
-	public class MmcPatchDefinitions
+	public class PrismPatchDefinitions
 	{
-		public static readonly MmcPatchesFile VivecraftPatchVr = new() {
+		public static readonly PrismPatchesFile VivecraftPatchVr = new() {
 			Uid = "vivecraft",
 			Name = "Vivecraft",
 			ReleaseTime = DateTime.Now,
@@ -13,31 +13,31 @@ namespace MinecraftUpgrader.MultiMC
 			MainClass = "net.minecraft.launchwrapper.Launch",
 			Version = "4",
 			Libraries = [
-				new MmcLibrary {
+				new PrismLibrary {
 					Name = $"com.mtbs3d:minecrift:{VivecraftVersionVr}-{VivecraftRevisionVr}",
 					MmcHint = "local",
 				},
 
-				new MmcLibrary {
+				new PrismLibrary {
 					Name = "org.json:json:20140107",
 					Url = "http://vivecraft.org/jar/",
 				},
 
-				new MmcLibrary {
+				new PrismLibrary {
 					Name = "com.sun:jna:4.2.1",
 					Url = "http://vivecraft.org/jar/",
 				},
 
-				new MmcLibrary {
+				new PrismLibrary {
 					Name = "org.ow2.asm:asm-all:5.2",
 					Url = "http://files.minecraftforge.net/maven/",
 				},
 
-				new MmcLibrary {
+				new PrismLibrary {
 					Name = "net.minecraft:launchwrapper:1.12",
 				},
 
-				new MmcLibrary {
+				new PrismLibrary {
 					Name = $"optifine:OptiFine:{OptifineVersion}",
 					MmcHint = "local",
 				},
@@ -49,7 +49,7 @@ namespace MinecraftUpgrader.MultiMC
 			],
 		};
 
-		public static readonly MmcPatchesFile VivecraftPatchNonVr = new() {
+		public static readonly PrismPatchesFile VivecraftPatchNonVr = new() {
 			Uid = "vivecraft",
 			Name = "Vivecraft",
 			ReleaseTime = DateTime.Now,
@@ -57,31 +57,31 @@ namespace MinecraftUpgrader.MultiMC
 			MainClass = "net.minecraft.launchwrapper.Launch",
 			Version = "4",
 			Libraries = [
-				new MmcLibrary {
+				new PrismLibrary {
 					Name = $"com.mtbs3d:minecrift:{VivecraftVersionNonVr}-{VivecraftRevisionNonVr}",
 					MmcHint = "local",
 				},
 
-				new MmcLibrary {
+				new PrismLibrary {
 					Name = "org.json:json:20140107",
 					Url = "http://vivecraft.org/jar/",
 				},
 
-				new MmcLibrary {
+				new PrismLibrary {
 					Name = "org.ow2.asm:asm-all:5.2",
 					Url = "http://files.minecraftforge.net/maven/",
 				},
 
-				new MmcLibrary {
+				new PrismLibrary {
 					Name = "net.minecraft:launchwrapper:1.12",
 				},
 
-				new MmcLibrary {
+				new PrismLibrary {
 					Name = $"optifine:OptiFine:{OptifineVersion}",
 					MmcHint = "local",
 				},
 
-				new MmcLibrary {
+				new PrismLibrary {
 					Name = "de.fruitfly.ovr:JRift:0.8.0.0.1",
 					Url = "http://vivecraft.org/jar/",
 				},

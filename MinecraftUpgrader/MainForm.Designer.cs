@@ -32,8 +32,8 @@
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 			this.lbInstancesFolder = new System.Windows.Forms.Label();
 			this.lbInstancesFolderStatic = new System.Windows.Forms.Label();
-			this.btnBrowseMmc = new System.Windows.Forms.Button();
-			this.txtMmcPath = new System.Windows.Forms.TextBox();
+			this.btnBrowsePrism = new System.Windows.Forms.Button();
+			this.txtPrismPath = new System.Windows.Forms.TextBox();
 			this.cmbInstance = new System.Windows.Forms.ComboBox();
 			this.txtNewInstanceName = new System.Windows.Forms.TextBox();
 			this.label3 = new System.Windows.Forms.Label();
@@ -73,27 +73,27 @@
 			this.lbInstancesFolderStatic.TabIndex = 8;
 			this.lbInstancesFolderStatic.Text = "Instances folder:";
 			// 
-			// btnBrowseMmc
+			// btnBrowsePrism
 			// 
-			this.btnBrowseMmc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnBrowseMmc.Location = new System.Drawing.Point(391, 23);
-			this.btnBrowseMmc.Name = "btnBrowseMmc";
-			this.btnBrowseMmc.Size = new System.Drawing.Size(33, 23);
-			this.btnBrowseMmc.TabIndex = 6;
-			this.btnBrowseMmc.Text = "...";
-			this.appToolTip.SetToolTip(this.btnBrowseMmc, "Switch MultiMC instance...");
-			this.btnBrowseMmc.UseVisualStyleBackColor = true;
-			this.btnBrowseMmc.Click += new System.EventHandler(this.OnBtnBrowseMmcClick);
+			this.btnBrowsePrism.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.btnBrowsePrism.Location = new System.Drawing.Point(391, 23);
+			this.btnBrowsePrism.Name = "btnBrowsePrism";
+			this.btnBrowsePrism.Size = new System.Drawing.Size(33, 23);
+			this.btnBrowsePrism.TabIndex = 6;
+			this.btnBrowsePrism.Text = "...";
+			this.appToolTip.SetToolTip(this.btnBrowsePrism, "Switch Prism instance...");
+			this.btnBrowsePrism.UseVisualStyleBackColor = true;
+			this.btnBrowsePrism.Click += new System.EventHandler(this.OnBtnBrowsePrismClick);
 			// 
-			// txtMmcPath
+			// txtPrismPath
 			// 
-			this.txtMmcPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+			this.txtPrismPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.txtMmcPath.Location = new System.Drawing.Point(12, 25);
-			this.txtMmcPath.Name = "txtMmcPath";
-			this.txtMmcPath.ReadOnly = true;
-			this.txtMmcPath.Size = new System.Drawing.Size(373, 20);
-			this.txtMmcPath.TabIndex = 5;
+			this.txtPrismPath.Location = new System.Drawing.Point(12, 25);
+			this.txtPrismPath.Name = "txtPrismPath";
+			this.txtPrismPath.ReadOnly = true;
+			this.txtPrismPath.Size = new System.Drawing.Size(373, 20);
+			this.txtPrismPath.TabIndex = 5;
 			// 
 			// cmbInstance
 			// 
@@ -125,7 +125,7 @@
 			this.label3.Name = "label3";
 			this.label3.Size = new System.Drawing.Size(92, 13);
 			this.label3.TabIndex = 12;
-			this.label3.Text = "MultiMC Location:";
+			this.label3.Text = "Prism Launcher Location:";
 			// 
 			// rbInstanceExisting
 			// 
@@ -224,8 +224,8 @@
 			this.linkLabel1.Size = new System.Drawing.Size(134, 13);
 			this.linkLabel1.TabIndex = 18;
 			this.linkLabel1.TabStop = true;
-			this.linkLabel1.Text = "Click here to open MultiMC";
-			this.linkLabel1.Click += new System.EventHandler(this.OnOpenMultiMCClick);
+			this.linkLabel1.Text = "Click here to open Prism Launcher";
+			this.linkLabel1.Click += new System.EventHandler(this.OnOpenPrismClick);
 			// 
 			// appToolTip
 			// 
@@ -323,8 +323,8 @@
 			this.Controls.Add(this.lbInstancesFolder);
 			this.Controls.Add(this.cmbInstance);
 			this.Controls.Add(this.lbInstancesFolderStatic);
-			this.Controls.Add(this.btnBrowseMmc);
-			this.Controls.Add(this.txtMmcPath);
+			this.Controls.Add(this.btnBrowsePrism);
+			this.Controls.Add(this.txtPrismPath);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MaximizeBox = false;
@@ -346,8 +346,8 @@
 
 		private System.Windows.Forms.Label lbInstancesFolder;
 		private System.Windows.Forms.Label lbInstancesFolderStatic;
-		private System.Windows.Forms.Button btnBrowseMmc;
-		private System.Windows.Forms.TextBox txtMmcPath;
+		private System.Windows.Forms.Button btnBrowsePrism;
+		private System.Windows.Forms.TextBox txtPrismPath;
 		private System.Windows.Forms.ComboBox cmbInstance;
 		private System.Windows.Forms.TextBox txtNewInstanceName;
 		private System.Windows.Forms.Label label3;

@@ -4,16 +4,16 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MinecraftUpgrader.Config;
-using MinecraftUpgrader.MultiMC;
+using MinecraftUpgrader.Prism;
 using MinecraftUpgrader.Utility;
 
 namespace MinecraftUpgrader
 {
-	public partial class ConfigureMultiMcForm : Form
+	public partial class ConfigurePrismForm : Form
 	{
 		private static readonly Guid OpenFolderCookie = new("76309a12-c3b3-4954-80ac-242685715563");
 
-		public ConfigureMultiMcForm()
+		public ConfigurePrismForm()
 		{
 			InitializeComponent();
 		}
@@ -34,19 +34,19 @@ namespace MinecraftUpgrader
 
 			if (result == CommonFileDialogResult.Ok)
 			{
-				var mmcPath = dialog.FileName;
+				var prismPath = dialog.FileName;
 
 				try
 				{
-					await MmcConfigReader.ReadFromMmcFolder(mmcPath);
-					AppConfig.Update(appConfig => appConfig.LastMmcPath = mmcPath);
+					await PrismConfigReader.ReadFromPrismFolder(prismPath);
+					AppConfig.Update(appConfig => appConfig.LastPrismPath = prismPath);
 					DialogResult = DialogResult.OK;
 				}
 				catch
 				{
-					MessageBox.Show("MultiMC was not found in the folder you chose, " +
+					MessageBox.Show("Prism Launcher was not found in the folder you chose, " +
 									"or is installed incorrectly.",
-									"MultiMC Not Found",
+									"Prism Launcher Not Found",
 									MessageBoxButtons.OK,
 									MessageBoxIcon.Error);
 				}
@@ -57,15 +57,15 @@ namespace MinecraftUpgrader
 		{
 			Enabled = false;
 
-			if (await InstallMultiMc())
+			if (await InstallPrism())
 				DialogResult = DialogResult.OK;
 			else
 				DialogResult = DialogResult.Cancel;
 		}
 
-		private async Task<bool> InstallMultiMc()
+		private async Task<bool> InstallPrism()
 		{
-			var dialog = new ProgressDialog("Downloading MultiMC");
+			var dialog = new ProgressDialog("Downloading Prism Launcher");
 
 			try
 			{
@@ -77,11 +77,11 @@ namespace MinecraftUpgrader
 				};
 				dialog.Show(this);
 
-				var mmcInstallPath = await MultiMcInstaller.InstallMultiMC(dialog.Reporter, cancelSource.Token);
+				var installPath = await PrismInstaller.InstallPrism(dialog.Reporter, cancelSource.Token);
 
 				MessageBox.Show(this,
-								$"Successfully installed MultiMC to \"{mmcInstallPath}\"!",
-								"MultiMC Setup Complete",
+								$"Successfully installed Prism Launcher to \"{installPath}\"!",
+								"Prism Launcher Setup Complete",
 								MessageBoxButtons.OK,
 								MessageBoxIcon.Information);
 
@@ -90,9 +90,9 @@ namespace MinecraftUpgrader
 			catch (TaskCanceledException)
 			{
 				MessageBox.Show(this,
-								"MultiMC setup cancelled. You will need to download it yourself, pick an existing installation," +
-								"or re-run the installer and start the MultiMC setup again.",
-								"MultiMC Setup Cancelled",
+								"Prism Launcher setup cancelled. You will need to download it yourself, pick an existing installation," +
+								"or re-run the installer and start the Prism Launcher setup again.",
+								"Prism Launcher Setup Cancelled",
 								MessageBoxButtons.OK,
 								MessageBoxIcon.Error);
 
