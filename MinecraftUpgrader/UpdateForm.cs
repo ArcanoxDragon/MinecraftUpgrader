@@ -68,7 +68,7 @@ public partial class UpdateForm : Form
 		if (SkipUpdate || localHash == remoteHash)
 		{
 			Hide();
-			new CheckJavaForm().ShowDialog();
+			Services.CreateInstance<MainForm>().ShowDialog();
 			Close();
 			return;
 		}
@@ -113,7 +113,7 @@ public partial class UpdateForm : Form
 			File.Move(processFileOldPath, processFilePath);
 
 			Hide();
-			new CheckJavaForm().ShowDialog();
+			Services.CreateInstance<MainForm>().ShowDialog();
 			Close();
 			return;
 		}
