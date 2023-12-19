@@ -47,7 +47,6 @@ public static class PrismInstaller
 
 			await zip.ExtractAsync(installPath,
 								   new ZipExtractOptions {
-									   DirectoryName = "PrismLauncher",
 									   RecreateFolderStructure = false,
 									   OverwriteExisting = true,
 									   CancellationToken = cancellationToken,

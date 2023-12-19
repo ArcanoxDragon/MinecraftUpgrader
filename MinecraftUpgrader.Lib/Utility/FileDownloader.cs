@@ -36,9 +36,10 @@ public class FileDownloader(HttpClient httpClient)
 
 	private async Task DownloadToStreamAsync(string uri, Stream destinationStream, CancellationToken cancellationToken = default)
 	{
-		await using var downloadStream = await httpClient.GetStreamAsync(uri, cancellationToken);
+		using var response = await httpClient.GetAsync(uri, cancellationToken);
+		await using var downloadStream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
-		var totalBytes = downloadStream.Length;
+		var totalBytes = response.Content.Headers.ContentLength ?? -1;
 		var bytesRemaining = totalBytes;
 		var totalBytesRead = 0;
 
