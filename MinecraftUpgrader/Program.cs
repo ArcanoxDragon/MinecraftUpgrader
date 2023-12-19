@@ -69,7 +69,7 @@ internal static class Program
 
 	private static string GetLogPath() => Path.Combine(
 		Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-		".mcupgrader",
+		".mcarcanox",
 		"log.txt"
 	);
 }
