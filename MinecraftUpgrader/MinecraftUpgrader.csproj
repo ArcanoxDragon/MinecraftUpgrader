@@ -4,6 +4,7 @@
 		<TargetFrameworks>net8.0-windows</TargetFrameworks>
 		<RootNamespace>MinecraftUpgrader</RootNamespace>
 		<OutputType>WinExe</OutputType>
+		<ImplicitUsings>enable</ImplicitUsings>
 		<UseWindowsForms>true</UseWindowsForms>
 		<UseWpf>true</UseWpf>
 	</PropertyGroup>

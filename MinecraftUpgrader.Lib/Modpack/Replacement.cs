@@ -1,8 +1,7 @@
-﻿namespace MinecraftUpgrader.Modpack
+﻿namespace MinecraftUpgrader.Modpack;
+
+public class Replacement
 {
-	public class Replacement
-	{
-		public string Replace { get; set; }
-		public string With    { get; set; }
-	}
+	public string Replace { get; set; }
+	public string With    { get; set; }
 }

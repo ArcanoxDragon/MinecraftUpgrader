@@ -1,9 +1,8 @@
 ﻿using System;
 
-namespace MinecraftUpgrader.Config
+namespace MinecraftUpgrader.Config;
+
+public class ConfigPropertyAttribute(string propertyName = null) : Attribute
 {
-	public class ConfigPropertyAttribute(string propertyName = null) : Attribute
-	{
-		public string PropertyName { get; } = propertyName;
-	}
+	public string PropertyName { get; } = propertyName;
 }

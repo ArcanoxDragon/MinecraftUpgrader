@@ -1,7 +1,6 @@
-﻿namespace MinecraftUpgrader.Options
+﻿namespace MinecraftUpgrader.Options;
+
+public class PackBuilderOptions
 {
-	public class PackBuilderOptions
-	{
-		public string ModPackUrl { get; set; }
-	}
+	public string ModPackUrl { get; set; }
 }
