@@ -38,9 +38,22 @@ public static class WinFormsExtensions
 
 	#endregion
 
+	#region Disable While
+
+	private sealed record DisableWhileState
+	{
+		public int  DisableCount    { get; set; }
+		public bool OriginalEnabled { get; set; }
+	}
+
+	private static readonly ConditionalWeakTable<Control, DisableWhileState> DisableWhileStates = new();
+
 	public static void DisableWhile(this Control control, Action action)
 	{
-		var wasEnabled = control.Enabled;
+		var state = DisableWhileStates.GetOrCreateValue(control)!;
+
+		if (state.DisableCount++ == 0)
+			state.OriginalEnabled = control.Enabled;
 
 		control.Enabled = false;
 
@@ -50,13 +63,20 @@ public static class WinFormsExtensions
 		}
 		finally
 		{
-			control.Enabled = wasEnabled;
+			if (--state.DisableCount <= 0)
+			{
+				state.DisableCount = 0;
+				control.Enabled = state.OriginalEnabled;
+			}
 		}
 	}
 
 	public static async Task DisableWhile(this Control control, Func<Task> action)
 	{
-		var wasEnabled = control.Enabled;
+		var state = DisableWhileStates.GetOrCreateValue(control)!;
+
+		if (state.DisableCount++ == 0)
+			state.OriginalEnabled = control.Enabled;
 
 		control.Enabled = false;
 
@@ -66,9 +86,15 @@ public static class WinFormsExtensions
 		}
 		finally
 		{
-			control.Enabled = wasEnabled;
+			if (--state.DisableCount <= 0)
+			{
+				state.DisableCount = 0;
+				control.Enabled = state.OriginalEnabled;
+			}
 		}
 	}
+
+	#endregion
 
 	public static void AppendText(this RichTextBox textBox, string text, Color? foreground = default, Color? background = default)
 	{
