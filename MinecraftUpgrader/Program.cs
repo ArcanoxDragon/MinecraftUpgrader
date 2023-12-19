@@ -1,29 +1,54 @@
-﻿using System.Net;
-using System.Windows.Forms;
+﻿using System.Diagnostics;
+using System.Net;
 using MinecraftUpgrader.DI;
+using MinecraftUpgrader.Extensions;
 
 namespace MinecraftUpgrader;
 
-static class Program
+internal static class Program
 {
 	private static readonly string LF      = Environment.NewLine;
 	private static readonly object LogLock = new();
 
+	private static bool InFirstChanceExceptionHandler;
+
 	[STAThread]
 	private static void Main()
 	{
-		AppDomain.CurrentDomain.FirstChanceException += (_, args) => {
+		// Ensure log directory exists
+		var logFileDirectory = Path.GetDirectoryName(GetLogPath());
+
+		if (!Directory.Exists(logFileDirectory))
+		{
 			try
 			{
-				lock (LogLock)
-				{
-					File.AppendAllText(GetLogPath(), $"=== Exception occurred at {DateTime.Now:yyyy-MM-dd hh:mm:ss tt} ==={LF}");
-					File.AppendAllText(GetLogPath(), $"{args.Exception}{LF}{LF}");
-				}
+				Directory.CreateDirectory(logFileDirectory);
 			}
 			catch
 			{
-				// Ignored
+				Debug.WriteLine($"Could not create log file directory at \"{logFileDirectory}\"!");
+			}
+		}
+
+		AppDomain.CurrentDomain.FirstChanceException += (_, args) => {
+			lock (LogLock)
+			{
+				try
+				{
+					if (InFirstChanceExceptionHandler)
+						return;
+
+					InFirstChanceExceptionHandler = true;
+
+					var logPath = GetLogPath();
+
+					File.AppendAllText(logPath, $"=== Exception occurred at {DateTime.Now:yyyy-MM-dd hh:mm:ss tt} ==={LF}");
+					File.AppendAllText(logPath, $"{args.Exception}{LF}{LF}");
+				}
+				finally
+				{
+					InFirstChanceExceptionHandler = false;
+				}
 			}
 		};
 
