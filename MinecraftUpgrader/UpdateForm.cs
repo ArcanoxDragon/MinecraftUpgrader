@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Windows.Forms;
 using Humanizer;
 using Microsoft.Extensions.Options;
@@ -62,10 +62,10 @@ namespace MinecraftUpgrader
 			if (File.Exists(processFileOldPath))
 				File.Delete(processFileOldPath);
 
-			using var web = new WebClient();
+			using var http = new HttpClient();
 
 			var localHash = CryptoUtility.CalculateFileMd5(processFilePath);
-			var remoteHash = await web.DownloadStringTaskAsync(this.remoteMd5Url);
+			var remoteHash = await http.GetStringAsync(this.remoteMd5Url);
 
 			// ReSharper disable once RedundantLogicalConditionalExpressionOperand
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
@@ -80,7 +80,9 @@ namespace MinecraftUpgrader
 			this.lbStatus.Text = "Updating program...";
 			this.pbDownload.Style = ProgressBarStyle.Continuous;
 
-			web.DownloadProgressChanged += (_, e) => Invoke(() => {
+			var downloader = new FileDownloader(http);
+
+			downloader.ProgressChanged += (_, e) => Invoke(() => {
 				var dlSize = e.BytesReceived.Bytes();
 				var totalSize = e.TotalBytesToReceive.Bytes();
 
@@ -93,7 +95,7 @@ namespace MinecraftUpgrader
 			if (File.Exists(updateFilePath))
 				File.Delete(updateFilePath);
 
-			await web.DownloadFileTaskAsync(this.remoteFileUrl, updateFilePath);
+			await downloader.DownloadFileAsync(this.remoteFileUrl, updateFilePath);
 
 			this.lbStatus.Text = "Installing updates...";
 			this.pbDownload.Style = ProgressBarStyle.Marquee;

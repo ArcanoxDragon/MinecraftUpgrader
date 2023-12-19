@@ -14,11 +14,7 @@ namespace MinecraftUpgrader.Utility
 		{
 			using var http = new HttpClient();
 			var requestUrl = $"{MetabaseUrl}/{projectId}/{fileId}.json";
-			var response = await http.GetAsync(requestUrl, cancellationToken);
-
-			response.EnsureSuccessStatusCode();
-
-			var responseJson = await response.Content.ReadAsStringAsync();
+			var responseJson = await http.GetStringAsync(requestUrl, cancellationToken);
 
 			return JsonConvert.DeserializeObject<CurseFileInfo>(responseJson);
 		}

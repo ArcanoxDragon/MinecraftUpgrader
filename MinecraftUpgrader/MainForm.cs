@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -335,9 +335,9 @@ namespace MinecraftUpgrader
 					// Check server pack MD5 if necessary
 					if (this.packMetadata.VerifyServerPackMd5)
 					{
-						using var web = new WebClient();
+						using var http = new HttpClient();
 						var basePackMd5Url = $"{this.packMetadata.ServerPack}.md5";
-						var basePackMd5 = await web.DownloadStringTaskAsync(basePackMd5Url);
+						var basePackMd5 = await http.GetStringAsync(basePackMd5Url);
 
 						outOfDate |= basePackMd5 != instanceMetadata.BuiltFromServerPackMd5;
 					}
@@ -491,9 +491,8 @@ namespace MinecraftUpgrader
 
 				successful = true;
 			}
-			catch (Exception ex) when (ex is TaskCanceledException
-										or OperationCanceledException
-										or WebException { Status: WebExceptionStatus.RequestCanceled })
+			catch (Exception ex) when (ex is OperationCanceledException
+										or TaskCanceledException { InnerException: null or not TimeoutException })
 			{
 				MessageBox.Show(dialog,
 								"Pack setup was cancelled. The instance is most likely not in a runnable state.",

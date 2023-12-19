@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -54,16 +54,17 @@ namespace MinecraftUpgrader.Modpack
 
 		public async Task<PackMetadata> LoadConfigAsync(CancellationToken cancellationToken = default, ProgressReporter progressReporter = default)
 		{
-			using var web = new WebClient();
-
-			cancellationToken.Register(web.CancelAsync);
+			using var http = new HttpClient();
+			var downloader = new FileDownloader(http);
 
 			if (progressReporter != null)
-				web.DownloadProgressChanged += (_, args) => {
+			{
+				downloader.ProgressChanged += (_, args) => {
 					progressReporter.ReportProgress(args.ProgressPercentage / 100.0, "Loading mod pack info...");
 				};
+			}
 
-			await using var stream = await web.OpenReadTaskAsync(PackMetadataUrl);
+			await using var stream = await downloader.DownloadToMemoryAsync(PackMetadataUrl, cancellationToken);
 
 			cancellationToken.ThrowIfCancellationRequested();
 
@@ -132,11 +133,12 @@ namespace MinecraftUpgrader.Modpack
 
 			try
 			{
-				using var web = new WebClient();
+				using var http = new HttpClient();
+				var downloader = new FileDownloader(http);
 
 				var downloadTask = "";
 
-				web.DownloadProgressChanged += (_, args) => {
+				downloader.ProgressChanged += (_, args) => {
 					// ReSharper disable AccessToModifiedClosure
 					var dlSize = args.BytesReceived.Bytes();
 					var totalSize = args.TotalBytesToReceive.Bytes();
@@ -156,12 +158,11 @@ namespace MinecraftUpgrader.Modpack
 				};
 
 				token.ThrowIfCancellationRequested();
-				token.Register(web.CancelAsync);
 
 				// Download MultiMC pack descriptor
 				downloadTask = "Downloading MultiMC pack descriptor...";
 				var packConfigFileName = Path.Combine(destinationFolder, "mmc-pack.json");
-				await web.DownloadFileTaskAsync(pack.MultiMcPack, packConfigFileName);
+				await downloader.DownloadFileAsync(pack.MultiMcPack, packConfigFileName, token);
 
 				// Download icon
 				if (!Directory.Exists(mmcConfig.IconsFolder))
@@ -169,7 +170,7 @@ namespace MinecraftUpgrader.Modpack
 
 				downloadTask = "Downloading pack icon...";
 				var iconFileName = Path.Combine(mmcConfig.IconsFolder, "arcanox.png");
-				await web.DownloadFileTaskAsync($"{this.options.ModPackUrl}/{IconPath}", iconFileName);
+				await downloader.DownloadFileAsync($"{this.options.ModPackUrl}/{IconPath}", iconFileName, token);
 
 				var rebuildBasePack = forceRebuild ||
 									  currentVersion == "0.0.0" ||
@@ -180,12 +181,10 @@ namespace MinecraftUpgrader.Modpack
 				if (pack.VerifyServerPackMd5)
 				{
 					var basePackMd5Url = $"{pack.ServerPack}.md5";
-					var basePackMd5 = await web.DownloadStringTaskAsync(basePackMd5Url);
+					var basePackMd5 = await http.GetStringAsync(basePackMd5Url, token);
 
 					if (!string.IsNullOrEmpty(basePackMd5))
-					{
 						rebuildBasePack |= basePackMd5 != currentBasePackMd5;
-					}
 				}
 
 				// Now create the temp dir for the following tasks
@@ -245,7 +244,7 @@ namespace MinecraftUpgrader.Modpack
 					// Download server pack contents
 					downloadTask = "Downloading base pack contents...";
 					var serverPackFileName = Path.Combine(tempDir, "server.zip");
-					await web.DownloadFileTaskAsync(pack.ServerPack, serverPackFileName);
+					await downloader.DownloadFileAsync(pack.ServerPack, serverPackFileName, token);
 
 					instanceMetadata.BuiltFromServerPackMd5 = CryptoUtility.CalculateFileMd5(serverPackFileName);
 
@@ -284,7 +283,7 @@ namespace MinecraftUpgrader.Modpack
 						// Download client pack overrides
 						downloadTask = "Downloading client overrides...";
 						var clientPackFileName = Path.Combine(tempDir, "client.zip");
-						await web.DownloadFileTaskAsync(pack.ClientPack, clientPackFileName);
+						await downloader.DownloadFileAsync(pack.ClientPack, clientPackFileName, token);
 
 						token.ThrowIfCancellationRequested();
 						progress?.ReportProgress(0, "Extracting client overrides...");
@@ -336,7 +335,7 @@ namespace MinecraftUpgrader.Modpack
 									var fullFilePath = Path.Combine(fileDestinationFolder, fileInfo.FileNameOnDisk);
 
 									if (!File.Exists(fullFilePath))
-										await web.DownloadFileTaskAsync(fileInfo.DownloadURL, fullFilePath);
+										await downloader.DownloadFileAsync(fileInfo.DownloadURL, fullFilePath, token);
 
 									currentFile++;
 								}
@@ -417,7 +416,7 @@ namespace MinecraftUpgrader.Modpack
 								downloadTask = $"{modTask}\n" +
 											   $"Downloading mod archive: {fileName}";
 
-								await web.DownloadFileTaskAsync(mod.FileUri, filePath);
+								await downloader.DownloadFileAsync(mod.FileUri, filePath, token);
 							}
 						}
 					}
@@ -470,7 +469,7 @@ namespace MinecraftUpgrader.Modpack
 								if (File.Exists(filePath))
 									File.Delete(filePath);
 
-								await web.DownloadFileTaskAsync(url, filePath);
+								await downloader.DownloadFileAsync(url, filePath, token);
 							}
 							catch
 							{
@@ -513,7 +512,7 @@ namespace MinecraftUpgrader.Modpack
 
 					var vivecraftInstallerUri = Constants.Vivecraft.GetVivecraftInstallerUri(vrEnabled);
 
-					await web.DownloadFileTaskAsync(vivecraftInstallerUri, vivecraftInstallerFilename);
+					await downloader.DownloadFileAsync(vivecraftInstallerUri, vivecraftInstallerFilename, token);
 
 					progress?.ReportProgress(-1, $"{vrTask}\nExtracting Vivecraft installer...");
 
@@ -538,7 +537,7 @@ namespace MinecraftUpgrader.Modpack
 					downloadTask = $"{vrTask}\n" +
 								   $"Fetching Optifine download information...";
 
-					var optifineDownloadPage = await web.DownloadStringTaskAsync(Constants.Vivecraft.OptifineMirrorUri);
+					var optifineDownloadPage = await http.GetStringAsync(Constants.Vivecraft.OptifineMirrorUri, token);
 
 					if (string.IsNullOrEmpty(optifineDownloadPage))
 						throw new Exception("Could not download Optifine from the mirror");
@@ -549,11 +548,12 @@ namespace MinecraftUpgrader.Modpack
 						throw new Exception("Unexpected response from Optifine mirror");
 
 					var optifineDownloadUrl = Constants.Vivecraft.OptifineBaseUri + mirrorPageMatch.Groups[2].Value;
+					var optifineLibraryPath = Path.Combine(librariesDir, Constants.Vivecraft.OptifineLibraryFilename);
 
 					downloadTask = $"{vrTask}\n" +
 								   $"Downloading Optifine archive...";
 
-					await web.DownloadFileTaskAsync(optifineDownloadUrl, Path.Combine(librariesDir, Constants.Vivecraft.OptifineLibraryFilename));
+					await downloader.DownloadFileAsync(optifineDownloadUrl, optifineLibraryPath, token);
 
 					// Write patch file
 					progress?.ReportProgress(-1, "Writing Vivecraft patch file...");
@@ -589,7 +589,7 @@ namespace MinecraftUpgrader.Modpack
 				await using var packMetaWriter = new StreamWriter(packMetaFileStream);
 
 				JsonSerializer.Serialize(packMetaWriter, instanceMetadata);
-				await packMetaWriter.FlushAsync();
+				await packMetaWriter.FlushAsync(token);
 			}
 			finally
 			{

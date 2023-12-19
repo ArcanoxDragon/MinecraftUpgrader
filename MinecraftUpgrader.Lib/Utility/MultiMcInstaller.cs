@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Humanizer;
@@ -19,11 +19,11 @@ namespace MinecraftUpgrader.Utility
 			var tempDir = Path.GetTempPath();
 			var tempFile = Path.Combine(tempDir, "multimc.zip");
 
-			using (var web = new WebClient())
+			using (var http = new HttpClient())
 			{
-				cancellationToken.Register(web.CancelAsync);
+				var downloader = new FileDownloader(http);
 
-				web.DownloadProgressChanged += (_, args) => {
+				downloader.ProgressChanged += (_, args) => {
 					var dlSize = args.BytesReceived.Bytes();
 					var totalSize = args.TotalBytesToReceive.Bytes();
 
@@ -31,7 +31,7 @@ namespace MinecraftUpgrader.Utility
 											 $"Downloading MultiMC... ({dlSize.ToString("0.##")} / {totalSize.ToString("0.##")})");
 				};
 
-				await web.DownloadFileTaskAsync(Constants.Paths.MultiMcDownload, tempFile);
+				await downloader.DownloadFileAsync(Constants.Paths.MultiMcDownload, tempFile, cancellationToken);
 			}
 
 			var mmcInstallPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MultiMC");
