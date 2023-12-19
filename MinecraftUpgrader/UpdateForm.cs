@@ -2,9 +2,9 @@
 // ReSharper disable HeuristicUnreachableCode
 
 using System.Diagnostics;
-using System.Net.Http;
 using Humanizer;
 using Microsoft.Extensions.Options;
+using MinecraftUpgrader.DI;
 using MinecraftUpgrader.Options;
 using MinecraftUpgrader.Utility;
 
@@ -58,7 +58,7 @@ public partial class UpdateForm : Form
 		if (File.Exists(processFileOldPath))
 			File.Delete(processFileOldPath);
 
-		using var http = new HttpClient();
+		using var http = WebUtility.CreateHttpClient();
 
 		var localHash = CryptoUtility.CalculateFileMd5(processFilePath);
 		var remoteHash = await http.GetStringAsync(this.remoteMd5Url);

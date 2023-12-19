@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -54,7 +53,7 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 
 	public async Task<PackMetadata> LoadConfigAsync(CancellationToken cancellationToken = default, ProgressReporter progressReporter = default)
 	{
-		using var http = new HttpClient();
+		using var http = WebUtility.CreateHttpClient();
 		var downloader = new FileDownloader(http);
 
 		if (progressReporter != null)
@@ -133,7 +132,7 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 
 		try
 		{
-			using var http = new HttpClient();
+			using var http = WebUtility.CreateHttpClient();
 			var downloader = new FileDownloader(http);
 
 			var downloadTask = "";

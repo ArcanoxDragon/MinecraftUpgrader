@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Humanizer;
@@ -19,7 +18,7 @@ public static class PrismInstaller
 		var tempDir = Path.GetTempPath();
 		var tempFile = Path.Combine(tempDir, "prismlauncher.zip");
 
-		using (var http = new HttpClient())
+		using (var http = WebUtility.CreateHttpClient())
 		{
 			var downloader = new FileDownloader(http);
 

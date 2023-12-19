@@ -4,6 +4,7 @@ using MinecraftUpgrader.Config;
 using MinecraftUpgrader.Extensions;
 using MinecraftUpgrader.Modpack;
 using MinecraftUpgrader.Prism;
+using MinecraftUpgrader.Utility;
 using NickStrupat;
 using Semver;
 
@@ -327,7 +328,7 @@ public partial class MainForm : Form
 				// Check server pack MD5 if necessary
 				if (this.packMetadata.VerifyServerPackMd5)
 				{
-					using var http = new HttpClient();
+					using var http = WebUtility.CreateHttpClient();
 					var basePackMd5Url = $"{this.packMetadata.ServerPack}.md5";
 					var basePackMd5 = await http.GetStringAsync(basePackMd5Url);
 
