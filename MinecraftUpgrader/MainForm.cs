@@ -22,6 +22,7 @@ public partial class MainForm : Form
 
 	private readonly PackBuilder packBuilder;
 
+	private bool                              initialized;
 	private PrismConfig                       config;
 	private IList<(string name, string path)> instances;
 	private PackMode                          currentPackState = PackMode.New;
@@ -58,6 +59,9 @@ public partial class MainForm : Form
 		}
 
 		await LoadPrismInstances(prismPath);
+		await UpdatePackMetadata();
+
+		this.initialized = true;
 	}
 
 	private async Task LoadPrismInstances(string prismPath)
@@ -181,11 +185,15 @@ public partial class MainForm : Form
 		this.txtNewInstanceName.Enabled = this.rbInstanceNew.Checked;
 		this.cmbInstance.Enabled = this.rbInstanceExisting.Checked;
 
-		await UpdatePackMetadata();
+		if (this.initialized)
+			await UpdatePackMetadata();
 	}
 
 	private async void OnTxtNewInstanceNameChanged(object sender, EventArgs e)
 	{
+		if (!this.initialized)
+			return;
+
 		await UpdatePackMetadata();
 	}
 
