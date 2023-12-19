@@ -1,9 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using Microsoft.WindowsAPICodePack.Dialogs;
-using MinecraftUpgrader.Config;
+﻿using MinecraftUpgrader.Config;
 using MinecraftUpgrader.Prism;
 using MinecraftUpgrader.Utility;
 
@@ -26,15 +21,15 @@ public partial class ConfigurePrismForm : Form
 
 	private async void btnBrowse_Click(object sender, EventArgs e)
 	{
-		var dialog = new CommonOpenFileDialog {
-			IsFolderPicker = true,
-			CookieIdentifier = OpenFolderCookie,
+		var dialog = new FolderBrowserDialog {
+			AutoUpgradeEnabled = true,
+			ClientGuid = OpenFolderCookie,
 		};
-		var result = dialog.ShowDialog(Handle);
+		var result = dialog.ShowDialog(this);
 
-		if (result == CommonFileDialogResult.Ok)
+		if (result == DialogResult.OK)
 		{
-			var prismPath = dialog.FileName;
+			var prismPath = dialog.SelectedPath;
 
 			try
 			{

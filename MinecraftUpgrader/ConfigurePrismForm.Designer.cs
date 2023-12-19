@@ -29,31 +29,31 @@
 		private void InitializeComponent()
 		{
 			var resources = new System.ComponentModel.ComponentResourceManager(typeof(ConfigurePrismForm));
-			this.label1 = new System.Windows.Forms.Label();
-			this.btnDownload = new System.Windows.Forms.Button();
-			this.btnBrowse = new System.Windows.Forms.Button();
-			this.btnExit = new System.Windows.Forms.Button();
+			this.label1 = new Label();
+			this.btnDownload = new Button();
+			this.btnBrowse = new Button();
+			this.btnExit = new Button();
 			SuspendLayout();
 			// 
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point,  0);
-			this.label1.Location = new System.Drawing.Point(20, 17);
-			this.label1.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+			this.label1.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Regular, GraphicsUnit.Point,  0);
+			this.label1.Location = new Point(20, 17);
+			this.label1.Margin = new Padding(5, 0, 5, 0);
 			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(586, 200);
+			this.label1.Size = new Size(586, 200);
 			this.label1.TabIndex = 0;
 			this.label1.Text = resources.GetString("label1.Text");
 			// 
 			// btnDownload
 			// 
-			this.btnDownload.Anchor =    System.Windows.Forms.AnchorStyles.Bottom  |  System.Windows.Forms.AnchorStyles.Left   |  System.Windows.Forms.AnchorStyles.Right ;
-			this.btnDownload.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point,  0);
-			this.btnDownload.Location = new System.Drawing.Point(17, 271);
-			this.btnDownload.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this.btnDownload.Anchor =    AnchorStyles.Bottom  |  AnchorStyles.Left   |  AnchorStyles.Right ;
+			this.btnDownload.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Regular, GraphicsUnit.Point,  0);
+			this.btnDownload.Location = new Point(17, 271);
+			this.btnDownload.Margin = new Padding(5, 6, 5, 6);
 			this.btnDownload.Name = "btnDownload";
-			this.btnDownload.Size = new System.Drawing.Size(643, 100);
+			this.btnDownload.Size = new Size(643, 100);
 			this.btnDownload.TabIndex = 1;
 			this.btnDownload.Text = "&Download it for me";
 			this.btnDownload.UseVisualStyleBackColor = true;
@@ -61,11 +61,11 @@
 			// 
 			// btnBrowse
 			// 
-			this.btnBrowse.Anchor =    System.Windows.Forms.AnchorStyles.Bottom  |  System.Windows.Forms.AnchorStyles.Left   |  System.Windows.Forms.AnchorStyles.Right ;
-			this.btnBrowse.Location = new System.Drawing.Point(17, 383);
-			this.btnBrowse.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this.btnBrowse.Anchor =    AnchorStyles.Bottom  |  AnchorStyles.Left   |  AnchorStyles.Right ;
+			this.btnBrowse.Location = new Point(17, 383);
+			this.btnBrowse.Margin = new Padding(5, 6, 5, 6);
 			this.btnBrowse.Name = "btnBrowse";
-			this.btnBrowse.Size = new System.Drawing.Size(643, 44);
+			this.btnBrowse.Size = new Size(643, 44);
 			this.btnBrowse.TabIndex = 2;
 			this.btnBrowse.Text = "&Browse for it";
 			this.btnBrowse.UseVisualStyleBackColor = true;
@@ -73,12 +73,12 @@
 			// 
 			// btnExit
 			// 
-			this.btnExit.Anchor =    System.Windows.Forms.AnchorStyles.Bottom  |  System.Windows.Forms.AnchorStyles.Left   |  System.Windows.Forms.AnchorStyles.Right ;
-			this.btnExit.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.btnExit.Location = new System.Drawing.Point(17, 438);
-			this.btnExit.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			this.btnExit.Anchor =    AnchorStyles.Bottom  |  AnchorStyles.Left   |  AnchorStyles.Right ;
+			this.btnExit.DialogResult = DialogResult.Cancel;
+			this.btnExit.Location = new Point(17, 438);
+			this.btnExit.Margin = new Padding(5, 6, 5, 6);
 			this.btnExit.Name = "btnExit";
-			this.btnExit.Size = new System.Drawing.Size(643, 44);
+			this.btnExit.Size = new Size(643, 44);
 			this.btnExit.TabIndex = 3;
 			this.btnExit.Text = "E&xit";
 			this.btnExit.UseVisualStyleBackColor = true;
@@ -86,21 +86,21 @@
 			// ConfigurePrismForm
 			// 
 			AcceptButton = this.btnDownload;
-			AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
-			AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+			AutoScaleDimensions = new SizeF(10F, 25F);
+			AutoScaleMode = AutoScaleMode.Font;
 			CancelButton = this.btnExit;
-			ClientSize = new System.Drawing.Size(677, 506);
+			ClientSize = new Size(677, 506);
 			ControlBox = false;
 			Controls.Add(this.btnExit);
 			Controls.Add(this.btnBrowse);
 			Controls.Add(this.btnDownload);
 			Controls.Add(this.label1);
-			FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-			Icon = (System.Drawing.Icon) resources.GetObject("$this.Icon");
-			Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+			FormBorderStyle = FormBorderStyle.FixedDialog;
+			Icon = (Icon) resources.GetObject("$this.Icon");
+			Margin = new Padding(5, 6, 5, 6);
 			MaximizeBox = false;
 			Name = "ConfigurePrismForm";
-			StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+			StartPosition = FormStartPosition.CenterScreen;
 			Text = "Prism Launcher Setup";
 			ResumeLayout(false);
 			PerformLayout();

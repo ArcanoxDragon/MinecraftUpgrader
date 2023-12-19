@@ -28,57 +28,59 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UpdateForm));
-			this.lbStatus = new System.Windows.Forms.Label();
-			this.pbDownload = new System.Windows.Forms.ProgressBar();
-			this.lbProgress = new System.Windows.Forms.Label();
-			this.SuspendLayout();
+			var resources = new System.ComponentModel.ComponentResourceManager(typeof(UpdateForm));
+			this.lbStatus = new Label();
+			this.pbDownload = new ProgressBar();
+			this.lbProgress = new Label();
+			SuspendLayout();
 			// 
 			// lbStatus
 			// 
 			this.lbStatus.AutoSize = true;
-			this.lbStatus.Location = new System.Drawing.Point(12, 9);
+			this.lbStatus.Location = new Point(12, 9);
+			this.lbStatus.Margin = new Padding(2, 0, 2, 0);
 			this.lbStatus.Name = "lbStatus";
-			this.lbStatus.Size = new System.Drawing.Size(172, 20);
+			this.lbStatus.Size = new Size(129, 15);
 			this.lbStatus.TabIndex = 0;
 			this.lbStatus.Text = "Checking for updates...";
 			// 
 			// pbDownload
 			// 
-			this.pbDownload.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.pbDownload.Location = new System.Drawing.Point(13, 81);
-			this.pbDownload.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.pbDownload.Anchor =    AnchorStyles.Bottom  |  AnchorStyles.Left   |  AnchorStyles.Right ;
+			this.pbDownload.Location = new Point(12, 93);
+			this.pbDownload.Margin = new Padding(3, 4, 3, 4);
 			this.pbDownload.Name = "pbDownload";
-			this.pbDownload.Size = new System.Drawing.Size(694, 35);
-			this.pbDownload.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+			this.pbDownload.Size = new Size(538, 26);
+			this.pbDownload.Style = ProgressBarStyle.Marquee;
 			this.pbDownload.TabIndex = 2;
 			// 
 			// lbProgress
 			// 
-			this.lbProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.lbProgress.Location = new System.Drawing.Point(9, 121);
+			this.lbProgress.Anchor =    AnchorStyles.Bottom  |  AnchorStyles.Left   |  AnchorStyles.Right ;
+			this.lbProgress.Location = new Point(12, 64);
+			this.lbProgress.Margin = new Padding(2, 0, 2, 0);
 			this.lbProgress.Name = "lbProgress";
-			this.lbProgress.Size = new System.Drawing.Size(698, 39);
+			this.lbProgress.Size = new Size(538, 25);
 			this.lbProgress.TabIndex = 0;
 			// 
 			// UpdateForm
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(720, 169);
-			this.Controls.Add(this.pbDownload);
-			this.Controls.Add(this.lbProgress);
-			this.Controls.Add(this.lbStatus);
-			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.Name = "UpdateForm";
-			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "Updating Program";
-			this.Load += new System.EventHandler(this.UpdateForm_Load);
-			this.ResumeLayout(false);
-			this.PerformLayout();
-
+			AutoScaleDimensions = new SizeF(7F, 15F);
+			AutoScaleMode = AutoScaleMode.Font;
+			ClientSize = new Size(560, 132);
+			Controls.Add(this.pbDownload);
+			Controls.Add(this.lbProgress);
+			Controls.Add(this.lbStatus);
+			FormBorderStyle = FormBorderStyle.FixedSingle;
+			Icon = (Icon) resources.GetObject("$this.Icon");
+			Margin = new Padding(2);
+			MaximizeBox = false;
+			Name = "UpdateForm";
+			StartPosition = FormStartPosition.CenterScreen;
+			Text = "Updating Program";
+			Load +=  UpdateForm_Load ;
+			ResumeLayout(false);
+			PerformLayout();
 		}
 
 		#endregion

@@ -68,7 +68,7 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 		cancellationToken.ThrowIfCancellationRequested();
 
 		using var streamReader = new StreamReader(stream);
-		using var jsonTextReader = new JsonTextReader(streamReader);
+		await using var jsonTextReader = new JsonTextReader(streamReader);
 
 		return JsonSerializer.Deserialize<PackMetadata>(jsonTextReader);
 	}
@@ -346,22 +346,24 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 			// Process version upgrades
 			foreach (var versionKey in pack.Versions.Keys)
 			{
-				if (!SemVersion.TryParse(versionKey, out _))
+				if (!SemVersion.TryParse(versionKey, SemVersionStyles.Any, out _))
 					throw new InvalidOperationException($"Invalid version number in mod pack definition: {versionKey}");
 			}
 
-			var curSemVersion = SemVersion.Parse(currentVersion);
-			var desiredSemVersion = SemVersion.Parse(pack.CurrentVersion);
+			var currentPackVersion = SemVersion.Parse(currentVersion, SemVersionStyles.Any);
+			var desiredPackVersion = SemVersion.Parse(pack.CurrentVersion, SemVersionStyles.Any);
+			var installedVersionRange = SemVersionRange.AtMost(currentPackVersion);
+			var futureVersionRange = SemVersionRange.GreaterThan(desiredPackVersion);
 
-			foreach (var (versionKey, version) in pack.Versions.OrderBy(pair => SemVersion.Parse(pair.Key)))
+			foreach (var (versionKey, version) in pack.Versions.OrderBy(pair => SemVersion.Parse(pair.Key, SemVersionStyles.Any)))
 			{
-				var thisSemVersion = SemVersion.Parse(versionKey);
+				var thisPackVersion = SemVersion.Parse(versionKey, SemVersionStyles.Any);
 
-				if (thisSemVersion <= curSemVersion)
+				if (thisPackVersion.Satisfies(installedVersionRange))
 					// This version is already installed; don't bother
 					continue;
 
-				if (thisSemVersion > desiredSemVersion)
+				if (thisPackVersion.Satisfies(futureVersionRange))
 					// We aren't supposed to install this version yet; it's newer than the "intended" pack version
 					continue;
 
@@ -369,8 +371,10 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 
 				progress?.ReportProgress(versionTask);
 
-				var futureVersions = pack.Versions.Keys
-					.Where(vk => SemVersion.TryParse(vk, out var parsed) && parsed > thisSemVersion && parsed <= desiredSemVersion)
+				// Find all versions AFTER this one that will be installed (but not future versions that aren't to be installed yet)
+				var remainingToInstallRange = SemVersionRange.InclusiveOfEnd(thisPackVersion, desiredPackVersion);
+				var remainingVersionsToInstall = pack.Versions.Keys
+					.Where(vk => SemVersion.TryParse(vk, SemVersionStyles.Any, out var parsed) && parsed.Satisfies(remainingToInstallRange))
 					.Select(vk => pack.Versions[vk])
 					.ToList();
 
@@ -385,7 +389,7 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 							// See if there are any mods in this version with the same mod ID and which download a new JAR
 							=> v.Mods?.Any(pair => pair.Key == modId && !string.IsNullOrEmpty(pair.Value.FileUri)) is true;
 
-						if (futureVersions.Any(VersionInstallsThisMod))
+						if (remainingVersionsToInstall.Any(VersionInstallsThisMod))
 							// Skip the mod in this version because a later version installs it
 							continue;
 

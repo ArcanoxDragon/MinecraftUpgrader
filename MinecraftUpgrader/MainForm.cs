@@ -322,15 +322,15 @@ public partial class MainForm : Form
 
 			if (instanceMetadata == null
 				|| instanceMetadata.Version == "0.0.0"
-				|| !SemVersion.TryParse(instanceMetadata.Version, out var instanceSemVersion)
-				|| !SemVersion.TryParse(this.packMetadata.CurrentVersion, out var serverSemVersion))
+				|| !SemVersion.TryParse(instanceMetadata.Version, SemVersionStyles.Any, out var currentPackVersion)
+				|| !SemVersion.TryParse(this.packMetadata.CurrentVersion, SemVersionStyles.Any, out var serverPackVersion))
 			{
 				// Never converted
 				this.currentPackState = PackMode.NeedsConversion;
 			}
 			else
 			{
-				var outOfDate = instanceSemVersion < serverSemVersion ||
+				var outOfDate = !currentPackVersion.Satisfies(SemVersionRange.AtLeast(serverPackVersion)) ||
 								instanceMetadata.BuiltFromServerPack != this.packMetadata.ServerPack;
 
 				// Check server pack MD5 if necessary

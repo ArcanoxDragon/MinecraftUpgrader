@@ -38,8 +38,7 @@ static class Program
 		ServicePointManager.Expect100Continue = true;
 		ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
-		Application.EnableVisualStyles();
-		Application.SetCompatibleTextRenderingDefault(false);
+		ApplicationConfiguration.Initialize();
 		Application.Run(Services.CreateInstance<UpdateForm>());
 	}
 
