@@ -28,7 +28,7 @@ static class Program
 		};
 
 		AppDomain.CurrentDomain.UnhandledException += (_, args) => {
-			MessageBox.Show($"Error: {( args.ExceptionObject as Exception )?.Message ?? "Unknown"}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			MessageBox.Show($"Error: {( args.ExceptionObject as Exception )?.GetFriendlyMessage() ?? "Unknown"}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		};
 
 		// Configure dependency injection

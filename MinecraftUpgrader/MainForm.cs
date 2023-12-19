@@ -298,7 +298,7 @@ public partial class MainForm : Form
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show($"An error occurred while fetching the mod pack info:\n\n{ex.Message}",
+				MessageBox.Show($"An error occurred while fetching the mod pack info:\n\n{ex.GetFriendlyMessage()}",
 								"Error Loading Mod Pack",
 								MessageBoxButtons.OK,
 								MessageBoxIcon.Error);
@@ -502,7 +502,7 @@ public partial class MainForm : Form
 		{
 			MessageBox.Show(dialog,
 							"An error occurred while setting up the pack:\n\n" +
-							ex.Message,
+							ex.GetFriendlyMessage(),
 							"Error Setting Up Pack",
 							MessageBoxButtons.OK,
 							MessageBoxIcon.Error);
