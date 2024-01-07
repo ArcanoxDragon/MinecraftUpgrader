@@ -36,9 +36,9 @@ public static class PrismConfigReader
 		var configPath = Path.Combine(prismPath, ConfigFileName);
 
 		// Normalize slashes
-		config.IconsFolder = config.IconsFolder.Replace("\\", "/");
-		config.InstancesFolder = config.InstancesFolder.Replace("\\", "/");
-		config.JavaPath = config.JavaPath.Replace("\\", "/");
+		config.IconsFolder = config.IconsFolder?.Replace("\\", "/");
+		config.InstancesFolder = config.InstancesFolder?.Replace("\\", "/");
+		config.JavaPath = config.JavaPath?.Replace("\\", "/");
 
 		await using var fs = File.Open(configPath, FileMode.Open, FileAccess.ReadWrite);
 

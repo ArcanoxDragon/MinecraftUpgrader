@@ -64,6 +64,16 @@ public partial class MainForm : Form
 		this.initialized = true;
 	}
 
+	private async Task RefreshPrismInstances()
+	{
+		var prismPath = AppConfig.Get().LastPrismPath;
+
+		if (string.IsNullOrEmpty(prismPath))
+			return;
+
+		await LoadPrismInstances(prismPath);
+	}
+
 	private async Task LoadPrismInstances(string prismPath)
 	{
 		this.txtPrismPath.Text = prismPath;
@@ -189,12 +199,12 @@ public partial class MainForm : Form
 			await UpdatePackMetadata();
 	}
 
-	private async void OnTxtNewInstanceNameChanged(object sender, EventArgs e)
+	private void OnTxtNewInstanceNameChanged(object sender, EventArgs e)
 	{
 		if (!this.initialized)
 			return;
 
-		await UpdatePackMetadata();
+		UpdateLayoutFromState();
 	}
 
 	private async void OnCbInstanceChanged(object sender, EventArgs e)
@@ -204,7 +214,7 @@ public partial class MainForm : Form
 
 	private void UpdateLayoutFromState()
 	{
-		if (this.packMetadata.SupportsVR)
+		if (this.packMetadata is { SupportsVR: true })
 		{
 			if (!this.panelVR.Visible)
 			{
@@ -272,9 +282,10 @@ public partial class MainForm : Form
 		}
 	}
 
-	private async Task UpdatePackMetadata()
+	private async Task UpdatePackMetadata(bool force = false)
 	{
-		await LoadPackMetadataAsync();
+		if (this.packMetadata is null || force)
+			await LoadPackMetadataAsync();
 
 		if (this.rbInstanceNew.Checked)
 		{
@@ -289,8 +300,10 @@ public partial class MainForm : Form
 	}
 
 	private Task LoadPackMetadataAsync()
-		=> this.DisableWhile(async () => {
+		=> this.disablePanel.DisableWhile(async () => {
 			var progressDialog = new ProgressDialog("Loading Mod Pack Info");
+
+			progressDialog.Show(this);
 
 			try
 			{
@@ -303,7 +316,7 @@ public partial class MainForm : Form
 								MessageBoxButtons.OK,
 								MessageBoxIcon.Error);
 
-				Close();
+				// Close();
 			}
 			finally
 			{
@@ -412,10 +425,10 @@ public partial class MainForm : Form
 	}
 
 	private async void OnBtnRebuildClick(object sender, EventArgs e)
-		=> await this.DisableWhile(() => DoConfigurePack(true));
+		=> await this.disablePanel.DisableWhile(() => DoConfigurePack(true));
 
 	private async void OnBtnGoClick(object sender, EventArgs e)
-		=> await this.DisableWhile(async () => {
+		=> await this.disablePanel.DisableWhile(async () => {
 			if (this.currentPackState == PackMode.ReadyToPlay)
 			{
 				// Button says "Play"; user doesn't expect another prompt to start MC
@@ -514,8 +527,10 @@ public partial class MainForm : Form
 			await UpdatePackMetadata();
 
 			if (successful)
-				OfferStartMinecraft(instanceName,
-									"The mod pack was successfully configured!");
+			{
+				await RefreshPrismInstances();
+				OfferStartMinecraft(instanceName, "The mod pack was successfully configured!");
+			}
 		}
 	}
 
@@ -524,9 +539,9 @@ public partial class MainForm : Form
 		var choice = MessageBox.Show(this,
 									 initialPrompt +
 									 "\n\nWould you like to start Minecraft now?\n\n" +
-									 "Note: If you haven't set up a Minecraft account in Prism Launcher yet, " +
-									 "you will have to run either this app or Prism Launcher again after setting " +
-									 "up your account to actually start Minecraft.",
+									 "Note: If this is your first time launching Prism Launcher, it will ask you to set up Java " +
+									 "as well as configure your Minecraft account. Follow the instructions provided by Prism, and " +
+									 "if it asks you which version of Java to use, pick one that starts with \"1.8\".",
 									 "Start Prism Launcher?",
 									 MessageBoxButtons.YesNo,
 									 MessageBoxIcon.Question);
