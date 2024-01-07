@@ -2,6 +2,8 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,16 +16,15 @@ using MinecraftUpgrader.Options;
 using MinecraftUpgrader.Prism;
 using MinecraftUpgrader.Utility;
 using MinecraftUpgrader.Zip;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Semver;
 
 namespace MinecraftUpgrader.Modpack;
 
 public class PackBuilder(IOptions<PackBuilderOptions> options)
 {
-	private static readonly JsonSerializer JsonSerializer = new() {
-		ContractResolver = new CamelCasePropertyNamesContractResolver(),
+	private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web) {
+		ReadCommentHandling = JsonCommentHandling.Skip,
+		AllowTrailingCommas = true,
 	};
 
 	private const string ConfigPath = "modpack/pack-info.json";
@@ -67,10 +68,12 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 
 		cancellationToken.ThrowIfCancellationRequested();
 
-		using var streamReader = new StreamReader(stream);
-		await using var jsonTextReader = new JsonTextReader(streamReader);
+		var packMetadata = JsonSerializer.Deserialize<PackMetadata>(stream, JsonSerializerOptions);
 
-		return JsonSerializer.Deserialize<PackMetadata>(jsonTextReader);
+		if (packMetadata is null)
+			throw new JsonException("Could not parse mod pack configuration file");
+
+		return packMetadata;
 	}
 
 	private async Task SetupPackAsync(PrismConfig prismConfig, PackMetadata pack, string destinationFolder, bool forceRebuild, bool vrEnabled, CancellationToken token, ProgressReporter progress, int? maxRamMb = null)
@@ -109,7 +112,7 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 		if (!forceRebuild && File.Exists(metadataFile))
 		{
 			var instanceMetadataJson = await File.ReadAllTextAsync(metadataFile, token).ConfigureAwait(false);
-			var currentInstanceMetadata = JsonConvert.DeserializeObject<InstanceMetadata>(instanceMetadataJson);
+			var currentInstanceMetadata = JsonSerializer.Deserialize<InstanceMetadata>(instanceMetadataJson, JsonSerializerOptions);
 
 			if (currentInstanceMetadata.FileVersion >= 2)
 			{
@@ -307,7 +310,7 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 					{
 						var clientManifestFile = Path.Combine(tempDir, "manifest.json");
 						var clientManifestJson = await File.ReadAllTextAsync(clientManifestFile, token).ConfigureAwait(false);
-						var clientManifest = JsonConvert.DeserializeObject<CursePackManifest>(clientManifestJson);
+						var clientManifest = JsonSerializer.Deserialize<CursePackManifest>(clientManifestJson, JsonSerializerOptions);
 
 						if (clientManifest.Files?.Count > 0)
 						{
@@ -561,10 +564,10 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 				// Write patch file
 				progress?.ReportProgress(-1, "Writing Vivecraft patch file...");
 
-				var patchFileJson = JsonConvert.SerializeObject(
+				var patchFileJson = JsonSerializer.Serialize(
 					vrEnabled ? PrismPatchDefinitions.VivecraftPatchVr : PrismPatchDefinitions.VivecraftPatchNonVr,
-					new JsonSerializerSettings {
-						NullValueHandling = NullValueHandling.Ignore,
+					new JsonSerializerOptions(JsonSerializerOptions) {
+						DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
 					}
 				);
 
@@ -589,10 +592,8 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 			// We do this last so that if a version upgrade fails, the user
 			// can resume at the last fully completed version
 			await using var packMetaFileStream = File.Open(metadataFile, FileMode.Create, FileAccess.Write, FileShare.None);
-			await using var packMetaWriter = new StreamWriter(packMetaFileStream);
 
-			JsonSerializer.Serialize(packMetaWriter, instanceMetadata);
-			await packMetaWriter.FlushAsync(token);
+			await JsonSerializer.SerializeAsync(packMetaFileStream, instanceMetadata, JsonSerializerOptions, token);
 		}
 		finally
 		{

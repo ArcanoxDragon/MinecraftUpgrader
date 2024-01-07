@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace MinecraftUpgrader.Modpack;
 
@@ -13,7 +13,7 @@ public class CurseFileInfo
 	public int    FileStatus     { get; set; }
 	public string DownloadURL    { get; set; }
 
-	[JsonProperty("_Project")]
+	[JsonPropertyName("_Project")]
 	public CurseFileProject Project { get; set; }
 }
 

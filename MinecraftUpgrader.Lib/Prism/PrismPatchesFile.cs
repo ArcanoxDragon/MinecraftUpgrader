@@ -1,32 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace MinecraftUpgrader.Prism;
 
 public class PrismPatchesFile
 {
-	[JsonProperty("uid")]
+	[JsonPropertyName("uid")]
 	public string Uid { get; set; }
 
-	[JsonProperty("releaseTime")]
+	[JsonPropertyName("releaseTime")]
 	public DateTime ReleaseTime { get; set; }
 
-	[JsonProperty("time")]
+	[JsonPropertyName("time")]
 	public DateTime Time { get; set; }
 
-	[JsonProperty("mainClass")]
+	[JsonPropertyName("mainClass")]
 	public string MainClass { get; set; }
 
-	[JsonProperty("libraries")]
+	[JsonPropertyName("libraries")]
 	public List<PrismLibrary> Libraries { get; set; }
 
-	[JsonProperty("name")]
+	[JsonPropertyName("name")]
 	public string Name { get; set; }
 
-	[JsonProperty("version")]
+	[JsonPropertyName("version")]
 	public string Version { get; set; }
 
-	[JsonProperty("+tweakers")]
+	[JsonPropertyName("+tweakers")]
 	public List<string> Tweakers { get; set; }
 }

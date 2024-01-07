@@ -1,10 +1,12 @@
 ﻿using System.IO;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace MinecraftUpgrader.Modpack;
 
 public static class InstanceMetadataReader
 {
+	private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web);
+
 	public static InstanceMetadata ReadInstanceMetadata(string instancePath)
 	{
 		var instanceFile = Path.Combine(instancePath, "packMeta.json");
@@ -13,9 +15,9 @@ public static class InstanceMetadataReader
 		if (File.Exists(instanceFile))
 			metadataJson = File.ReadAllText(instanceFile);
 
-		if (string.IsNullOrEmpty(instanceFile))
+		if (string.IsNullOrEmpty(metadataJson))
 			return new InstanceMetadata();
 
-		return JsonConvert.DeserializeObject<InstanceMetadata>(metadataJson);
+		return JsonSerializer.Deserialize<InstanceMetadata>(metadataJson, JsonSerializerOptions);
 	}
 }

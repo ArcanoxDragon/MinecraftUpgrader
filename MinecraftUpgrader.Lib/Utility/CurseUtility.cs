@@ -1,7 +1,7 @@
-﻿using System.Threading;
+﻿using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using MinecraftUpgrader.Modpack;
-using Newtonsoft.Json;
 
 namespace MinecraftUpgrader.Utility;
 
@@ -15,6 +15,6 @@ public static class CurseUtility
 		var requestUrl = $"{MetabaseUrl}/{projectId}/{fileId}.json";
 		var responseJson = await http.GetStringAsync(requestUrl, cancellationToken);
 
-		return JsonConvert.DeserializeObject<CurseFileInfo>(responseJson);
+		return JsonSerializer.Deserialize<CurseFileInfo>(responseJson);
 	}
 }

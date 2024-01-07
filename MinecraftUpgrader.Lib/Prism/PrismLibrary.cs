@@ -1,15 +1,15 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace MinecraftUpgrader.Prism;
 
 public class PrismLibrary
 {
-	[JsonProperty("name")]
+	[JsonPropertyName("name")]
 	public string Name { get; set; }
 
-	[JsonProperty("url")]
+	[JsonPropertyName("url")]
 	public string Url { get; set; }
 
-	[JsonProperty("MMC-hint")]
+	[JsonPropertyName("MMC-hint")]
 	public string MmcHint { get; set; }
 }

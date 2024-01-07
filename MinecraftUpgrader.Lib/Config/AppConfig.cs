@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace MinecraftUpgrader.Config;
 
@@ -28,7 +28,7 @@ public class AppConfig : IAppConfig
 		updateAction(config);
 
 		var configPath = GetConfigPath();
-		var configJson = JsonConvert.SerializeObject(config);
+		var configJson = JsonSerializer.Serialize(config);
 
 		File.WriteAllText(configPath, configJson);
 	}
@@ -47,7 +47,7 @@ public class AppConfig : IAppConfig
 		if (File.Exists(configPath))
 		{
 			var configJson = File.ReadAllText(configPath);
-			var appConfig = JsonConvert.DeserializeObject<AppConfig>(configJson);
+			var appConfig = JsonSerializer.Deserialize<AppConfig>(configJson);
 
 			CachedInstance = appConfig;
 		}
