@@ -13,6 +13,7 @@ public class PackMetadata
 	public bool   VerifyServerPackMd5      { get; set; }
 	public bool   SupportsVR               { get; set; }
 
+	public List<string> BasePackFolders         { get; set; }
 	public List<string> ClientOverrideFolders   { get; set; }
 	public List<string> AdditionalBasePackFiles { get; set; }
 

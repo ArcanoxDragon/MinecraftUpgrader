@@ -31,7 +31,15 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 	private const string IconPath   = "modpack/icon.png";
 	private const string IconName   = "arcanox";
 
-	private static readonly string[] DefaultClientOverrideFolders = {
+	private static readonly string[] DefaultBasePackFolders = [
+		".minecraft/config",
+		".minecraft/coremods",
+		".minecraft/defaultconfigs",
+		".minecraft/local",
+		".minecraft/mods",
+	];
+
+	private static readonly string[] DefaultClientOverrideFolders = [
 		"animation",
 		"configs",
 		"defaultconfigs",
@@ -39,14 +47,14 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 		"paintings",
 		"resources",
 		"scripts",
-	};
+	];
 
-	private static readonly string[] ProfileFilePatternsToPreserve = {
+	private static readonly string[] ProfileFilePatternsToPreserve = [
 		@"options\.txt$",
 		@"servers\.dat$",
 		@"assets[/\\].*$",
 		@"(?:resourcepacks|saves|schematics|screenshots|shaderpacks|texturepacks)[/\\].*$",
-	};
+	];
 
 	private readonly PackBuilderOptions options = options.Value;
 
@@ -258,14 +266,12 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 				{
 					using var zip = new ZipFile(fs);
 
-					progress?.ReportProgress("Extracting base pack contents (configs)...");
-					await zip.ExtractAsync(minecraftDir, new ZipExtractOptions("config", false, token, progress));
-					progress?.ReportProgress("Extracting base pack contents (mods)...");
-					await zip.ExtractAsync(minecraftDir, new ZipExtractOptions("mods", true, token, progress));
-					progress?.ReportProgress("Extracting base pack contents (resources)...");
-					await zip.TryExtractAsync(minecraftDir, new ZipExtractOptions("resources", false, token, progress));
-					progress?.ReportProgress("Extracting base pack contents (scripts)...");
-					await zip.TryExtractAsync(minecraftDir, new ZipExtractOptions("scripts", false, token, progress));
+					foreach (var folder in pack.BasePackFolders ?? DefaultBasePackFolders.ToList())
+					{
+						progress?.ReportProgress($"Extracting base pack contents ({folder})...");
+						await zip.ExtractAsync(minecraftDir, new ZipExtractOptions(folder, false, token, progress));
+					}
+
 					progress?.ReportProgress("Extracting base pack contents...");
 
 					// Individual files that might exist
@@ -406,7 +412,7 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 							progress?.ReportProgress($"{modTask}\n" +
 													 $"Deleting old versions...");
 
-							var deletePattern = mod.RemovePattern ?? $"{modId}.*";
+							var deletePattern = mod.RemovePattern ?? $"{modId}-.*";
 							var toDelete = currentModFiles.Where(file => Regex.IsMatch(file, deletePattern)).ToList();
 
 							foreach (var file in toDelete)
