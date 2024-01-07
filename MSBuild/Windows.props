@@ -1,0 +1,11 @@
+<Project>
+	<PropertyGroup>
+		<Configurations>Windows;WindowsDebug</Configurations>
+		<DefaultConfiguration>WindowsDebug</DefaultConfiguration>
+		<DefineConstants>$(DefineConstants);PLATFORM_WIN</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(TargetFramework.Contains('netcoreapp'))">
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+	</PropertyGroup>
+</Project>

@@ -1,20 +1,16 @@
 <Project>
 	<PropertyGroup>
 		<Configurations>Windows;macOS;WindowsDebug;macOSDebug</Configurations>
+		<DefaultConfiguration>WindowsDebug</DefaultConfiguration>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="$(Configuration.Contains('Debug'))">
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-		<Optimize>false</Optimize>
-	</PropertyGroup>
-	
 	<PropertyGroup Condition="$(Configuration.Contains('Windows'))">
 		<DefineConstants>$(DefineConstants);PLATFORM_WIN</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="$(Configuration.Contains('Windows')) And $(TargetFramework.Contains('netcoreapp'))">
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	</PropertyGroup>
-	
+
 	<PropertyGroup Condition="$(Configuration.Contains('macOS'))">
 		<DefineConstants>$(DefineConstants);PLATFORM_MAC</DefineConstants>
 	</PropertyGroup>
