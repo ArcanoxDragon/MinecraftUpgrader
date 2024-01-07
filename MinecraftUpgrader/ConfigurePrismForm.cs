@@ -72,7 +72,7 @@ public partial class ConfigurePrismForm : Form
 			};
 			dialog.Show(this);
 
-			var installPath = await PrismInstaller.InstallPrism(dialog.Reporter, cancelSource.Token);
+			var installPath = await PrismUtility.InstallPrism(dialog.Reporter, cancelSource.Token);
 
 			MessageBox.Show(this,
 							$"Successfully installed Prism Launcher to \"{installPath}\"!",

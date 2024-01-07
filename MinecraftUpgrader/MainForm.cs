@@ -52,7 +52,7 @@ public partial class MainForm : Form
 
 		if (string.IsNullOrEmpty(prismPath))
 		{
-			if (!ShowConfigurePrism(out prismPath))
+			if (!LocateOrConfigurePrism(out prismPath))
 			{
 				Close();
 			}
@@ -96,14 +96,19 @@ public partial class MainForm : Form
 		}
 	}
 
-	private bool ShowConfigurePrism(out string lastPrismPath, string exitText = null)
+	private bool LocateOrConfigurePrism(out string prismPath)
+	{
+		if (PrismUtility.TryAutoLocatePrism(out _, out prismPath))
+			return true;
+
+		return ShowConfigurePrism(out prismPath);
+	}
+
+	private bool ShowConfigurePrism(out string lastPrismPath)
 	{
 		Hide();
 
 		var form = new ConfigurePrismForm();
-
-		if (!string.IsNullOrEmpty(exitText))
-			form.ExitText = exitText;
 
 		var formResult = form.ShowDialog(this);
 
@@ -556,7 +561,7 @@ public partial class MainForm : Form
 	{
 		var startInfo = new ProcessStartInfo {
 			UseShellExecute = true,
-			FileName = Path.Combine(this.txtPrismPath.Text, "prismlauncher.exe"),
+			FileName = GetPrismExecutablePath(),
 			WorkingDirectory = this.txtPrismPath.Text,
 		};
 
@@ -567,12 +572,22 @@ public partial class MainForm : Form
 	{
 		var startInfo = new ProcessStartInfo {
 			UseShellExecute = true,
-			FileName = Path.Combine(this.txtPrismPath.Text, "prismlauncher.exe"),
+			FileName = GetPrismExecutablePath(),
 			Arguments = $"-l \"{instanceName}\"",
 			WorkingDirectory = this.txtPrismPath.Text,
 		};
 
 		Process.Start(startInfo);
 		Application.Exit();
+	}
+
+	private string GetPrismExecutablePath()
+	{
+		if (PrismUtility.TryAutoLocatePrism(out var programPath, out _))
+			return programPath;
+
+		// If we couldn't find the installed version, we assume the user has the portable version.
+		// The executable is therefore in the same folder as the config.
+		return Path.Combine(this.txtPrismPath.Text, "prismlauncher.exe");
 	}
 }

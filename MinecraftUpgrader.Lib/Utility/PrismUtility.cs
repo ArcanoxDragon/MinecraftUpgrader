@@ -11,8 +11,35 @@ using MinecraftUpgrader.Zip;
 
 namespace MinecraftUpgrader.Utility;
 
-public static class PrismInstaller
+public static class PrismUtility
 {
+	public static bool TryAutoLocatePrism(out string programPath, out string configFolder)
+	{
+		// Try and locate Prism in known locations
+
+		programPath = null;
+		configFolder = null;
+
+		var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+		var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+		var prismProgramFolder = Path.Combine(localAppData, "Programs", "PrismLauncher");
+		var prismProgramPath = Path.Combine(prismProgramFolder, "prismlauncher.exe");
+
+		if (!File.Exists(prismProgramPath))
+			return false;
+
+		// Found non-portable version. See if we can find the config file too.
+		var prismConfigFolder = Path.Combine(appData, "PrismLauncher");
+		var prismConfigFile = Path.Combine(prismConfigFolder, "prismlauncher.cfg");
+
+		if (!File.Exists(prismConfigFile))
+			return false;
+
+		programPath = prismProgramPath;
+		configFolder = prismConfigFolder;
+		return true;
+	}
+
 	public static async Task<string> InstallPrism(ProgressReporter progress, CancellationToken cancellationToken = default)
 	{
 		var tempDir = Path.GetTempPath();
