@@ -35,7 +35,6 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 		".minecraft/config",
 		".minecraft/coremods",
 		".minecraft/defaultconfigs",
-		".minecraft/local",
 		".minecraft/mods",
 	];
 
@@ -53,7 +52,7 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 		@"options\.txt$",
 		@"servers\.dat$",
 		@"assets[/\\].*$",
-		@"(?:resourcepacks|saves|schematics|screenshots|shaderpacks|texturepacks)[/\\].*$",
+		@"(?:local|resourcepacks|saves|schematics|screenshots|shaderpacks|texturepacks)[/\\].*$",
 	];
 
 	private readonly PackBuilderOptions options = options.Value;
@@ -134,6 +133,7 @@ public class PackBuilder(IOptions<PackBuilderOptions> options)
 		var instanceMetadata = new InstanceMetadata {
 			FileVersion = InstanceMetadata.CurrentFileVersion,
 			Version = pack.CurrentVersion,
+			IntendedMinecraftVersion = pack.IntendedMinecraftVersion,
 			BuiltFromServerPack = pack.ServerPack,
 			BuiltFromServerPackMd5 = currentBasePackMd5,
 			VrEnabled = vrEnabled,

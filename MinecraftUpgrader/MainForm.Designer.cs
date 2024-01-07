@@ -357,7 +357,7 @@
 			MinimumSize = new Size(535, 583);
 			Name = "MainForm";
 			StartPosition = FormStartPosition.CenterScreen;
-			Text = "Minecraft Mod Installer";
+			Text = "Minecraft Mod Pack Installer";
 			Load +=  OnFormLoad ;
 			this.buttonLayoutPanel.ResumeLayout(false);
 			this.panelVR.ResumeLayout(false);
