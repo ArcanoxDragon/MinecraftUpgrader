@@ -1,6 +1,7 @@
 <Project>
 	<PropertyGroup>
 		<Configurations>Windows;macOS;WindowsDebug;macOSDebug</Configurations>
+		<DefaultConfiguration>WindowsDebug</DefaultConfiguration>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="$(Configuration.Contains('Windows'))">

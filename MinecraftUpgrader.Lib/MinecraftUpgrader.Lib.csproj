@@ -5,8 +5,8 @@
 		<RootNamespace>MinecraftUpgrader</RootNamespace>
 	</PropertyGroup>
 
-	<Import Project="..\MSBuild\Common.props" />
 	<Import Project="..\MSBuild\CrossPlatform.props" />
+	<Import Project="..\MSBuild\Common.props" />
 
 	<ItemGroup>
 		<PackageReference Include="Humanizer.Core" Version="2.14.1" />

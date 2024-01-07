@@ -8,8 +8,8 @@
 		<UseWindowsForms>true</UseWindowsForms>
 	</PropertyGroup>
 
-	<Import Project="..\MSBuild\Common.props" />
 	<Import Project="..\MSBuild\Windows.props" />
+	<Import Project="..\MSBuild\Common.props" />
 
 	<ItemGroup>
 		<ProjectReference Include="..\MinecraftUpgrader.Lib\MinecraftUpgrader.Lib.csproj" />

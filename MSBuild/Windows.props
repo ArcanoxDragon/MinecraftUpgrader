@@ -1,6 +1,7 @@
 <Project>
 	<PropertyGroup>
 		<Configurations>Windows;WindowsDebug</Configurations>
+		<DefaultConfiguration>WindowsDebug</DefaultConfiguration>
 		<DefineConstants>$(DefineConstants);PLATFORM_WIN</DefineConstants>
 	</PropertyGroup>
 
